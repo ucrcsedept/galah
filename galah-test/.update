@@ -1,3 +1,0 @@
-#!/bin/bash
-rsync -r -e "ssh" . john@ec2-23-20-182-113.compute-1.amazonaws.com:/home/dev/
-rsync -r . ../.backup/galah-test
