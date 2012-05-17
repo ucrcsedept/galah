@@ -1,5 +1,0 @@
-<suiteconfig>
-	<driver id="GalahRuntimeTester.py">
-		{concurrent: true, scripts: [{path: "TpsReport.py", tests: ["CorrectlyCalculated", "NameIsSplit", "NumbersFormatted", "NeatFormatting"]}]}
-	</driver>
-</suiteconfig>
