@@ -1,0 +1,73 @@
+Notes:
+
+Testable: A program, or code, which may may be tested by Galah. Examples would include a
+	student's source code, or a student's compiled program.
+Test: A single test which is run on a Testable and produces a correctness value at least.
+	A test may also produce comments, an attention flag, and any other data that it wants
+	to make available to the caller of the Test Suite.
+Test Harness: A program which is run on a specific Testable. This is what instructors would
+	write to define what a successful program is. A Test Harness may define one or more Tests
+	within itself. Because scripts may be written in any language, your file must begin with
+	#!INTERPRETER if the file requires an interpreter. INTERPRETER will not be treated as a
+	path, rather its base name will be taken and galah will find a suitable installed interpeter
+	by matching it with its lookup table. If the file does not begine with #! then it will be
+	executed as a binary file.
+	A Test Harness recieves the following from the test driver: tests to perform, testables, and
+	any additional parameters added in the suite configuration. This information will be a subset
+	of the Suite Configuration.
+Test Driver: A program that executes Test Harnesss on a testable and performs any common initial
+	work required by a class of Test Harnesss (aka all the Test Harnesss that will be run by the
+	Test Driver). A Test Driver may perform all of the work itself if it makes more sense to
+	do so. Either way however, it must support the common Test Driver interface.
+	A test driver recieves the following from the test suite: tests to perform, testables, and
+	any additional parameters added in the suite configuration.
+	Specifically a Test Driver receives a SuiteConfiguration JSON object:
+	-SuiteConfiguration : Object
+		-testables : List
+			List of paths, each one pointing to a testable.
+		-actions : List
+			List of driver defined objects. # SuiteConfiguration.Harness objects.
+		-config : Object
+			Object containing driver defined configuration data.
+			
+	-SuiteConfiguration.Harness : Object
+		-path : String
+			Path pointing to a Test Harness.
+		-info : Object [Optional]
+			An object containing any additional information that was sent with the request
+			associated with this particular script.
+		-tests: List<String>
+			A list of strings containing the names of the tests to be executed by this script.
+			
+	A Test Driver should output a DriverResult JSON object:
+	-DriverResult : Object
+		-results : List<TestResult>
+		-errors : List<FailedAction>
+	-FailedAction : Object
+		-testable : String
+			The testable that this failed action concerns.
+		-message : String
+			Description of the failure.
+	-TestResult : Object
+		-name : String
+			The name of the test that produced this result.
+		-testable : String
+			The testable this result concerns
+		-score : Number
+			The number of points scored.
+		-score_max : Number
+			The max number of possible points one could score.
+		-inconclusive : Boolean
+			True iff a result is inconclusive and should be reviewed.
+		-messages : List<String>
+			A list of messages related to this result.
+			
+Test Suite: Program that handles execution of the Test Drivers on a given testable and brings
+	together the results from every driver. The term Test Suite can also mean to include the
+	Test Drivers as well.
+Suite Configuration: A Suite Configuration specifies Test Drivers, Test Harnesss, and Tests to
+	run, but does not specify the Testables.
+	
+A Test Harness may recieve the testable in different ways:
+1. The Driver can send the Script a JSON object through standard input which has the following
+	fields: enabled_tests, 
