@@ -1,9 +1,0 @@
-<spec>
-	<runtime>
-		<!-- Runtime testing goes here -->
-		<file path="MadLib">
-			<test name="WordsExist" />
-			<test name="LineLengths" />
-		</file>
-	</runtime>
-</spec>
