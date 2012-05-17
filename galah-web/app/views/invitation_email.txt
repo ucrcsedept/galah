@@ -1,0 +1,24 @@
+$def with (email, theClass, confirmLink)
+$var subject: Galah - Invitation to $theClass["name"] with $theClass["with"]
+<p>
+Hello,
+</p>
+<p>
+You have been invited to the class $theClass["name"] with
+$theClass["with"]. <a href="$confirmLink">CLICK HERE</a> to accept this
+invitation.
+</p>
+<p>
+If you cannot click the link above, copy and paste this address into your
+web browser: $confirmLink
+</p>
+<p>
+If you believe this email has been sent to you in error, you
+may safely disregard it and you shouldn't recieve any further
+emails. If you do, please contact your institution's system
+administrator.
+</p>
+<p>
+Have a great day,
+Galah
+</p>

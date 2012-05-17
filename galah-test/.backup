@@ -1,0 +1,15 @@
+#!/bin/bash
+VERSION_PATH="../ben/version.txt"
+VERSION=0
+
+for WORD in `cat $VERSION_PATH`
+do
+    VERSION=$WORD
+done
+
+mkdir ../ben/backup_${VERSION}
+exec cp *.py ../ben/backup_${VERSION}
+
+VERSION=$(($VERSION+1))
+
+echo $VERSION > $VERSION_PATH

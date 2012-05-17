@@ -1,0 +1,48 @@
+$def with (assignment, class_, testResults)
+$var path: &rarr; <a href="/assignments">assignments</a> &rarr; <a href="/assignments/$assignment['_id']">$assignment["name"]</a>
+$var scripts: http://yui.yahooapis.com/3.5.0/build/yui/yui-min.js /static/assignmentTabs.js
+    <div id="assignment_details">
+        <h1>Tests</h1>
+        $ tests = assignment.get("tests", [])
+        $for i in tests:
+            <h2>$i["title"]</h2>
+            <div>$i["description"]</div>
+        $if not tests:
+            <div class="attention">(No Test Information Found)</div>
+    </div>
+    <div id="submissions">
+        <h1 style="margin-bottom: 0px">Your Submissions</h1>
+        <div>
+            <label for="sortBy" class="heading">Show</label>
+            <select name="sortBy">
+                <option value="due">Most Recent</option>
+                <option value="class">Timeline</option>
+            </select>
+            <button>Make New Submission</button>
+        </div>
+        $for result in testResults:
+            <div class="submission">
+                <h2>
+                    Test Submission on $timeformat.timeToString(result["timestamp"])
+                    <span class="score">$utils.renderScore(result)</span>
+                </h2>
+                <div class="action_list">
+                    $for i in result["results"]:
+                        <div class="action">
+                            <h3>
+                                $i["name"] (${utils.renderScore(i)})
+                            </h3>
+                            $if "messages" in i and i["messages"] is not None:
+                                $if type(i["messages"]) is unicode:
+                                    <div class="message">$:i["messages"]</div>
+                                $else:
+                                    <ul class="messages">
+                                        $for j in i["messages"]:
+                                            <li>$j</li>
+                                    </ul>
+                        </div>
+                </div>
+            </div>
+        $if not testResults:
+            <div class="attention">(No Submissions Found)</div>
+    </div>

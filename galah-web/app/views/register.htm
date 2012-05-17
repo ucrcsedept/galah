@@ -1,0 +1,29 @@
+$def with (invitation, registerForm, passwordRuleDescription)
+$var path: &rarr; <a href="/register">Register</a>
+    <script>
+        YUI().use("node", function(Y) {
+            Y.one("#email").focus()
+        })
+    </script>
+    <div id="register" class="modalForm">
+        <div class="description">
+            <p>
+                <strong>You are not yet registered!</strong> You must enter a
+                password below. $passwordRuleDescription
+            </p>
+            <p>
+                You are registering with the email address
+                <strong>$invitation.email</strong>. If you would like to use a
+                different email address you may change it in account options
+                once your registered.
+            </p>
+        </div>
+        <form method="post">
+            <input type="hidden" value="/" name="redirectTo">
+            <label for="password">$registerForm.password.description</label> $:registerForm.password.render()
+            <label for="passwordConfirmation">$registerForm.passwordConfirmation.description</label> $:registerForm.passwordConfirmation.render()
+            $if not registerForm.valid:
+                <div class="wrong">$registerForm.note</div>
+            $:registerForm.submit.render()
+        </form>
+    </div>

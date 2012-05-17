@@ -1,0 +1,35 @@
+$def with (content)
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Galah</title>
+    <link rel="stylesheet" href="/static/galah.css"></link>
+    $for i in content.scripts.split() if "scripts" in content else []:
+        <script src="$i"></script>
+</head>
+<body>
+<div id="container">
+    <div id="header" class="heading">
+        <span class="logo"><a href="http://localhost:8080/">Galah</a></span>
+        $if "path" in content:
+            <span class="path">
+                $:content.path
+            </span>
+    </div>
+    $if not content.get("noTopbar"):
+        $ user = auth.authenticated()
+        <div id="topbar">
+            $if user:
+                <div>
+                    You are logged in as <strong>$user</strong> (<a href="/logout">logout</a>)
+                </div>
+            $else:
+                <div>
+                    You are not logged in (<a href="/login">login</a>)
+                </div>
+        </div>
+            
+    $:content
+</div>
+</body>
+</html>
