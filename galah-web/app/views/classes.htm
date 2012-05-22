@@ -1,0 +1,23 @@
+$def with (assignments, classes)
+$var path: &rarr; <a href="/classes">classes</a>
+    $code:
+        today = datetime.datetime.today()
+    <div id="class_list">
+        $for i in classes:
+            <div class="class">
+                <div class="title heading">$i.name</div>
+                <button>Create New Assignment...</button>
+                $ curAssignments = [a for a in assignments if a.forClass == i.id]
+                <ul class="simple_assignment_list">
+                    $if curAssignments:
+                            $for j in curAssignments:
+                                <li><a href="#">$j.name</a> due $timeFormat.timeToString(i["due"])</li>
+                    $else:
+                        <li>(No Assignments Found)</li>
+                </ul>
+            </div>
+        $if not classes:
+            <div class="class">
+                (No Classes Found)
+            </div>
+    </div>

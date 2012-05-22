@@ -18,8 +18,6 @@ class Assignments:
         classes = models.Class.objects(id__in = user.classes)
         
         # Get all of the assignments in those classes
-        import inspect
-        print inspect.getmembers(models.Assignment)
         assignments = models.Assignment.objects(forClass__in = user.classes)
         
         # Add the className attribute to all the assignments so the view can
