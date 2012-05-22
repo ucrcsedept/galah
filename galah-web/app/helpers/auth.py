@@ -27,7 +27,7 @@ def void():
     if "user" in _session:
         del _session["user"]
 
-def authenticationRequired(zfunc):
+def authenticationRequired(zfunc, zuserType = None):
     def inner(*zargs, **zkwargs):
         if not authenticated():
             raise web.seeother("/login?redirectTo=%s" % web.ctx.path)

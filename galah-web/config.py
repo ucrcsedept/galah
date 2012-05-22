@@ -7,6 +7,7 @@ urls = (
     "/login", "app.controllers.account.Login",
     "/logout", "app.controllers.account.Logout",
     "/register/([A-Fa-f0-9]{24})", "app.controllers.account.Register",
+    "/classes/?", "app.controllers.manage.Classes"
 )
 
 # Some of the imports may rely on this variable

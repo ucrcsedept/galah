@@ -105,5 +105,5 @@ class Login:
     
 class Logout:
     def GET(self):
-        models.authentication.void()
+        auth.void()
         return config.view.logout()

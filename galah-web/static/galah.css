@@ -115,14 +115,23 @@ h3 {
 }
 
 /* Classes Page */
-#classes_list > .class { margin: 20px 0px; }
+#class_list > .class { margin: 20px 0px; }
 
-#classes_list > .class > .title {
+#class_list > .class > .title {
     font-size: 14pt;
     font-weight: bold;
     border-bottom: 1px solid #CCC;
     margin-bottom: 5px;
 }
+
+#class_list > .class > .simple_assignment_list {
+    list-style: none;
+    margin-left: 0.5em;
+    padding-left: 0em;
+}
+
+#class_list > .class > .simple_assignment_list > li { margin-bottom: 0.5em; }
+    
 
 /* Assignment Page */
 #submissions > .submission { margin: 20px 0px 30px 0px; }
