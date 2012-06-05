@@ -2,14 +2,11 @@ from datetime import datetime
 
 from mongoengine import *
 
-from app.models.classes import Class
-from app.models.users import User
-
-from app.helpers.utils import Enum
+from users import User
 
 class Invitation(Document):
     email = EmailField(required = True)
-    class_ = ReferenceField(Class, CASCADE, required = True)
+    class_ = ObjectIdField(required = True)
     expires = DateTimeField(required = True)
     accountType = IntField(choices = range(User.accountTypes.end()),
                            default = User.accountTypes.student)

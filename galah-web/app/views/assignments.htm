@@ -5,13 +5,13 @@ $var scripts: http://yui.yahooapis.com/3.5.0/build/yui/yui-min.js /static/classB
         # This plus the script below allows the classButtons.js to do its job
         classMap = {}
         for i in classes:
-            cur = classMap[unicode(i["_id"])] = {
-                "name": i["name"],
-                "with": i["with"]
+            cur = classMap[unicode(i.id)] = {
+                "name": i.name,
+                "with": i.instructors if i.instructors else "N/S"
             }
             
-            if "site" in i:
-                cur["site"] = i["site"]
+            if i.website:
+                cur["site"] = i.website
     <script>
         classMap = $:json.dumps(classMap)
     </script>
@@ -22,13 +22,14 @@ $var scripts: http://yui.yahooapis.com/3.5.0/build/yui/yui-min.js /static/classB
             <option value="class">Class</option>
         </select>
     </div>
-    $code:
-        today = datetime.datetime.today()
+    $ today = datetime.datetime.today()
     <div id="assignment_list">
         $for i in assignments:
             <div class="assignment">
-                <div class="title heading"><a class="classButton" href="/classes/$i['class']">$i["className"]</a> <a href="/assignments/$i['_id']">$i["name"]</a></div>
-                <div class="due">due $timeformat.timeDistance(today, i["due"]) on $timeformat.timeToString(i["due"])</div>
+                <div class="title heading">
+                    <a class="classButton" href="/classes/$i.forClass">$i.className</a> <a href="/assignments/$i.id">$i.name</a>
+                </div>
+                <div class="due">due $timeformat.timeDistance(today, i.due) on $timeformat.timeToString(i.due)</div>
             </div>
         $if not assignments:
             <div class="assignment">
