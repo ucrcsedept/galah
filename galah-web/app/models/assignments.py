@@ -1,14 +1,20 @@
-from config import db
 from mongoengine import *
 
 from classes import Class
-from testresults import TestResult
+
+class TestDescription(EmbeddedDocument):
+    title = StringField(required = True)
+    description = StringField()
+    
+    meta = {
+        "allow_inheritance": False
+    }
 
 class Assignment(Document):
     name = StringField(required = True)
     due = DateTimeField(required = True)
-    forClass = ReferenceField(Class, CASCADE, required = True)
-    tests = ListField(ReferenceField(TestResult))
+    forClass = ObjectIdField(required = True)
+    tests = ListField(EmbeddedDocumentField(TestDescription))
 
     meta = {
         "allow_inheritance": False

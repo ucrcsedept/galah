@@ -1,64 +1,88 @@
-import web, datetime, pymongo
+import web, datetime, pymongo, shutil, hashlib, os.path
 from config import view
-from app.helpers import utils
-from app.helpers.exceptions import UserError
+from pymongo.objectid import ObjectId
 
-import app.helpers.auth as auth
-
+# Needed to diferentiate the Assignment class in this module with the model
 import app.models as models
+
+from app.models import *
+from app.helpers import *
 
 from pymongo.objectid import ObjectId
 
 class Assignments:
     @auth.authenticationRequired
     def GET(self):
-        user = models.User.objects.get(email = auth.authenticated())
-
-        # Get a list of all the classes the user belongs to.
-        classes = models.Class.objects(id__in = user.classes)
+        user = User.objects.get(email = auth.authenticated())
+        
+        classes = Class.objects(id__in = user.classes).only("name")
         
         # Get all of the assignments in those classes
-        assignments = models.Assignment.objects(forClass__in = user.classes)
+        assignments = list(models.Assignment.objects(forClass__in = user.classes))
         
         # Add the className attribute to all the assignments so the view can
         # access it easily.
         for i in assignments:
-            try:
-                i["className"] = \
-                    utils.first(classes, lambda j: j.id == i["forClass"]).name
-            except:
-                i["className"] = "NONE"
+            assert "className" not in vars(i)
+            
+            i.className = \
+                utils.first(classes, lambda j: j.id == i.forClass).name
         
         return view.assignments(assignments, classes)
 
 class Assignment:
     @auth.authenticationRequired
     def GET(self, zassignment):
-        user = models.User.objects.get(email = models.authentication.authenticated())
+        user = User.objects.get(email = auth.authenticated())
         
         # Convert the assignment in the URL into an ObjectId
         id = ObjectId(zassignment)
         
         # Retrieve the assignment
-        assignment = models.assignments.fromId(id)
+        assignment = models.Assignment.objects.get(id = id)
         
         if assignment == None:
             raise UserError("Assignment was not found.")
         
         # Retrieve the name of the class the assignment belongs to
-        class_ = Class.objects.get(id = assignment["class"])
+        className = Class.objects(id = assignment.forClass).only("name").first()
         
-        # Ensure that a class was found
-        if class_ == None:
-            raise UserError("You are not in the correct class.")
-        
-        assert assignment != None, "Exists in a class page but doesn't exist " \
-                                   "assignments collection."
+        assert className != None, "Assignment pointing to non-existant class."
         
         # Add class information so the template can access it easily
-        assignment["className"] = class_.name
+        assignment.className = className
         
         # Get all of the test results for this assignmnet
-        testResults = models.testresults.fromUserAssignment("john", id)
+        testResults = list(TestResult.objects(user = user.id, assignment = id))
         
-        return view.assignment(assignment, class_, testResults)
+        return view.assignment(assignment, testResults)
+ 
+    @auth.authenticationRequired
+    def POST(self, zassignment):
+        user = User.objects.get(email = auth.authenticated())
+        
+        # Convert the assignment in the URL into an ObjectId
+        id = ObjectId(zassignment)
+        
+        # Retrieve the assignment
+        assignment = models.Assignment.objects.get(id = id)
+        
+        post = web.input(new_submission = {})
+        
+        save_to = "/tmp/galah/"
+        
+        if "new_submission" in post:
+            # Come up with a name for the file and open it
+            fileId = ObjectId()
+            file = open(os.path.join(save_to, str(fileId)), "wb")
+            
+            # Copy the contents of the uploaded file into the new one
+            shutil.copyfileobj(post.new_submission.file, file)
+            
+            # Craft a new test request
+            testRequest = {
+                "assignment": str(id),
+                "testDriver": 
+            }
+
+        return Assignment.GET(self, zassignment)

@@ -1,5 +1,7 @@
 import config
 
+# !!! Import statement at bottom
+
 def shallowFlatten(zlist):
     "Flattens a list of lists."
     
@@ -12,7 +14,13 @@ def first(zlist, zpredicate):
     return next(i for i in zlist if zpredicate(i))
 
 def renderScore(zobject):
-    return "Inconclusive" if zobject.get("inconclusive", False) else "%d / %d" % (zobject["score"], zobject["maxScore"])
+    convert = lambda d: str(d) if str(d)[-2:] != ".0" else str(d)[:-2]
+    
+    if not zobject.score:
+        return "Inconclusive"
+    else:
+        return "%s / %s" % (convert(zobject.score),
+                            convert(zobject.maxScore))
 
 def safeStrCmp(za, zb):
     if len(za) != len(zb):
@@ -24,6 +32,47 @@ def safeStrCmp(za, zb):
             rv = False
     
     return rv
+    
+class HashInfo:
+    "Utility class for dealing with hashed passwords in the database."
+    
+    def __init__(self, zalgorithm = "", zsalt = "", zcostFactor = 0, zhash = ""):
+        self.algorithm = str(zalgorithm)
+        self.salt = str(zsalt)
+        self.costFactor = int(zcostFactor)
+        self.hash = str(zhash)
+    
+    def hashString(self, zstr):
+        """
+        Hashes a string given the algorithm, salt, and costFactor for this
+        object.
+        
+        """
+        
+        assert self.algorithm == "PBKDF2-256"
+        
+        return pbkdf2.pbkdf2_hex(str(zstr), str(self.salt), self.costFactor)
+    
+    @classmethod
+    def fromString(cls, zstring):
+        "Deconstructs a string into a PassInfo object"
+        
+        # Create a new instance
+        obj = cls()
+        
+        # Deconstruct the string
+        passInfo = zstring.split(":")
+
+        # Fill in the datamembers
+        obj.algorithm = str(passInfo[0])
+        obj.salt = str(passInfo[1])
+        obj.costFactor = int(passInfo[2])
+        obj.hash = str(passInfo[3])
+        
+        return obj
+    
+    def __str__(self):
+        return ":".join((self.algorithm, self.salt, str(self.costFactor), self.hash))
 
 def isLocalUrl(zurl):
     "Returns true iff the URL points to a location on this web server"
@@ -100,3 +149,6 @@ def selectFromDict(zdict, zpredicate):
     for k, v in zdict.items():
         if zpredicate(k, v):
             yield (k, v)
+
+# Imported down here to avoid circular dependency
+from app.helpers import pbkdf2
