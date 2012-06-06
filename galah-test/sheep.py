@@ -136,14 +136,14 @@ log = logging.getLogger("galah.sheep")
 # there are four branches.
 if cmdOptions.destroyAllMachines and cmdOptions.leaveDirtyMachines:
     # Only destroy clean VMs
-    machinesToKill = pyvz.getContainers("galah-vm: clean")
+    machinesToKill = app.pyvz.getContainers("galah-vm: clean")
 elif cmdOptions.destroyAllMachines and not cmdOptions.leaveDirtyMachines:
     # Destroy everything!
-    machinesToKill = pyvz.getContainers("galah-vm: *")
+    machinesToKill = app.pyvz.getContainers("galah-vm: *")
 elif not cmdOptions.destroyAllMachines and \
      not cmdOptions.leaveDirtyMachines:
     # Only destroy dirty VMs (default)
-    machinesToKill = pyvz.getContainers("galah-vm: dirty")
+    machinesToKill = app.pyvz.getContainers("galah-vm: dirty")
 else: # not options.destroyAllMachines and not options.leaveDirtyMachines
     # Don't touch anything
     machinesToKill = []
@@ -152,7 +152,7 @@ else: # not options.destroyAllMachines and not options.leaveDirtyMachines
 for m in machinesToKill:
     log.info("Destroying VM with CTID %d" % m)
     
-    pyvz.extirpateContainer(m)
+    app.pyvz.extirpateContainer(m)
 
 # Exit if that's all the user wanted us to do
 if cmdOptions.clean:
