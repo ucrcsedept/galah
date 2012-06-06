@@ -16,7 +16,7 @@
 # along with Galah. If not, see <http://www.gnu.org/licenses/>.
 
 import zmq, threading, Queue, logging, sys, copy, os, app.maintainer, \
-       app.universal, pyvz, signal, time
+       app.universal, app.pyvz, signal, time
 
 ## Parse Command Line Arguments ##
 from optparse import OptionParser, make_option
@@ -111,7 +111,8 @@ if cmdOptions.logLevel == 0:
     cmdOptions.cmdOptions.verbose = False
 
 ## Root Check ##
-# Note this isn't here for security, only convenience
+# Note this isn't here for security, only convenience. If this wasn't here
+# errors wouldn't start showing up until we started creating virtual machines.
 if not os.geteuid() == 0:
     sys.exit("Only root can run this script")
 
