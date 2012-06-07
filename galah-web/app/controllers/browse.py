@@ -110,7 +110,7 @@ class Assignment:
                 "actions": ["test.c"]
             }
             
-            shepherd = config.zmqContext.Socket(zmq.DEALER)
+            shepherd = config.zmqContext.socket(zmq.DEALER)
             shepherd.connect("tcp://%s:%i" % (config.shepherdAddress, config.shepherdPort))
             shepherd.send_json(testRequest)
         else:
