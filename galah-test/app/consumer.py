@@ -15,7 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with Galah. If not, see <http://www.gnu.org/licenses/>.
 
-import zmq, logging, pyvz, universal, utility, universal, threading
+import zmq, logging, pyvz, universal, utility, universal, threading, tempfile, \
+       subprocess
 
 # ZMQ constants for timeouts which are inexplicably missing from pyzmq
 ZMQ_RCVTIMEO = 27
@@ -74,11 +75,15 @@ def run():
             
             # Retrieve the testables from the git repository and place them in
             # the temporary directory we created
+            # TODO: Security warning!!! Unsanitized input going into shell!!!!
             sucess = subprocess.call(
                 "git archive --format=tar --remote=%s HEAD | tar xf -"
                     % testRequest["testables"],
-                cwd = tempDirectory
+                cwd = tempDirectory,
+                shell = True
             )
+            
+            # TODO: remove temp directory when done
             
             if success != 0:
                 raise RuntimeError("Could not retrieve copy of repository %s"
