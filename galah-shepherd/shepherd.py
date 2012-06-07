@@ -69,6 +69,8 @@ while True:
     # For now, take in tasks from stdin
     address, bulk, test_request = routerRecv(outside)
     
+    print "Recieved test request:", test_request
+    
     # Will continue looping until the queue has something in it and there are
     # no more outstanding messages
     while not (sheepQueue and sheep.poll(1) == 0):
