@@ -1,6 +1,6 @@
 import web.session, config, os, re
 
-from pymongo.objectid import ObjectId
+from bson.objectid import ObjectId
 
 _objectid_re = re.compile("[A-Fa-f0-9]{24}")
 _session = web.session.Session(

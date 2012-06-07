@@ -134,11 +134,6 @@ h3 {
     
 
 /* Assignment Page */
-#new_submission input {
-    display: block;
-    margin-bottom: 5px;
-}
-
 #submissions > .submission { margin: 20px 0px 30px 0px; }
 
 #submissions > .submission > .action_list {

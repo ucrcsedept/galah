@@ -1,4 +1,4 @@
-import pymongo, web, datetime, os, json
+import pymongo, web, datetime, os, json, sys, os.path, zmq
 
 urls = (
     "/?", "app.controllers.misc.Home",
@@ -23,8 +23,14 @@ siteAddress = "localhost"
 shepherdAddress = "localhost"
 shepherdPort = 6668
 
+# Bash script for git uploads via the web interface
+pullScript = os.path.join(sys.path[0], "app/helpers/pull_script.sh")
+
 # Connect to the database
 db = pymongo.Connection(dbAddress).galah
+
+# Create a monolithic zmq context
+zmqContext = zmq.Context()
 
 from app.helpers import utils, timeformat, auth
 

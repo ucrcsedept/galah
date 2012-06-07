@@ -7,7 +7,7 @@ import app.helpers.auth as auth
 
 import app.models as models
 
-from pymongo.objectid import ObjectId
+from bson.objectid import ObjectId
 
 class Classes:
     @auth.authenticationRequired

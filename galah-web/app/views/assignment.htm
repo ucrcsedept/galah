@@ -1,4 +1,4 @@
-$def with (assignment, testResults)
+$def with (assignment, testResults, gitRepo)
 $var path: &rarr; <a href="/assignments">assignments</a> &rarr; <a href="/assignments/$assignment.id">$assignment.name</a>
 $var scripts: http://yui.yahooapis.com/3.5.0/build/yui/yui-min.js /static/tabs.js
     <div class="tabs">
@@ -48,9 +48,29 @@ $var scripts: http://yui.yahooapis.com/3.5.0/build/yui/yui-min.js /static/tabs.j
         </div>
 	<div class="tab" id="new_submission">
 	    <h1>Make New Submission</h1>
-	    <form method="post" enctype="multipart/form-data" action="">
-		<input type="file" name="new_submission" />
-		<input type="submit" />
-	    </form>
+	    $if gitRepo:
+		<form method="post" enctype="multipart/form-data">
+		    <div>
+			<input type="file" name="new_submission" />
+		    </div>
+		    <input type="submit" />
+		</form>
+	    $else:
+		<p>
+		    You have not set up a git repo yet! You need to do this before
+		    you can start sending submissions.
+		</p>
+		<p>
+		    In the future, a git repository may be provided for you,
+		    until then, go set up a repo on GitHub and enter the address
+		    to it below.
+		</p>
+		<form method="post">
+		    <div>
+			<label for="git_repo">Git Repository</label>
+			<input id="git_repo" type="text" name="git_repo" />
+		    </div>
+		    <input type="submit" />
+		</form>
 	</div>
     </div>
