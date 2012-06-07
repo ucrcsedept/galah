@@ -16,7 +16,7 @@
 # along with Galah. If not, see <http://www.gnu.org/licenses/>.
 
 import zmq, logging, pyvz, universal, utility, universal, threading, tempfile, \
-       subprocess, shutil
+       subprocess, shutil, os.path
 
 # ZMQ constants for timeouts which are inexplicably missing from pyzmq
 ZMQ_RCVTIMEO = 27
@@ -76,8 +76,7 @@ def run():
             # Retrieve the testables from the git repository and place them in
             # the temporary directory we created
             success = subprocess.call(
-                ["git", "clone", "--depth=1", testRequest["testables"]],
-                cwd = tempDirectory
+                ["git", "clone", "--depth=1", testRequest["testables"], tempDirectory]
             )
             
             shutil.rmtree(os.path.join(tempDirectory, ".git"))
