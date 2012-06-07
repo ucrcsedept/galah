@@ -8,8 +8,6 @@ import app.models as models
 from app.models import *
 from app.helpers import *
 
-from pymongo.objectid import ObjectId
-
 class Assignments:
     @auth.authenticationRequired
     def GET(self):
