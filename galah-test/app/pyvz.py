@@ -201,7 +201,7 @@ def injectFile(zid, zfrom, zto, zmove = True, zpermissions = "rwx",
             check_call(["rm", zfrom], stdout = nullFile, stderr = nullFile)
     else:
         if os.path.isdir(zfrom):
-            files = [os.path.join(i, k) for i, j, k in os.walk(zfrom)]
+            files = [os.path.join(i, l) for i, j, k in os.walk(zfrom) for l in k]
         else:
             files = [zfrom]
         
