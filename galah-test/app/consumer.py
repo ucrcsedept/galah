@@ -15,7 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with Galah. If not, see <http://www.gnu.org/licenses/>.
 
-import zmq, logging, pyvz, universal, utility, universal, threading
+import zmq, logging, pyvz, universal, utility, universal, threading, tempfile, \
+       subprocess
 
 # ZMQ constants for timeouts which are inexplicably missing from pyzmq
 ZMQ_RCVTIMEO = 27
