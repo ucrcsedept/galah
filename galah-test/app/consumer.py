@@ -16,7 +16,7 @@
 # along with Galah. If not, see <http://www.gnu.org/licenses/>.
 
 import zmq, logging, pyvz, universal, utility, universal, threading, tempfile, \
-       subprocess
+       subprocess, shutil
 
 # ZMQ constants for timeouts which are inexplicably missing from pyzmq
 ZMQ_RCVTIMEO = 27
@@ -75,15 +75,12 @@ def run():
             
             # Retrieve the testables from the git repository and place them in
             # the temporary directory we created
-            # TODO: Security warning!!! Unsanitized input going into shell!!!!
-            sucess = subprocess.call(
-                "git archive --format=tar --remote=%s HEAD | tar xf -"
-                    % testRequest["testables"],
-                cwd = tempDirectory,
-                shell = True
+            success = subprocess.call(
+                ["git", "clone", "--depth=1", testRequest["testables"]],
+                cwd = tempDirectory
             )
             
-            # TODO: remove temp directory when done
+            shutil.rmtree(os.path.join(tempDirectory, ".git"))
             
             if success != 0:
                 raise RuntimeError("Could not retrieve copy of repository %s"
@@ -91,6 +88,8 @@ def run():
                                 
             # Inject file into VM from the testables location
             pyvz.injectFile(id, tempDirectory, "/home/tester/testables/")
+            
+            shutil.rmtree(tempDirectory)
             
             # TODO: Permissions need to be set on the test driver so the
             # student's program can't access it.
