@@ -5,9 +5,7 @@ from bson.objectid import ObjectId
 _objectid_re = re.compile("[A-Fa-f0-9]{24}")
 _session = web.session.Session(
     config.app, 
-    web.session.MongoStore(config.db.sessions),
-    keygen = lambda: ObjectId(os.urandom(12).encode("hex")),
-    keyvalidator = lambda key: type(key) is ObjectId or _objectid_re.match(key)
+    web.session.DiskStore("/var/local/galah-web/sessions")
 )
         
 
