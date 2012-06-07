@@ -13,6 +13,7 @@ class User(Document):
     accountType = IntField(choices = range(accountTypes.end()), required = True)
     classes = ListField(ObjectIdField())
     teaching = ListField(ObjectIdField())
+    repos = MapField(URLField())
     
     meta = {
         "indexes": ["email", "classes", "teaching"],

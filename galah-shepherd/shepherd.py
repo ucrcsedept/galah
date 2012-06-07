@@ -61,9 +61,13 @@ context = zmq.Context()
 sheep = context.socket(zmq.ROUTER)
 sheep.bind("tcp://*:6667")
 
+# Socket to recieve Test Requests from the other components
+outside = context.socket(zmq.ROUTER)
+outside.bind("tcp://*:6668")
+
 while True:
     # For now, take in tasks from stdin
-    test_request = raw_input("Enter Test Request: ")
+    address, bulk, test_request = routerRecv(outside)
     
     # Will continue looping until the queue has something in it and there are
     # no more outstanding messages
@@ -84,4 +88,6 @@ while True:
             sheepEnvironments[address] = body
             print "Sheep connected ", body
     
+    # Note here I have not validated the test_request. This is by design, the
+    # shepherd should not concern itself with such things
     routerSend(sheep, sheepQueue.popleft(), (), test_request)

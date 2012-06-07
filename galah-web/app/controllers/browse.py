@@ -1,6 +1,6 @@
-import web, datetime, pymongo, shutil, hashlib, os.path
+import web, datetime, pymongo, shutil, hashlib, os.path, config
 from config import view
-from pymongo.objectid import ObjectId
+from bson.objectid import ObjectId
 
 # Needed to diferentiate the Assignment class in this module with the model
 import app.models as models
@@ -55,7 +55,7 @@ class Assignment:
         # Get all of the test results for this assignmnet
         testResults = list(TestResult.objects(user = user.id, assignment = id))
         
-        return view.assignment(assignment, testResults)
+        return view.assignment(assignment, testResults, user.repos.get(str(id)))
  
     @auth.authenticationRequired
     def POST(self, zassignment):
@@ -71,18 +71,51 @@ class Assignment:
         
         save_to = "/tmp/galah/"
         
-        if "new_submission" in post:
+        if "git_repo" in post and post.git_repo:
+            user.repos[str(id)] = post.git_repo
+            user.save()
+        elif "new_submission" in post:
+            import subprocess, tempfile, os, zmq
+            
+            # The repo the file will be uploaded to
+            repo = user.repos[str(id)]
+            
             # Come up with a name for the file and open it
-            fileId = ObjectId()
-            file = open(os.path.join(save_to, str(fileId)), "wb")
+            file = tempfile.NamedTemporaryFile(mode = "wb", delete = False)
             
             # Copy the contents of the uploaded file into the new one
             shutil.copyfileobj(post.new_submission.file, file)
             
+            # Close the file
+            file.close()
+            
+            # Get a temporary directory for us to play in
+            directory = tempfile.mkdtemp()
+            
+            # Untar the archive into the directory
+            if subprocess.call(["tar", "-xf", file.name], cwd = directory) != 0:
+                raise RuntimeError("Not a valid tar file.")
+                
+            # Remove the tar file now that we've extracted its contents
+            os.remove(file.name)
+            
+            # Update the git repo with the files inside the tar file
+            a = subprocess.call([config.pullScript, repo], cwd = directory)
+            assert a == 0
+            
             # Craft a new test request
             testRequest = {
                 "assignment": str(id),
-                "testDriver": 
+                "testDriver": "cat",
+                "testables": repo,
+                "user": user.email,
+                "actions": ["test.c"]
             }
+            
+            shepherd = config.zmqContext.Socket(zmq.DEALER)
+            shepherd.connect("tcp://%s:%i" % (config.shepherdAddress, config.shepherdPort))
+            shepherd.send_json(testRequest)
+        else:
+            assert False
 
         return Assignment.GET(self, zassignment)

@@ -68,12 +68,28 @@ def run():
             continue
 
         try:
+            # Create a temporary directory that we will put the testable in
+            # before we transfer it to the VM
+            tempDirectory = tempfile.mkdtemp()
+            
+            # Retrieve the testables from the git repository and place them in
+            # the temporary directory we created
+            sucess = subprocess.call(
+                "git archive --format=tar --remote=%s HEAD | tar xf -"
+                    % testRequest["testables"],
+                cwd = tempDirectory
+            )
+            
+            if success != 0:
+                raise RuntimeError("Could not retrieve copy of repository %s"
+                                      % testRequest["testables"])
+                                
             # Inject file into VM from the testables location
-            # TODO: These are hackish, get from fileserver
-            pyvz.injectFile(id, testRequest["testables"],
-                            "/home/tester/testables/",
-                            False)
-            pyvz.injectFile(id, "main", "/home/tester/testDriver/", False)
+            pyvz.injectFile(id, tempDirectory, "/home/tester/testables/")
+            
+            # TODO: Permissions need to be set on the test driver so the
+            # student's program can't access it.
+            pyvz.injectFile(id, "/bin/cat", "/home/tester/testDriver/", False)
             
             # Inject Test Suite into VM
             pyvz.injectFile(id, "suite.py", "/home/tester/", False)

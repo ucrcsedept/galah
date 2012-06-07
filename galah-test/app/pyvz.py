@@ -173,6 +173,9 @@ def injectFile(zid, zfrom, zto, zmove = True, zpermissions = "rwx",
     Injects a given file (zfrom) from the host system into the filesystem of
     the container with id zid at location zto (zto is an absolute filepath as
     seen by the container's filesystem.
+    
+    If zfrom is a directory, all of the files inside of that directory will be
+    injected, the directory itself will not be injected.
 
     If zmove is True, then the file will be moved, otherwise it will be
     copied.
@@ -197,11 +200,16 @@ def injectFile(zid, zfrom, zto, zmove = True, zpermissions = "rwx",
         if zmove:
             check_call(["rm", zfrom], stdout = nullFile, stderr = nullFile)
     else:
+        if os.path.isdir(zfrom):
+            files = [os.path.join(i, k) for i, j, k in os.walk(zfrom)]
+        else:
+            files = [zfrom]
+        
         if zmove:
-            check_call(["mv", "-f", zfrom, ztoReal],
+            check_call(["mv", "-f"] + zfrom + [ztoReal],
                        stdout = nullFile, stderr = nullFile)
         else:
-            check_call(["cp", "-f", zfrom, ztoReal],
+            check_call(["cp", "-f"] + zfrom + [ztoReal],
                        stdout = nullFile, stderr = nullFile)
 
     # Ensure that the permissions and owner are correct
