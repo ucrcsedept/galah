@@ -112,7 +112,8 @@ while True:
             # Timed out
             break
         
-        if type(sheepMessage) is unicode:
+        log.debug(str(type(sheepMessage)))
+        if isinstance(sheepMessage, basestring):
             # The sheep bleeted (signalying it wants more work) so add it to
             # the queue
             sheepQueue.append(sheepAddresses)
