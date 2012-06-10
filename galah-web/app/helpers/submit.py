@@ -43,7 +43,7 @@ class FileStore:
                 raise ValueError("ztestables is not a valid archive")
         except:
             try:
-                os.removedir(directory)
+                os.rmdir(directory)
             except OSError:
                 pass
             
