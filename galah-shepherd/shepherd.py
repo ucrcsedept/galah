@@ -120,7 +120,7 @@ while True:
             log.debug("Sheep bleeted " + sheepMessage)
         else:
             # The sheep sent us environmental information, note it
-            sheepEnvironments[sheepAddress] = sheepMessage
+            sheepEnvironments[sheepAddresses] = sheepMessage
             
             log.info("Sheep connected " + sheepMessage)
 
