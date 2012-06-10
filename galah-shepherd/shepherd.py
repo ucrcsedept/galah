@@ -16,6 +16,7 @@
 # along with Galah. If not, see <http://www.gnu.org/licenses/>.
 
 import zmq, collections, zmq.utils, logging, json
+from app.models import *
 
 # ZMQ constants for timeouts which are inexplicably missing from pyzmq
 ZMQ_RCVTIMEO = 27
@@ -74,6 +75,9 @@ requestQueue = collections.deque()
 # A map from sheep to their environment information
 sheepEnvironments = {}
 
+# A map from sheep to the submission they're servicing
+sheepAssignments = {}
+
 context = zmq.Context()
 
 # Socket to send Test Requests to galah-test
@@ -127,7 +131,26 @@ while True:
 
     # Will match as many requests to sheep as possible
     while requestQueue and sheepQueue:
-        message = [sheepQueue.popleft()] + requestQueue.popleft()
+        sheepAddress = sheepQueue.popleft()
+        request = requestQueue.popleft()
+        
+        # Convert the submission into a proper test request
+        submission = request.pop()
+        assignment = Assignment.objects.get(id = ObjectId(submission["assignment"]))
+        
+        test_request = {
+            "assignment": submission["assignment"],
+            "testables": submission["testables"],
+            "user": submission["user"],
+            "testDriver": assignment.testSpecification.testDriver,
+            "timeout": assignment.testSpecification.timeout,
+            "actions": assignment.testSpecification.actions,
+            "config": assignment.testSpecification.config
+        }
+        
+        submission.append(test_request)
+        
+        message = [sheepAddress] + submission
         sheep.send_multipart(message)
         
-        log.debug("Sent to sheep: " + str(message))
+        log.debug("Sent request to sheep: " + str(message))
