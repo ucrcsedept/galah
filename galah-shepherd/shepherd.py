@@ -130,4 +130,4 @@ while True:
         message = [sheepQueue.popleft()] + requestQueue.popleft()
         sheep.send_multipart(message)
         
-        log.debug("Sent to sheep: " + message)
+        log.debug("Sent to sheep: " + str(message))
