@@ -1,4 +1,4 @@
-import config, app.helpers.pbkdf2, app.helpers.utils, os, copy
+import app.helpers.pbkdf2, app.helpers.utils, os, copy
 
 from mongoengine import *
 from app.helpers import *
