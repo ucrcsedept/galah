@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Galah. If not, see <http://www.gnu.org/licenses/>.
 
-import zmq, collections, zmq.utils
+import zmq, collections, zmq.utils, logging
 
 # ZMQ constants for timeouts which are inexplicably missing from pyzmq
 ZMQ_RCVTIMEO = 27
