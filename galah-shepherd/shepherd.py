@@ -28,6 +28,10 @@ optionList = [
     make_option("--sheep-port", dest = "sheepPort", default = 6667,
                 metavar = "PORT", type = "int",
                 help = "Listen for sheep on port PORT (default: %default)"),
+                
+    make_option("--public-port", dest = "publicPort", default = 6668,
+                metavar = "PORT", type = "int", 
+                help = "Listen for requests on port PORT (default: %default)"),
 
     make_option("-l", "--log-level", dest = "logLevel", type = "int",
                 default = logging.DEBUG, metavar = "LEVEL",
@@ -75,12 +79,14 @@ context = zmq.Context()
 # Socket to send Test Requests to galah-test
 sheep = context.socket(zmq.ROUTER)
 sheep.setsockopt(ZMQ_RCVTIMEO, 5 * 1000)
-sheep.bind("tcp://*:6667")
+sheep.bind("tcp://*:%d" % cmdOptions.sheepPort)
 
 # Socket to recieve Test Requests from the other components
 outside = context.socket(zmq.ROUTER)
 outside.setsockopt(ZMQ_RCVTIMEO, 5 * 1000)
-outside.bind("tcp://*:6668")
+outside.bind("tcp://*:%d" % cmdOptions.publicPort)
+
+log.info("Shepherd starting")
 
 while True:
     # Will grab all of the outstanding messages from the outside and place them
