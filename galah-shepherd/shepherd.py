@@ -107,7 +107,7 @@ while True:
         # message picked up any other addresses (from other routers for
         # example).
         try:
-            sheepAddresses, sheepMessage = sheep.recv_multipart()
+            sheepAddress, sheepMessage = sheep.recv_multipart()
             sheepMessage = json.loads(sheepMessage)
         except zmq.ZMQError:
             # Timed out
@@ -116,18 +116,18 @@ while True:
         if isinstance(sheepMessage, basestring):
             # The sheep bleeted (signalying it wants more work) so add it to
             # the queue
-            sheepQueue.append(sheepAddresses)
+            sheepQueue.append(sheepAddress)
             
             log.debug("Sheep bleeted " + sheepMessage)
         else:
             # The sheep sent us environmental information, note it
-            sheepEnvironments[sheepAddresses] = sheepMessage
+            sheepEnvironments[sheepAddress] = sheepMessage
             
             log.info("Sheep connected " + str(sheepMessage))
 
     # Will match as many requests to sheep as possible
     while requestQueue and sheepQueue:
-        message = [sheepQueue.popleft()] + [requestQueue.popleft()]
+        message = [sheepQueue.popleft()] + requestQueue.popleft()
         sheep.send_multipart(message)
         
         log.debug("Sent to sheep: " + message)
