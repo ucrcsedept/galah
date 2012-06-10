@@ -17,6 +17,7 @@
 
 import zmq, collections, zmq.utils, logging, json
 from app.models import *
+from bson.objectid import ObjectId
 
 # ZMQ constants for timeouts which are inexplicably missing from pyzmq
 ZMQ_RCVTIMEO = 27
@@ -82,12 +83,12 @@ context = zmq.Context()
 
 # Socket to send Test Requests to galah-test
 sheep = context.socket(zmq.ROUTER)
-sheep.setsockopt(ZMQ_RCVTIMEO, 5 * 1000)
+sheep.setsockopt(ZMQ_RCVTIMEO, 1000)
 sheep.bind("tcp://*:%d" % cmdOptions.sheepPort)
 
 # Socket to recieve Test Requests from the other components
 outside = context.socket(zmq.ROUTER)
-outside.setsockopt(ZMQ_RCVTIMEO, 5 * 1000)
+outside.setsockopt(ZMQ_RCVTIMEO, 1000)
 outside.bind("tcp://*:%d" % cmdOptions.publicPort)
 
 log.info("Shepherd starting")
@@ -122,12 +123,12 @@ while True:
             # the queue
             sheepQueue.append(sheepAddress)
             
-            log.debug("Sheep bleeted " + sheepMessage)
+            log.debug("Sheep bleeted")
         else:
             # The sheep sent us environmental information, note it
             sheepEnvironments[sheepAddress] = sheepMessage
             
-            log.info("Sheep connected " + str(sheepMessage))
+            log.info("Sheep connected with environment information " + str(sheepMessage))
 
     # Will match as many requests to sheep as possible
     while requestQueue and sheepQueue:
