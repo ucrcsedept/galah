@@ -1,4 +1,4 @@
-import web, datetime, pymongo, shutil, hashlib, os.path, config
+import web, datetime, pymongo, shutil, hashlib, os.path, config, json
 from config import view
 from bson.objectid import ObjectId
 
@@ -29,6 +29,8 @@ class Assignments:
         return view.assignments(assignments, classes)
 
 class Assignment:
+    storage = submit.FileStore()
+    
     @auth.authenticationRequired
     def GET(self, zassignment):
         user = User.objects.get(email = auth.authenticated())
@@ -50,10 +52,10 @@ class Assignment:
         # Add class information so the template can access it easily
         assignment.className = className
         
-        # Get all of the test results for this assignmnet
-        testResults = list(TestResult.objects(user = user.id, assignment = id))
+        # Get all of the submissions for this assignmnet
+        submissions = list(Submission.objects(user = user.id, assignment = id))
         
-        return view.assignment(assignment, testResults, user.repos.get(str(id)))
+        return view.assignment(assignment, submissions)
  
     @auth.authenticationRequired
     def POST(self, zassignment):
@@ -65,21 +67,29 @@ class Assignment:
         # Retrieve the assignment
         assignment = models.Assignment.objects.get(id = id)
         
+        if assignment == None:
+            raise UserError("Assignment was not found.")
+        
         post = web.input(new_submission = {})
         
         save_to = "/tmp/galah/"
         
-        if "git_repo" in post and post.git_repo:
-            user.repos[str(id)] = post.git_repo
-            user.save()
-        elif "new_submission" in post:
+        if "new_submission" in post:
             import subprocess, tempfile, os, zmq
             
-            # The repo the file will be uploaded to
-            repo = user.repos[str(id)]
+            # Determine the file's type
+            suffix = post.new_submission.filename
+            if suffix.endswith(".tar.gz"):
+                suffix = ".tar.gz"
+            elif suffix.endswith(".zip"):
+                suffix = ".zip"
+            else:
+                raise UserError("Only .tar.gz and .zip files are allowed")
             
-            # Come up with a name for the file and open it
-            file = tempfile.NamedTemporaryFile(mode = "wb", delete = False)
+            # Get a temporary file that we can store the uploaded file in
+            file = tempfile.NamedTemporaryFile(
+                mode = "wb", delete = False, suffix = suffix
+            )
             
             # Copy the contents of the uploaded file into the new one
             shutil.copyfileobj(post.new_submission.file, file)
@@ -87,33 +97,22 @@ class Assignment:
             # Close the file
             file.close()
             
-            # Get a temporary directory for us to play in
-            directory = tempfile.mkdtemp()
+            # Craft a new submission object
+            newSubmission = Submission(
+                assignment = id,
+                user = user.id,
+                timestamp = datetime.datetime.today()
+            )
             
-            # Untar the archive into the directory
-            if subprocess.call(["tar", "-xf", file.name], cwd = directory) != 0:
-                raise RuntimeError("Not a valid tar file.")
-                
-            # Remove the tar file now that we've extracted its contents
-            os.remove(file.name)
+            # Store the submission
+            newSubmission.testables = \
+                self.storage.store(newSubmission, file.name)
             
-            # Update the git repo with the files inside the tar file
-            a = subprocess.call([config.pullScript, repo], cwd = directory)
-            assert a == 0
+            submissionDict = newSubmission.to_mongo()
             
-            # Craft a new test request
-            testRequest = {
-                "assignment": str(id),
-                "testDriver": "cat",
-                "testables": repo,
-                "user": user.email,
-                "actions": ["test.c"]
-            }
-            
+            # Send the submission to the shepherd
             shepherd = config.zmqContext.socket(zmq.DEALER)
             shepherd.connect("tcp://%s:%i" % (config.shepherdAddress, config.shepherdPort))
-            shepherd.send_json(testRequest)
-        else:
-            assert False
+            shepherd.send(json.dumps(submissionDict, cls = mongoencoder.MongoEncoder))
 
         return Assignment.GET(self, zassignment)
