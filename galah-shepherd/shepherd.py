@@ -136,7 +136,7 @@ while True:
         request = requestQueue.popleft()
         
         # Convert the submission into a proper test request
-        submission = request.pop()
+        submission = json.loads(request.pop())
         assignment = Assignment.objects.get(id = ObjectId(submission["assignment"]))
         
         test_request = {
