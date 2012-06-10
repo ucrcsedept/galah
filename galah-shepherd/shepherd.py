@@ -123,7 +123,7 @@ while True:
             # The sheep sent us environmental information, note it
             sheepEnvironments[sheepAddresses] = sheepMessage
             
-            log.info("Sheep connected " + sheepMessage)
+            log.info("Sheep connected " + str(sheepMessage))
 
     # Will match as many requests to sheep as possible
     while requestQueue and sheepQueue:
