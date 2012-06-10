@@ -1,7 +1,5 @@
 from mongoengine import *
 
-from classes import Class
-
 class TestDescription(EmbeddedDocument):
     title = StringField(required = True)
     description = StringField()
