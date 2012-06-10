@@ -108,11 +108,12 @@ while True:
         # example).
         try:
             sheepAddresses, sheepMessage = sheep.recv_multipart()
+            sheepMessage = json.loads(sheepMessage)
         except zmq.ZMQError:
             # Timed out
             break
         
-        if type(sheepMessage) is unicode:
+        if isinstance(sheepMessage, basestring):
             # The sheep bleeted (signalying it wants more work) so add it to
             # the queue
             sheepQueue.append(sheepAddresses)
@@ -120,7 +121,7 @@ while True:
             log.debug("Sheep bleeted " + sheepMessage)
         else:
             # The sheep sent us environmental information, note it
-            sheepEnvironments[sheepAddress] = sheepMessage
+            sheepEnvironments[sheepAddresses] = sheepMessage
             
             log.info("Sheep connected " + sheepMessage)
 
