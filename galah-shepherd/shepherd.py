@@ -120,7 +120,7 @@ while True:
 
     # Will match as many requests to sheep as possible
     while requestQueue and sheepQueue:
-        message = [sheepQueue.popleft()] + requestQueue.popleft()]
+        message = [sheepQueue.popleft()] + [requestQueue.popleft()]
         sheep.send_multipart(message)
         
         log.debug("Sent to sheep: " + message)
