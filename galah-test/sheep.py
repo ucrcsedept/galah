@@ -167,7 +167,13 @@ maintainer.start()
 # Wait until we recieve a SIGINT (a hook was added by universal.py that changes
 # exiting to True when a SIGINT is recieved)
 try:
-    while True:
-        signal.pause()
+    while not app.universal.exiting:
+        time.sleep(5)
 except KeyboardInterrupt:    
     app.universal.exiting = True
+
+# TODO: When zmq's queues have items in them still the program won't exit. This
+# is that problem you (John) went onto freenode for help and solved. The
+# solution is in your head somewhere....
+
+log.info("Exiting...")

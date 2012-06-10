@@ -206,10 +206,10 @@ def injectFile(zid, zfrom, zto, zmove = True, zpermissions = "rwx",
             files = [zfrom]
         
         if zmove:
-            check_call(["mv", "-f"] + zfrom + [ztoReal],
+            check_call(["mv", "-rf"] + files + [ztoReal],
                        stdout = nullFile, stderr = nullFile)
         else:
-            check_call(["cp", "-f"] + zfrom + [ztoReal],
+            check_call(["cp", "-rf"] + files + [ztoReal],
                        stdout = nullFile, stderr = nullFile)
 
     # Ensure that the permissions and owner are correct
@@ -280,9 +280,9 @@ def execute(zid, zcode, zblock = True):
     """
 
     p = subprocess.Popen([vzctlPath, "exec", str(zid), "-"],
-                         stdin = subprocess.PIPE,
-                         stdout = nullFile,
-                         stderr = nullFile)
+                         stdin = subprocess.PIPE)
+                         #stdout = nullFile,
+                         #stderr = nullFile)
     p.stdin.write(zcode)
     p.stdin.close()
     if zblock:
