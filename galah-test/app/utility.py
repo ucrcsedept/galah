@@ -15,7 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with Galah. If not, see <http://www.gnu.org/licenses/>.
 
-import universal, Queue, time, zmq, copy
+import universal, Queue, time, zmq, copy, time
+from zmq.utils import jsonapi
 
 def enqueue(zqueue, zitem, zpollTimeout = 5):
     """
@@ -55,13 +56,25 @@ def recv_json(zsocket, ztimeout = None, zignoreExiting = False):
     timed out.
     """
     
+    # WARNING: I used time.clock() here previously but for some reason it was
+    # returning the same value (0.02) every time it was called on my testing
+    # server. Not sure why this is, plan to investigate further.
+    
     if ztimeout != None:
-        startTime = time.clock()
+        startTime = time.time()
     
     while (zignoreExiting or not universal.exiting) and \
-          (ztimeout == None or startTime + ztimeout > time.clock()):
+          (ztimeout == None or startTime + ztimeout > time.time()):
         try:
-            return zsocket.recv_json()
+            msg = zsocket.recv_multipart()
+            
+            # Decode the json in the innermost frame
+            msg[-1] = jsonapi.loads(msg[-1])
+            
+            # If only one frame was recieved simply return that frame
+            if len(msg) == 1: msg = msg[0]
+            
+            return msg
         except zmq.ZMQError:
             pass
     
@@ -94,7 +107,7 @@ def waitForQueue(zqueue, zpollTimeout = 5):
     """
     
     while not universal.exiting and zqueue.full():
-        time.sleep(5)
+        time.sleep(zpollTimeout)
     
     if universal.exiting:
         raise universal.Exiting()

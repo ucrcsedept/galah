@@ -1,8 +1,5 @@
 from mongoengine import *
 
-from assignments import Assignment
-from users import User
-
 class SubTest(EmbeddedDocument):
     score = FloatField()
     maxScore = FloatField()
