@@ -94,7 +94,7 @@ def run():
             # others
             testRequestClone = utility.filterDictionary(
                 testRequest,
-                ["testables", "actions", "config"]
+                ["actions", "config"]
             )
             
             # Socket to receive messages back from the VM
