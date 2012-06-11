@@ -124,11 +124,14 @@ while True:
             sheepQueue.append(sheepAddress)
             
             log.debug("Sheep bleeted")
-        else:
+        elif isinstance(sheepMessage, dict) and "system" in sheepMessage:
             # The sheep sent us environmental information, note it
             sheepEnvironments[sheepAddress] = sheepMessage
             
             log.info("Sheep connected with environment information " + str(sheepMessage))
+        else:
+            # THe sheep sent us a test result
+            log.debug("Sheep sent test result " + str(sheepMessage))
 
     # Will match as many requests to sheep as possible
     while requestQueue and sheepQueue:

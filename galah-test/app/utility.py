@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Galah. If not, see <http://www.gnu.org/licenses/>.
 
-import universal, Queue, time, zmq, copy
+import universal, Queue, time, zmq, copy, time
 from zmq.utils import jsonapi
 
 def enqueue(zqueue, zitem, zpollTimeout = 5):

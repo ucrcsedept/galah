@@ -167,8 +167,8 @@ maintainer.start()
 # Wait until we recieve a SIGINT (a hook was added by universal.py that changes
 # exiting to True when a SIGINT is recieved)
 try:
-    while True:
-        signal.pause()
+    while not app.universal.exiting:
+        time.sleep(5)
 except KeyboardInterrupt:    
     app.universal.exiting = True
 
