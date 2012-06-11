@@ -124,4 +124,4 @@ def run():
             
             pyvz.extirpateContainer(id)
 
-    raise universal.Exiting()b
+    raise universal.Exiting()
