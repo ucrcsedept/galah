@@ -65,8 +65,6 @@ class FileStore:
         return zsource.startswith(FileStore.prefix)    
     
     def load(self, zsource):
-        source = zsource.testables
-        
         if not FileStore.canHandle(zsource):
             raise ValueError("cannot open zsource")
             
