@@ -111,7 +111,7 @@ def run():
             try:
                 # Receive test results from the VM
                 log.debug("Waiting for test results")
-                testResult = utility.recv_json(vm, 60, zignoreExiting = True)
+                testResult = utility.recv_json(vm, 60)
                 
                 log.debug("Test results recieved " + str(testResult))
             except zmq.ZMQError:
