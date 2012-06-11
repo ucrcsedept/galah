@@ -16,7 +16,7 @@
 # along with Galah. If not, see <http://www.gnu.org/licenses/>.
 
 import zmq, logging, pyvz, universal, utility, universal, threading, tempfile, \
-       subprocess, shutil, os.path, sumbit, json
+       subprocess, shutil, os.path, submit, json
 
 # ZMQ constants for timeouts which are inexplicably missing from pyzmq
 ZMQ_RCVTIMEO = 27
