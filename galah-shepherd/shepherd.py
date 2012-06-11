@@ -15,9 +15,10 @@
 # You should have received a copy of the GNU General Public License
 # along with Galah. If not, see <http://www.gnu.org/licenses/>.
 
-import zmq, collections, zmq.utils, logging, json
+import zmq, collections, zmq.utils, logging, json, datetime
 from app.models import *
 from bson.objectid import ObjectId
+from mongoengine import *
 
 # ZMQ constants for timeouts which are inexplicably missing from pyzmq
 ZMQ_RCVTIMEO = 27
@@ -74,7 +75,13 @@ sheepQueue = collections.deque()
 requestQueue = collections.deque()
 
 # A map from sheep to their environment information
-sheepEnvironments = {}
+class SheepInfo:
+    def __init__(self, zenvironment):
+        self.environment = zenvironment
+        
+        self.servicingRequest = None
+        self.beganServicing = None
+sheepInfo = {}
 
 # A map from sheep to the submission they're servicing
 sheepAssignments = {}
@@ -129,26 +136,33 @@ while True:
             log.debug("Sheep bleeted")
         elif isinstance(sheepMessage, dict) and "system" in sheepMessage:
             # The sheep sent us environmental information, note it
-            sheepEnvironments[sheepAddress] = sheepMessage
+            sheepInfo[sheepAddress] = SheepInfo(sheepMessage)
             
             log.info("Sheep connected with environment information " + str(sheepMessage))
         else:
-            # THe sheep sent us a test result
+            # The sheep sent us a test result
             log.debug("Sheep sent test result " + str(sheepMessage))
+            
+            testResult = submissions.TestResult(**sheepMessage)
+            
+            try:
+                testResult.validate()
+            except ValidationError:
+                log.debug("Test result is invalid")
+            
 
     # Will match as many requests to sheep as possible
     while requestQueue and sheepQueue:
         sheepAddress = sheepQueue.popleft()
         request = requestQueue.popleft()
         
-        # Convert the submission into a proper test request
+        # Convert the submission into a proper test request that the sheep knows
+        # how to read
         submission = json.loads(request.pop())
         assignment = Assignment.objects.get(id = ObjectId(submission["assignment"]["value"]))
         
         test_request = {
-            "assignment": submission["assignment"],
             "testables": submission["testables"],
-            "user": submission["user"],
             "testDriver": assignment.testSpecification.testDriver,
             "timeout": assignment.testSpecification.timeout,
             "actions": assignment.testSpecification.actions,
@@ -157,7 +171,12 @@ while True:
         
         request.append(json.dumps(test_request))
         
+        # Send the test request to the sheep
         message = [sheepAddress] + request
         sheep.send_multipart(message)
+        
+        # Note that the sheep is doing work
+        sheepInfo[sheepAddress].servicingRequest = request
+        sheepInfo[sheepAddress].beganServicing = datetime.datetime.now()
         
         log.debug("Sent request to sheep: " + str(message))
