@@ -112,7 +112,10 @@ while True:
         # message picked up any other addresses (from other routers for
         # example).
         try:
-            sheepAddress, sheepMessage = sheep.recv_multipart()
+            rawMessage = sheep.recv_multipart()
+            sheepAddress, sheepEnvelope, sheepMessage = \
+                (rawMessage[0], rawMessage[1:-1], rawMessage[-1])
+                
             sheepMessage = json.loads(sheepMessage)
         except zmq.ZMQError:
             # Timed out
