@@ -149,6 +149,8 @@ while True:
                 testResult.validate()
             except ValidationError:
                 log.debug("Test result is invalid")
+                
+            log.debug("Test result is valid")
             
 
     # Will match as many requests to sheep as possible
