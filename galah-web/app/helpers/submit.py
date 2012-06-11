@@ -61,7 +61,7 @@ class FileStore:
         return FileStore.prefix + directory
     
     @staticmethod
-    def canHandle(self, zsource):
+    def canHandle(zsource):
         return zsource.startswith(FileStore.prefix)    
     
     def load(self, zsource):
