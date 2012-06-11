@@ -149,9 +149,9 @@ while True:
             "config": assignment.testSpecification.config
         }
         
-        submission.append(test_request)
+        request.append(test_request)
         
-        message = [sheepAddress] + submission
+        message = [sheepAddress] + request
         sheep.send_multipart(message)
         
         log.debug("Sent request to sheep: " + str(message))
