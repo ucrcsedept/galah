@@ -149,7 +149,7 @@ while True:
             "config": assignment.testSpecification.config
         }
         
-        request.append(test_request)
+        request.append(json.dumps(test_request))
         
         message = [sheepAddress] + request
         sheep.send_multipart(message)
