@@ -137,7 +137,7 @@ while True:
         
         # Convert the submission into a proper test request
         submission = json.loads(request.pop())
-        assignment = Assignment.objects.get(id = ObjectId(submission["assignment"]))
+        assignment = Assignment.objects.get(id = ObjectId(submission["assignment"]["value"]))
         
         test_request = {
             "assignment": submission["assignment"],
