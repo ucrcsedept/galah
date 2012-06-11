@@ -280,9 +280,9 @@ def execute(zid, zcode, zblock = True):
     """
 
     p = subprocess.Popen([vzctlPath, "exec", str(zid), "-"],
-                         stdin = subprocess.PIPE)
-                         #stdout = nullFile,
-                         #stderr = nullFile)
+                         stdin = subprocess.PIPE,
+                         stdout = nullFile,
+                         stderr = nullFile)
     p.stdin.write(zcode)
     p.stdin.close()
     if zblock:
