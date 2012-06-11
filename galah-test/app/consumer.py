@@ -124,7 +124,7 @@ def run():
 
             log.debug("Test results sent back to shepherd")
 
-        except universal.exiting:
+        except universal.Exiting:
             raise
         except:
             log.exception("Error in Consumer's Main Loop")
