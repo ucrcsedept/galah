@@ -51,7 +51,8 @@ def run():
         try: 
             # Recieve test request from the shepherd
             log.debug("Waiting for test request")
-            testRequest = utility.recv_json(shepherd)
+            addresses = utility.recv_json(shepherd)
+            testRequest = addresses.pop()
     
             # Mark container as dirty before we do anything at all
             pyvz.setAttribute(id, "description", "galah-vm: dirty") 
@@ -91,8 +92,10 @@ def run():
             
             # Only certain fields get passed to the test suite, eliminate the
             # others
-            testRequestClone = utility.filterDictionary(testRequest,
-                                        ["testables", "actions", "config"])
+            testRequestClone = utility.filterDictionary(
+                testRequest,
+                ["testables", "actions", "config"]
+            )
             
             # Socket to receive messages back from the VM
             vm = universal.context.socket(zmq.REQ)
