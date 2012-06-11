@@ -206,10 +206,10 @@ def injectFile(zid, zfrom, zto, zmove = True, zpermissions = "rwx",
             files = [zfrom]
         
         if zmove:
-            check_call(["mv", "-f"] + files + [ztoReal],
+            check_call(["mv", "-rf"] + files + [ztoReal],
                        stdout = nullFile, stderr = nullFile)
         else:
-            check_call(["cp", "-f"] + files + [ztoReal],
+            check_call(["cp", "-rf"] + files + [ztoReal],
                        stdout = nullFile, stderr = nullFile)
 
     # Ensure that the permissions and owner are correct
