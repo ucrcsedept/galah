@@ -116,6 +116,11 @@ def run():
                 log.debug("Test results recieved " + str(testResult))
             except zmq.ZMQError:
                 log.info("Test Suite timed out")
+            
+            # Send the test result back to the shepherd
+            testResult.send_multipart(addresses + [json.dumps(testResult)])
+
+            log.debug("Test results sent back to shepherd")
 
         except universal.exiting:
             raise
