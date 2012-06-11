@@ -56,11 +56,15 @@ def recv_json(zsocket, ztimeout = None, zignoreExiting = False):
     timed out.
     """
     
+    # WARNING: I used time.clock() here previously but for some reason it was
+    # returning the same value (0.02) every time it was called on my testing
+    # server. Not sure why this is, plan to investigate further.
+    
     if ztimeout != None:
-        startTime = time.clock()
+        startTime = time.time()
     
     while (zignoreExiting or not universal.exiting) and \
-          (ztimeout == None or startTime + ztimeout > time.clock()):
+          (ztimeout == None or startTime + ztimeout > time.time()):
         try:
             print "luck"
             msg = zsocket.recv_multipart()
@@ -106,7 +110,7 @@ def waitForQueue(zqueue, zpollTimeout = 5):
     """
     
     while not universal.exiting and zqueue.full():
-        time.sleep(5)
+        time.sleep(zpollTimeout)
     
     if universal.exiting:
         raise universal.Exiting()
