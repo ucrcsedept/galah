@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Galah. If not, see <http://www.gnu.org/licenses/>.
 
-import zmq, json, subprocess, logging, os.path
+import zmq, json, subprocess, logging, os.path, sys
 
 # Port that this VM uses to listen for the test server.
 testServerPort = 6668

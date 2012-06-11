@@ -120,7 +120,7 @@ def run():
                 continue
             
             # Send the test result back to the shepherd
-            testResult.send_multipart(addresses + [json.dumps(testResult)])
+            shepherd.send_multipart(addresses + [json.dumps(testResult)])
 
             log.debug("Test results sent back to shepherd")
 
