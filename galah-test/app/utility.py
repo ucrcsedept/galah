@@ -62,7 +62,9 @@ def recv_json(zsocket, ztimeout = None, zignoreExiting = False):
     while (zignoreExiting or not universal.exiting) and \
           (ztimeout == None or startTime + ztimeout > time.clock()):
         try:
+            print "luck"
             msg = zsocket.recv_multipart()
+            print "duck"
             
             # Decode the json in the innermost frame
             msg[-1] = jsonapi.loads(msg[-1])
@@ -72,6 +74,7 @@ def recv_json(zsocket, ztimeout = None, zignoreExiting = False):
             
             return msg
         except zmq.ZMQError:
+            print "chuck"
             pass
     
     if universal.exiting:
