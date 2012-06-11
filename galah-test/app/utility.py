@@ -16,6 +16,7 @@
 # along with Galah. If not, see <http://www.gnu.org/licenses/>.
 
 import universal, Queue, time, zmq, copy
+from zmq.utils import jsonapi
 
 def enqueue(zqueue, zitem, zpollTimeout = 5):
     """
@@ -64,7 +65,7 @@ def recv_json(zsocket, ztimeout = None, zignoreExiting = False):
             msg = zsocket.recv_multipart()
             
             # Decode the json in the innermost frame
-            msg[-1] = zmq.jsonapi.loads(msg[-1])
+            msg[-1] = jsonapi.loads(msg[-1])
             
             # If only one frame was recieved simply return that frame
             if len(msg) == 1: msg = msg[0]
