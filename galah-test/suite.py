@@ -49,7 +49,7 @@ def main():
     
     driverPath = "/home/tester/testDriver/main"
     if not os.path.exists(driverPath):
-        log.warn("Test driver does not exist.")
+        log.error("Test driver does not exist.")
         
         socket.send_json({"error": "Test driver does not exist."})
         
