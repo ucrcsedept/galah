@@ -83,12 +83,12 @@ context = zmq.Context()
 
 # Socket to send Test Requests to galah-test
 sheep = context.socket(zmq.ROUTER)
-sheep.setsockopt(ZMQ_RCVTIMEO, 1000)
+sheep.setsockopt(ZMQ_RCVTIMEO, 1 * 1000)
 sheep.bind("tcp://*:%d" % cmdOptions.sheepPort)
 
 # Socket to recieve Test Requests from the other components
 outside = context.socket(zmq.ROUTER)
-outside.setsockopt(ZMQ_RCVTIMEO, 1000)
+outside.setsockopt(ZMQ_RCVTIMEO, 1 * 1000)
 outside.bind("tcp://*:%d" % cmdOptions.publicPort)
 
 log.info("Shepherd starting")

@@ -64,12 +64,21 @@ class FileStore:
     def canHandle(self, zsource):
         return zsource.startswith(FileStore.prefix)    
     
-    def load(self, zobject):
-        source = zobject.testables
+    def load(self, zsource):
+        source = zsource.testables
         
-        if not FileStore.canHandle(source):
-            raise ValueError("cannot open zobject")
+        if not FileStore.canHandle(zsource):
+            raise ValueError("cannot open zsource")
             
-        return source[len(FileStore.prefix):]
+        return zsource[len(FileStore.prefix):]
         
+stores = (FileStore, )
+def which(zsource):
+    for i in stores:
+        if i.canHandle(zsource):
+            return i
+            
+    return None
     
+def quickLoad(zsource):
+    return which(zsource)().load(zsource)
