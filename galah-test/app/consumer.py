@@ -51,8 +51,7 @@ def run():
         try: 
             # Recieve test request from the shepherd
             log.debug("Waiting for test request")
-            addresses = utility.recv_multipart(shepherd)
-            testRequest = json.loads(addresses.pop())
+            testRequest = utility.recv_json(shepherd)
     
             # Mark container as dirty before we do anything at all
             pyvz.setAttribute(id, "description", "galah-vm: dirty") 
