@@ -1,4 +1,4 @@
-$def with (assignment, testResults)
+$def with (assignment, submissions)
 $var path: &rarr; <a href="/assignments">assignments</a> &rarr; <a href="/assignments/$assignment.id">$assignment.name</a>
 $var scripts: http://yui.yahooapis.com/3.5.0/build/yui/yui-min.js /static/tabs.js
     <div class="tabs">
@@ -11,15 +11,20 @@ $var scripts: http://yui.yahooapis.com/3.5.0/build/yui/yui-min.js /static/tabs.j
                     <option value="class">Timeline</option>
                 </select>
             </div>
-            $for result in testResults:
+            $for submission in submissions:
                 <div class="submission">
                     <h2>
-                        Test Submission on $timeformat.timeToString(result.timestamp)
-                        <span class="score">$utils.renderScore(result)</span>
+                        Test Submission on $timeformat.timeToString(submission.timestamp)
+                        <span class="score">
+			    $if submission.testResult:
+				$utils.renderScore(submission.testResult)
+			    $else:
+				PENDING
+			</span>
                     </h2>
-		    $if result.subTests:
+		    $if submission.testResult and submission.testResult.subTests
 			<div class="action_list">
-			    $for i in result.subTests:
+			    $for i in submission.testResult.subTests:
 				<div class="action">
 				    <h3>
 					$i.name (${utils.renderScore(i)})
