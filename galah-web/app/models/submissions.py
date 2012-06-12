@@ -35,13 +35,6 @@ class TestResult(EmbeddedDocument):
     meta = {
         "allow_inheritance": False
     }
-    
-    def validate(self):
-        """
-        Performs an additional validation step that ensures no fields except the
-        ones specified exist.
-        
-        """
 
 class Submission(Document):
     assignment = ObjectIdField(required = True)

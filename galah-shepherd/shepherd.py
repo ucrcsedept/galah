@@ -150,7 +150,7 @@ while True:
                 
                 log.debug("Test result is valid.")
             except ValidationError:
-                log.warn("Test result is invalid.")
+                log.warn("Test result is invalid.", exc_info = True)
 
     # Will match as many requests to sheep as possible
     while requestQueue and sheepQueue:
