@@ -145,8 +145,15 @@ while True:
             
             testResult = submissions.TestResult(**sheepMessage)
             
+            # Pull down the submission the TestResult was for
+            submission = Submission.objects.get(id = sheepInfo[sheepAddress])
+            
+            # Add the test result to it
+            submission.testResult = testResult
+            
             try:
-                testResult.validate()
+                # Save the submission to the database
+                submission.save()
                 
                 log.debug("Test result is valid.")
             except ValidationError:
