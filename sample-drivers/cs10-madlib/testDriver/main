@@ -6,7 +6,7 @@ def main():
     spec = json.load(sys.stdin)
     
     driver = MadLibDriver(
-        "../testables", 
+        "testables/", 
         spec.get("actions", []), 
         spec.get("config", {})
     )
@@ -50,13 +50,19 @@ class MadLibDriver:
         
     def run(self):
         if "compile" in self.actions:
+            sub_test = self.compile_code()
+            
             # Compile the students code    
-            MadLibDriver._include_sub_test(self.test_result, self.compile_code())
+            MadLibDriver._include_sub_test(self.test_result, sub_test)
+            
+            if sub_test["score"] == 0:
+                return self.test_result
         else:
             # Everything below this assumes that the code has been compiled. We
             # can't do anything more if we didn't compile it
             return self.test_result
-        
+            
+        assert os.path.exists(os.path.join(self.testables_directory, "main"))
         
         # Execute the student's compiled binary
         self.student_bin = subprocess.Popen(
