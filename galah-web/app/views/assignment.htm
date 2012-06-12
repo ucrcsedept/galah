@@ -22,7 +22,7 @@ $var scripts: http://yui.yahooapis.com/3.5.0/build/yui/yui-min.js /static/tabs.j
 				PENDING
 			</span>
                     </h2>
-		    $if submission.testResult and submission.testResult.subTests
+		    $if submission.testResult and submission.testResult.subTests:
 			<div class="action_list">
 			    $for i in submission.testResult.subTests:
 				<div class="action">
