@@ -110,6 +110,9 @@ class Assignment:
             
             submissionDict = newSubmission.to_mongo()
             
+            # Save the submission to the database
+            newSubmission.save()
+            
             # Send the submission to the shepherd
             shepherd = config.zmqContext.socket(zmq.DEALER)
             shepherd.connect("tcp://%s:%i" % (config.shepherdAddress, config.shepherdPort))
