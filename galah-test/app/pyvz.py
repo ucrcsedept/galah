@@ -213,8 +213,8 @@ def injectFile(zid, zfrom, zto, zmove = True, zpermissions = "rwx",
                        stdout = nullFile, stderr = nullFile)
 
     # Ensure that the permissions and owner are correct
-    check_call(["chown", "0:0", ztoReal], stdout = nullFile, stderr = nullFile)
-    check_call(["chmod", "a=%s" % (zpermissions), ztoReal],
+    check_call(["chown", "-R", "0:0", ztoReal], stdout = nullFile, stderr = nullFile)
+    check_call(["chmod", "-R", "a=%s" % (zpermissions), ztoReal],
                stdout = nullFile, stderr = nullFile)
 
 def runShellScriptFromHost(zid, zscript):
