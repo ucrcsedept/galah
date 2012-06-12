@@ -177,6 +177,52 @@ h3 {
 
 #assignment_details  > h2:first-of-type { margin-top: 0px; }
 
+#filelist {
+    margin-top: 15px;
+}
+
+#uploadFilesButtonContainer, #selectFilesButtonContainer, #overallProgress {
+    display: inline-block;
+}
+
+#overallProgress {
+    float: right;
+}
+
+table {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+tr {
+    display: table-row;
+    vertical-align: inherit;
+    border-color: inherit;
+}
+
+th {
+    background: #D2D7E6;
+    border-bottom: 0;
+    border-top: 0;
+    color: black;
+    font-weight: bold;
+    line-height: 1.3;
+    white-space: nowrap;
+}
+
+td, th {
+    padding: 5px 12px;
+    vertical-align: top;
+}
+
+.yellowBackground {
+    background: #F2E699;
+}
+
+.serverdata {
+    font-size: 0.8em;
+}
+
 .yui3-tab-panel-selected { display: block; }
 
 .yui3-tabview-list, .yui3-tab {
