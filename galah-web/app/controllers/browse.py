@@ -1,4 +1,5 @@
-import web, datetime, pymongo, shutil, hashlib, os.path, config, json
+import web, datetime, pymongo, shutil, hashlib, os.path, config, json, \
+       zmq, StringIO
 from config import view
 from bson.objectid import ObjectId
 
@@ -7,6 +8,73 @@ import app.models as models
 
 from app.models import *
 from app.helpers import *
+
+class SendSubmission:
+    upload_map = {}
+    
+    def POST(self, zassignment):
+        # TODO: This is full of hacky code but might be unavoidable thanks to
+        # web.py. If/when migrating to Django clean this up.
+        
+        # Hack to ensure auth._session doesn't actually do anything (mainly were
+        # worried about it creating an entirely new session because this page
+        # may be requested without cookies).
+        #auth._session._killed = True
+        
+        # Grab the POST data
+        post = web.input(Filedata = "", session_id = None, done = None)
+        
+        # Ensure we we're given a session_id
+        if not post.session_id:
+            return "You are not logged in."
+        
+        # Grab the user's session from their session_id
+        store = web.session.DiskStore("/var/local/galah-web/sessions")
+        session_data = store[post.session_id]
+        
+        # Ensure a user is logged in
+        if "user" not in session_data and session_data["user"]:
+            return "You are not logged in."
+            
+        key = (session_data["user"], zassignment)
+        
+        if key not in SendSubmission.upload_map:
+            newId = ObjectId()
+            
+            SendSubmission.upload_map[key] = {
+                "submission": Submission(
+                    id = newId,
+                    assignment = ObjectId(zassignment),
+                    user = session_data["user"],
+                    timestamp = datetime.datetime.today(),
+                    testables = "file://" + os.path.join("/var/local/galah-web/submissions/", str(newId))
+                )
+            }
+            
+            os.makedirs(os.path.join("/var/local/galah-web/submissions/", str(newId)))
+        
+        import sys
+        print >> sys.stderr, post
+        
+        if post.done == "true":
+            submissionDict = SendSubmission.upload_map[key]["submission"].to_mongo()
+            
+            # Save the submission to the database
+            SendSubmission.upload_map[key]["submission"].save()
+            
+            # Send the submission to the shepherd
+            shepherd = config.zmqContext.socket(zmq.DEALER)
+            shepherd.connect("tcp://%s:%i" % (config.shepherdAddress, config.shepherdPort))
+            shepherd.send(json.dumps(submissionDict, cls = mongoencoder.MongoEncoder))
+        else:
+            # TODO: Massive security vulnerability right here. Can you say "Welcome
+            # to my server? Leave your coat anywere."
+            file = open(os.path.join(SendSubmission.upload_map[key]["submission"].testables[7:], post.filename), "w")
+            
+            # Copy the contents of the uploaded file into the new one
+            shutil.copyfileobj(StringIO.StringIO(post.Filedata), file)
+        
+        return "GOOD"
 
 class Assignments:
     @auth.authenticationRequired
