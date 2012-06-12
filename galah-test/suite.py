@@ -40,7 +40,7 @@ def main():
     
     log.debug("Connected (?) to testServer")
     
-    # Recieve test request from the shepher
+    # Recieve test request from the test server
     log.debug("Waiting for test request")
     testRequest = socket.recv()
     
