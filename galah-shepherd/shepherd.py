@@ -146,7 +146,9 @@ while True:
             testResult = submissions.TestResult(**sheepMessage)
             
             # Pull down the submission the TestResult was for
-            submission = Submission.objects.get(id = sheepInfo[sheepAddress])
+            submission = Submission.objects.get(
+                id = ObjectId(sheepInfo[sheepAddress].servicingRequest["_id"]["value"])
+            )
             
             # Add the test result to it
             submission.testResult = testResult
