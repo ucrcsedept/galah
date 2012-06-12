@@ -186,7 +186,7 @@ while True:
         sheep.send_multipart(message)
         
         # Note that the sheep is doing work
-        sheepInfo[sheepAddress].servicingRequest = request
+        sheepInfo[sheepAddress].servicingRequest = submission
         sheepInfo[sheepAddress].beganServicing = datetime.datetime.now()
         
         log.debug("Sent request to sheep: " + str(message))
