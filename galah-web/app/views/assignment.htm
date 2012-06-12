@@ -1,6 +1,6 @@
 $def with (assignment, submissions)
 $var path: &rarr; <a href="/assignments">assignments</a> &rarr; <a href="/assignments/$assignment.id">$assignment.name</a>
-$var scripts: http://yui.yahooapis.com/3.5.0/build/yui/yui-min.js /static/tabs.js
+$var scripts: /static/yui3/yui/yui-min.js /static/tabs.js /static/uploader.js
     <div class="tabs">
         <div class="tab" id="submissions">
             <h1 style="margin-bottom: 0px">Your Submissions</h1>
@@ -16,33 +16,33 @@ $var scripts: http://yui.yahooapis.com/3.5.0/build/yui/yui-min.js /static/tabs.j
                     <h2>
                         Test Submission on $timeformat.timeToString(submission.timestamp)
                         <span class="score">
-			    $if submission.testResult:
-				$utils.renderScore(submission.testResult)
-			    $else:
-				PENDING
-			</span>
+                            $if submission.testResult:
+                                $utils.renderScore(submission.testResult)
+                            $else:
+                                PENDING
+                        </span>
                     </h2>
-		    $if submission.testResult and submission.testResult.subTests:
-			<div class="action_list">
-			    $for i in submission.testResult.subTests:
-				<div class="action">
-				    <h3>
-					$i.name (${utils.renderScore(i)})
-				    </h3>
-				    $if i.message:
-					<div class="message">$i["message"]</div>
-				    $elif i.messages:
-					<ul class="messages">
-					    $for j in i.messages:
-						<li>$j</li>
-					</ul>
-				</div>
-			</div>
+                    $if submission.testResult and submission.testResult.subTests:
+                        <div class="action_list">
+                            $for i in submission.testResult.subTests:
+                                <div class="action">
+                                    <h3>
+                                        $i.name (${utils.renderScore(i)})
+                                    </h3>
+                                    $if i.message:
+                                        <div class="message">$i["message"]</div>
+                                    $elif i.messages:
+                                        <ul class="messages">
+                                            $for j in i.messages:
+                                                <li>$j</li>
+                                        </ul>
+                                </div>
+                        </div>
                 </div>
             $if not submissions:
                 <div class="attention">(No Submissions Found)</div>
-	</div>
-	<div class="tab" id="assignment_details">
+        </div>
+        <div class="tab" id="assignment_details">
             <h1>Tests</h1>
             $ tests = assignment.tests
             $for i in tests:
@@ -51,13 +51,36 @@ $var scripts: http://yui.yahooapis.com/3.5.0/build/yui/yui-min.js /static/tabs.j
             $if not tests:
                 <div class="attention">(No Test Information Found)</div>
         </div>
-	<div class="tab" id="new_submission">
-	    <h1>Make New Submission</h1>
-	    <form method="post" enctype="multipart/form-data">
-		<div>
-		    <input type="file" name="new_submission" />
+        <div class="tab" id="new_submission">
+            <h1>Make New Submission</h1>
+            <div id="exampleContainer">
+                <div id="uploaderContainer"> 
+                    <div id="selectFilesButtonContainer">
+                    </div> 
+                    <div id="uploadFilesButtonContainer">
+                        <button type="button" id="uploadFilesButton" class="yui3-button" style="width:250px; height:35px;">Send Submission</button>
+                    </div> 
+                    <div id="overallProgress">
+                    </div>
+                </div> 
+
+                <div id="filelist">
+                    <table id="filenames">
+                        <thead>
+                            <tr>
+                                <th>File name</th>
+                                <th>Percent uploaded</th>
+                            </tr>
+			    <tr id="nofiles">
+				<td colspan="4" id="ddmessage">
+				    <strong>No files selected.</strong>
+				</td>
+			    </tr>
+			</thead>
+			<tbody>
+			</tbody>
+		    </table>  
 		</div>
-		<input type="submit" />
-	    </form>
-	</div>
+            </div>
+        </div>
     </div>

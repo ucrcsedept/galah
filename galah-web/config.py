@@ -4,10 +4,14 @@ urls = (
     "/?", "app.controllers.misc.Home",
     "/assignments/?", "app.controllers.browse.Assignments",
     "/assignments/([A-Fa-f0-9]{24})", "app.controllers.browse.Assignment",
+    "/submit/([A-Fa-f0-9]{24})", "app.controllers.browse.SendSubmission",
     "/login", "app.controllers.account.Login",
     "/logout", "app.controllers.account.Logout",
     "/register/([A-Fa-f0-9]{24})", "app.controllers.account.Register"
 )
+
+# Have session cookies visible to client-side scripts
+web.config.session_parameters["httponly"] = False
 
 # Some of the imports may rely on this variable
 app = web.application(urls, globals())
