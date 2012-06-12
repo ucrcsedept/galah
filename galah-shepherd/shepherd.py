@@ -143,6 +143,9 @@ while True:
             # The sheep sent us a test result
             log.debug("Sheep sent test result " + str(sheepMessage))
             
+            for i in range(len(sheepMessage["subTests"])):
+                sheepMessage["subTests"][i] = submissions.SubTest(**sheepMessage["subTests"][i])
+            
             testResult = submissions.TestResult(**sheepMessage)
             
             # Pull down the submission the TestResult was for
