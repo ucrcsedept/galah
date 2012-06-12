@@ -6,7 +6,7 @@ def main():
     spec = json.load(sys.stdin)
     
     driver = MadLibDriver(
-        "../testables", 
+        "testables/", 
         spec.get("actions", []), 
         spec.get("config", {})
     )

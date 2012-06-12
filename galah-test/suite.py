@@ -46,8 +46,8 @@ def main():
     
     log.debug("Running test driver")
     
+    os.chdir("/home/tester")
     
-    driverPath = "/home/tester/testDriver/main"
     if not os.path.exists(driverPath):
         log.error("Test driver does not exist.")
         
@@ -56,7 +56,7 @@ def main():
         sys.exit(1)
     
     # Run testdriver on student script
-    testDriverProc = subprocess.Popen([driverPath],
+    testDriverProc = subprocess.Popen(["testDriver/main"],
                                       stdout = subprocess.PIPE,
                                       stdin = subprocess.PIPE)
     
