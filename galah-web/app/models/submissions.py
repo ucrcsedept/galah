@@ -16,6 +16,7 @@ def rigidDocument(zdocClass):
         
 @rigidDocument
 class SubTest(EmbeddedDocument):
+    name = StringField(required = True)
     score = FloatField()
     maxScore = FloatField()
     message = StringField()
