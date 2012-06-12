@@ -46,7 +46,7 @@ def main():
     
     log.debug("Running test driver")
     
-    os.chdir("/home/tester")
+    os.chdir("/home/tester/")
     
     driverPath = "testDriver/main"
     if not os.path.exists(driverPath):
@@ -59,7 +59,8 @@ def main():
     # Run testdriver on student script
     testDriverProc = subprocess.Popen([driverPath],
                                       stdout = subprocess.PIPE,
-                                      stdin = subprocess.PIPE)
+                                      stdin = subprocess.PIPE,
+                                      cwd = "/home/tester/")
     
     # Test result, JSON object encoded as string
     result = testDriverProc.communicate(testRequest)[0]
