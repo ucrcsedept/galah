@@ -30,7 +30,7 @@ $var scripts: http://yui.yahooapis.com/3.5.0/build/yui/yui-min.js /static/tabs.j
 					$i.name (${utils.renderScore(i)})
 				    </h3>
 				    $if i.message:
-					<div class="message">$:i["messages"]</div>
+					<div class="message">$i["message"]</div>
 				    $elif i.messages:
 					<ul class="messages">
 					    $for j in i.messages:
