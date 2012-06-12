@@ -22,6 +22,7 @@ a {
 
 /* Global Classes */
 .heading { font-family: Helvetica, "Helvetica Neue", Arial, sans-serif; }
+
 .attention {
     font-weight: bold;
     font-size: 14pt;
@@ -134,7 +135,11 @@ h3 {
     
 
 /* Assignment Page */
-#submissions > .submission { margin: 20px 0px 30px 0px; }
+#submissions > .submission {
+    margin: 20px 0px 30px 0px;
+    border-bottom: 1px dashed #2647a0;
+    padding-bottom: 30px;
+}
 
 #submissions > .submission > .action_list {
     background-color: #FFF;
