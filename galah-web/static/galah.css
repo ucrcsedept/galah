@@ -154,6 +154,9 @@ h3 {
 
 #submissions > .submission > .action_list > .action > .messages { margin: 0px; }
 
+#submissions > .submission > .action_list > .action > .message { margin: 5px 10px; }
+
+
 #submissions > .submission > .action_list > .action:first-child > h3
     { margin-top: 0px; }
 
