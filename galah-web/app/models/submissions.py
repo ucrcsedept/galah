@@ -44,5 +44,6 @@ class Submission(Document):
     testResult = EmbeddedDocumentField(TestResult)
     
     meta = {
-        "allow_inheritance": False
+        "allow_inheritance": False,
+        "ordering": ["-timestamp"]
     }
