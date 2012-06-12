@@ -143,14 +143,27 @@ while True:
             # The sheep sent us a test result
             log.debug("Sheep sent test result " + str(sheepMessage))
             
+            for i in range(len(sheepMessage["subTests"])):
+                sheepMessage["subTests"][i] = submissions.SubTest(**sheepMessage["subTests"][i])
+            
             testResult = submissions.TestResult(**sheepMessage)
             
+            # Pull down the submission the TestResult was for
+            submission = Submission.objects.get(
+                id = ObjectId(sheepInfo[sheepAddress].servicingRequest["_id"]["value"])
+            )
+            
+            # Add the test result to it
+            submission.testResult = testResult
+            
             try:
-                testResult.validate()
+                # Save the submission to the database
+                submission.save()
                 
                 log.debug("Test result is valid.")
-            except ValidationError:
-                log.warn("Test result is invalid.")
+            except ValidationError as e:
+                log.warn("Test result is invalid.", exc_info = True)
+                log.debug(str(e.errors))
 
     # Will match as many requests to sheep as possible
     while requestQueue and sheepQueue:
@@ -177,7 +190,7 @@ while True:
         sheep.send_multipart(message)
         
         # Note that the sheep is doing work
-        sheepInfo[sheepAddress].servicingRequest = request
+        sheepInfo[sheepAddress].servicingRequest = submission
         sheepInfo[sheepAddress].beganServicing = datetime.datetime.now()
         
         log.debug("Sent request to sheep: " + str(message))

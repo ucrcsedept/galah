@@ -40,14 +40,15 @@ def main():
     
     log.debug("Connected (?) to testServer")
     
-    # Recieve test request from the shepher
+    # Recieve test request from the test server
     log.debug("Waiting for test request")
     testRequest = socket.recv()
     
     log.debug("Running test driver")
     
+    os.chdir("/home/tester/")
     
-    driverPath = "/home/tester/testDriver/main"
+    driverPath = "testDriver/main"
     if not os.path.exists(driverPath):
         log.error("Test driver does not exist.")
         
@@ -58,7 +59,8 @@ def main():
     # Run testdriver on student script
     testDriverProc = subprocess.Popen([driverPath],
                                       stdout = subprocess.PIPE,
-                                      stdin = subprocess.PIPE)
+                                      stdin = subprocess.PIPE,
+                                      cwd = "/home/tester/")
     
     # Test result, JSON object encoded as string
     result = testDriverProc.communicate(testRequest)[0]
