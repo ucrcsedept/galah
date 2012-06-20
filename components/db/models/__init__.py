@@ -1,5 +1,4 @@
 import mongoengine
-mongoengine.connect("galah")
 
 # If were importing models from another component of galah the users shouldn't
 # (and can't) be loaded.

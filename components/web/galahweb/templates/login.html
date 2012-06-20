@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Login{% endblock %}
+{% block path %}&rarr; <a href="/login">login</a>{% endblock %}
+{% block includes %}
+    <script>
+        YUI().use("node", function(Y) {
+            Y.one("#email").focus()
+        })
+    </script>
+{% endblock %}
+{% block content %}
+    <div id="login" class="modalForm">
+        <form method="post" action=".">
+            {{ form.hidden_tag() }}
+            {{ form.email.label }} {{ form.email() }}
+            {{ form.password.label }} {{ form.password() }}
+            <div class="wrong" style="text-align: center">
+            {% for field in form %}
+                {% for err in field.errors %}
+                <div>{{ err }}</div>
+                {% endfor %}
+            {% endfor %}
+            </div>
+            <input type="submit" value="login">
+        </form>
+    </div>
+{% endblock %}

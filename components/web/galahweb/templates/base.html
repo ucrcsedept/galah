@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+{% macro with_errors(field) %}
+    {% if field.errors %}
+        {% set css_class = 'has_error ' + kwargs.pop('class', '') %}
+        {{ field(class=css_class, **kwargs) }}
+        <ul class="errors">{% for error in field.errors %}<li>{{ error|e }}</li>{% endfor %}</ul>
+    {% else %}
+        {{ field(**kwargs) }}
+    {% endif %}
+{% endmacro %}
+<html>
+<head>
+    <title>{% block title %}{% endblock %} - Galah</title>
+    <link rel="stylesheet" href="/static/galah.css"></link>
+    {%- block includes %}{% endblock -%}
+</head>
+<body>
+<div id="container">
+    <div id="header" class="heading">
+        <span class="logo"><a href="http://localhost:8080/">Galah</a></span>
+        <span class="path">
+            {% block path %}{% endblock %}
+        </span>
+    </div>
+    <div id="topbar">
+    {%- if current_user %}
+        <div>
+            You are logged in as <strong>{{ current_user.id }}</strong> (<a href="/logout">logout</a>)
+        </div>
+    {% else %}
+        <div>
+            You are not logged in (<a href="/login">login</a>)
+        </div>
+    {% endif -%}
+    </div>
+            
+    {%- block content %}{% endblock -%}
+</div>
+</body>
+</html>
