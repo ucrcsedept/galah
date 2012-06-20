@@ -1,5 +1,5 @@
 from galah.db.models import User, Class, Assignment
-from galah.crypto.passcrypt import seal, serialize_seal
+from galah.db.crypto.passcrypt import seal, serialize_seal
 
 ## Users ##
 def create_user(email, password, account_type = "student"):

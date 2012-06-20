@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Assignments{% endblock %}
+{% block path %}&rarr; <a href="/assignments">assignments</a>{% endblock %}
+{% block content %}
+    <div>
+        <label for="sortBy">Sort by</label>
+        <select name="sortBy">
+            <option value="due">Due Date</option>
+            <option value="class">Class</option>
+        </select>
+    </div>
+    <div id="assignment_list">
+    {% for i in assignments %} 
+        <div class="assignment">
+            <div class="title heading">
+                <span class="classButton">{{ i.class_name}}</span> <a href="/assignments/{{ i.id }}">{{ i.name }}</a>
+            </div>
+            <div class="due">due {{ i.due_pretty }}</div>
+        </div>
+    {% endfor %}
+    {% if not assignments %}
+        <div class="assignment">
+            (No Assignments Found)
+        </div>
+    {% endif %}
+    </div>
+{% endblock %}
