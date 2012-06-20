@@ -18,7 +18,7 @@ def rigidDocument(zdocClass):
 class SubTest(EmbeddedDocument):
     name = StringField(required = True)
     score = FloatField()
-    maxScore = FloatField()
+    max_score = FloatField()
     message = StringField()
     messages = ListField(StringField)
 
@@ -28,9 +28,9 @@ class SubTest(EmbeddedDocument):
 
 @rigidDocument
 class TestResult(EmbeddedDocument):
-    subTests = ListField(EmbeddedDocumentField(SubTest))
+    sub_tests = ListField(EmbeddedDocumentField(SubTest))
     score = FloatField()
-    maxScore = FloatField()
+    max_score = FloatField()
     
     meta = {
         "allow_inheritance": False
@@ -41,7 +41,7 @@ class Submission(Document):
     user = StringField(required = True)
     timestamp = DateTimeField(required = True)
     testables = StringField(required = True)
-    testResult = EmbeddedDocumentField(TestResult)
+    test_result = EmbeddedDocumentField(TestResult)
     
     meta = {
         "allow_inheritance": False,
