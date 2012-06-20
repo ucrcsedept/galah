@@ -1,5 +1,5 @@
 from galahweb import app
-from flask.ext.login import login_required, current_user
+from flask.ext.login import current_user
 from galahweb.auth import account_type_required
 from galah.db.models import Class, Assignment
 from galah.db.helpers.pretty import pretty_time_distance

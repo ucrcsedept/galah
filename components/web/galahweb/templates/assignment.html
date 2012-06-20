@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}{{ assignment.name }}{% endblock %}
+{% block path %}&rarr; <a href="/assignments">assignments</a> &rarr; <a href="/assignments/{{ assignment.id }}">{{ assignment.name }}</a>{% endblock %}
+{% block content %}
+    <div id="exampleContainer">
+	<div id="uploaderContainer"> 
+	    <div id="selectFilesButtonContainer">
+	    </div> 
+	    <div id="uploadFilesButtonContainer">
+		<button type="button" id="uploadFilesButton" class="yui3-button" style="width:250px; height:35px;">Send Submission</button>
+	    </div> 
+	    <div id="overallProgress">
+	    </div>
+	</div> 
+
+	<div id="filelist">
+	    <table id="filenames">
+		<thead>
+		    <tr>
+			<th>File name</th>
+			<th>Percent uploaded</th>
+		    </tr>
+		    <tr id="nofiles">
+			<td colspan="4" id="ddmessage">
+			    <strong>No files selected.</strong>
+			</td>
+		    </tr>
+		</thead>
+		<tbody>
+		</tbody>
+	    </table>  
+	</div>
+    </div>
+
+{% for submission in submissions %}
+    <div class="submission">
+	<h2>
+	    Submission on {{ submission.timestamp_pretty }}
+	</h2>
+    </div>
+{% endfor %}
+{% if not submissions %}
+    <div>
+	(No Submissions Yet)
+    </div>
+{% endif %}
+{% endblock %}
