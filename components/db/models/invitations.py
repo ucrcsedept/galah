@@ -2,14 +2,11 @@ from datetime import datetime
 
 from mongoengine import *
 
-from users import User
-
 class Invitation(Document):
     email = EmailField(required = True)
     class_ = ObjectIdField(required = True)
     expires = DateTimeField(required = True)
-    accountType = IntField(choices = range(User.accountTypes.end()),
-                           default = User.accountTypes.student)
+    accountType = StringField(required = True)
     
     meta = {
         "allow_inheritance": False
