@@ -1,6 +1,7 @@
 ## Create the base form ##
 from flask import request, url_for, render_template
 from flaskext.wtf import Form, HiddenField
+from werkzeug.exceptions import NotFound, HTTPException
 
 class RedirectForm(Form):
     next = HiddenField()
@@ -11,9 +12,14 @@ class RedirectForm(Form):
         if not self.next.data:
             self.next.data = request.args.get("next") or request.referrer
         
-        # TODO: Ensure that the target is on this site.
-        #if not route_exists(self.next.data):
-            #self.next.data = ""
+        try:
+            # Will raise an exception if no endpoint exists for the url
+            app.create_url_adapter(request).match(self.next.data)
+        except NotFound:
+            self.next.data = ""
+        except HTTPException:
+            # Any other exceptions are harmless (I think)
+            pass
     
     @property
     def redirect_target(self):
@@ -36,6 +42,7 @@ from flask.ext.login import login_user
 from galahweb.auth import FlaskUser
 from flask import redirect, url_for
 
+@app.route("/login", methods = ["GET", "POST"])
 @app.route("/", methods = ["GET", "POST"])
 def login():
     form = LoginForm()
@@ -53,6 +60,6 @@ def login():
             form.errors["global"] = ["Incorrect email + password combination."]
         else:
             login_user(user)
-            return redirect(form.redirect_target or url_for("assignments"))
+            return redirect(form.redirect_target or url_for("browse_assignments"))
     
     return render_template("login.html", form = form)
