@@ -1,5 +1,5 @@
 from flask import Flask
-app = Flask(__name__)
+app = Flask("galahweb")
 
 # Plug the auth system into our app
 from auth import login_manager

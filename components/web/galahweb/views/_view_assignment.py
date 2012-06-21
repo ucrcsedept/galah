@@ -1,3 +1,10 @@
+## Create the form that takes simple archives ##
+from flaskext.wtf import Form, FileField, validators
+
+class SimpleArchiveForm(Form):
+    archive = FileField('Archive', [validators.Required()])
+
+## The Actual View ##
 from galahweb import app
 from flask.ext.login import current_user
 from galahweb.auth import account_type_required
@@ -7,9 +14,11 @@ from flask import abort, render_template
 from galah.db.models import Assignment, Submission
 from galah.db.helpers.pretty import pretty_time
 
-@app.route("/assignments/<assignment_id>")
+@app.route("/assignments/<assignment_id>/")
 @account_type_required("student")
 def view_assignment(assignment_id):
+    simple_archive_form = SimpleArchiveForm()
+    
     # Convert the assignment in the URL into an ObjectId
     try:
         id = ObjectId(assignment_id)
@@ -31,4 +40,9 @@ def view_assignment(assignment_id):
     for i in submissions:
         i.timestamp_pretty = pretty_time(i.timestamp)
     
-    return render_template("assignment.html", assignment = assignment, submissions = submissions)
+    return render_template(
+        "assignment.html", 
+        assignment = assignment, 
+        submissions = submissions,
+        simple_archive_form = simple_archive_form
+    )
