@@ -50,7 +50,6 @@ def login():
     # If the user's input isn't immediately incorrect (validate_on_submit() will
     # not check if the email and password combo is valid, only that it could be
     # valid)
-    # TODO: Verify this won't accept GET requests
     if form.validate_on_submit():
         # Find the user with the given email
         user = FlaskUser(User.objects.get(email = form.email.data))
