@@ -158,6 +158,9 @@ def upload_submission(assignment_id):
     else:
         # We did not recieve enough information to do anything
         return craft_response(error = "Nothing to do.")
+        
+    # Persist! Otherwise nobody will know what happened this day.
+    new_submission.save()
     
     # Everything seems to have gone well
     return craft_response()
