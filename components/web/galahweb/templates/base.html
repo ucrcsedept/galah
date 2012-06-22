@@ -17,7 +17,7 @@
 <body>
 <div id="container">
     <div id="header" class="heading">
-        <span class="logo"><a href="http://localhost:8080/">Galah</a></span>
+        <span class="logo"><a href="{{ request.url }}">Galah</a></span>
         <span class="path">
             {% block path %}{% endblock %}
         </span>
