@@ -1,7 +1,7 @@
 ## Create the base form ##
 from flask import request, url_for, render_template
 from flaskext.wtf import Form, HiddenField
-from werkzeug.exceptions import NotFound, HTTPException
+from galahweb.util import is_url_on_site
 
 class RedirectForm(Form):
     next = HiddenField()
@@ -12,14 +12,8 @@ class RedirectForm(Form):
         if not self.next.data:
             self.next.data = request.args.get("next") or request.referrer
         
-        try:
-            # Will raise an exception if no endpoint exists for the url
-            app.create_url_adapter(request).match(self.next.data)
-        except NotFound:
+        if not is_url_on_site(app, self.next.data):
             self.next.data = ""
-        except HTTPException:
-            # Any other exceptions are harmless (I think)
-            pass
     
     @property
     def redirect_target(self):
