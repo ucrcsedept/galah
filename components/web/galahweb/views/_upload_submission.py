@@ -158,7 +158,18 @@ def upload_submission(assignment_id):
     else:
         # We did not recieve enough information to do anything
         return craft_response(error = "Nothing to do.")
-        
+    
+    # Determine what files actually got uploaded and save them into the
+    # submission.
+    for root, dirnames, filenames in os.walk(new_submission.testables):
+        for filename in filenames:
+            new_submission.uploaded_filenames.append(
+                os.path.relpath(
+                    os.path.join(root, filename), 
+                    new_submission.testables
+                )
+            )
+    
     # Persist! Otherwise nobody will know what happened this day.
     new_submission.save()
     
