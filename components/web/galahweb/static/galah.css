@@ -48,6 +48,24 @@ a {
     padding-left: 0.1em;
 }
 
+/* Assignment Page */
+#submissions .uploaded_filenames {
+    line-height: 30px;
+}
+
+#submissions .uploaded_filenames > ul {
+    list-style: none;
+    padding: 0px;
+    display: inline;
+}
+
+#submissions .uploaded_filenames > ul > li {
+    padding: 2px;
+    border: 1px solid #ccc;
+    background-color: white;
+    display: inline;
+}
+
 /* Heiarchal Headings */
 h1, h2, h3, h4 { font-family: Helvetica, "Helvetica Neue", Arial, sans-serif; }
 

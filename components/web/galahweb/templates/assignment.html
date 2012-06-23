@@ -18,11 +18,14 @@
 		Submission on {{ submission.timestamp_pretty }}
 	    </h2>
 	    {% if submission.uploaded_filenames %}
-	    <ul class="uploaded_filenames">
-	    {% for i in submission.uploaded_filenames %}
-		<li>{{ i }}</li>
-	    {% endfor %}
-	    </ul>
+	    <div class="uploaded_filenames">
+		<span class="heading">Files:</span>
+		<ul class="uploaded_filenames">
+		{% for i in submission.uploaded_filenames %}
+		    <li>{{ i }}</li>
+		{% endfor %}
+		</ul>
+	    </div>
 	    {% endif %}
 	</div>
     </div>
