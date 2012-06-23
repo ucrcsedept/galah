@@ -9,19 +9,23 @@
     </script>
 {% endblock %}
 {% block content %}
-    <div id="login" class="modalForm">
+    <div id="login">
         <form method="post" action=".">
+            <div class="fields">
             {{ form.hidden_tag() }}
             {{ form.email.label }} {{ form.email() }}
             {{ form.password.label }} {{ form.password() }}
-            <div class="wrong" style="text-align: center">
+            </div>
+            <div class="errors">
             {% for field in form %}
                 {% for err in field.errors %}
                 <div>{{ err }}</div>
                 {% endfor %}
             {% endfor %}
             </div>
-            <input type="submit" value="login">
+            <div class="submit">
+                <input class="submit" type="submit" value="Login">
+            </div>
         </form>
     </div>
 {% endblock %}

@@ -5,14 +5,15 @@
  *     - The ending brace on a line of its own with no indentation.
  *     - Use comment headings where appropriate.
  *     - Each block must be surrounded by a single blank line on both sides.
+ *     - Pixels (px) rather than ems should be used.
  */
 
 #container {
     color: #333;
     font-size: 12pt;
-    padding-left: 100px;
+    padding: 0px 100px;
     font-family: Palatino, Georgia, serif;
-    width: 75%;
+    min-width: 400px;
 }
 
 a { 
@@ -36,7 +37,7 @@ a {
     margin-left: auto;
     background-color: white;
     border: 1px solid #ccc;
-    padding: 0.2em;
+    padding: 4px;
     font-family: Arial, Helvetica, sans-serif;
     margin-bottom: 10px;
 }
@@ -284,60 +285,43 @@ td, th {
 .yui3-tabview-panel { padding: .5em 0px; }
 
 /* Login Page */
-#login { width: 20em; }
-
-#register { width: 30em; }
-
-.modalForm {
+#login {
     border: 1px solid #ccc;
-    padding: 1em;
+    padding: 16px;
     background-color: white;
-    width: 20em;
+    width: 320px;
     
     margin-top: 20px;
     margin-left: auto;
     margin-right: auto;
 }
 
-.modalForm > .description {
-    margin-bottom: 1em;
-}
-
-.modalForm > .description > p { margin: 0em 0em 1em 0em; }
-
-.modalForm > .description > p:last-child { margin: 0px; }
-
-.modalForm > form > input.wrong {
-    border: 2px solid #C00;
-    /*font-family: Impact, Charcoal, sans-serif;
-    margin-left: 5px;
-    font-weight: normal;
-    text-decoration: underline;*/
-}
-
-.modalForm > form > div.wrong {
-    font-family: Impact, Charcoal, sans-serif;
+#login .errors > div {
     color: #c00;
-    margin-bottom: 10px;
 }
 
-.modalForm > form > label {
+#login .fields > label {
     font-family: Helvetica, "Helvetica Neue", Arial, sans-serif;
     margin: 0px 0px 3px 0px;
     cursor: pointer;
     display: block;
 }
 
-.modalForm > form > input {
+#login .fields > input {
     border: 1px solid #333;
     background-color: #F3F3F3;
     margin-bottom: 15px;
     padding: 0.2em;
     font-size: 14pt;
-    width: 95%
+    width: 312px;
 }
 
-.modalForm > form > button { margin: 0px; }
+#login .submit { text-align: center; }
+
+#login .submit > input {
+    width: 275px;
+    height: 33px;
+}
 
 /* Logout Page */
 #logout {
