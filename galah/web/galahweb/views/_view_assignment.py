@@ -6,9 +6,9 @@ class SimpleArchiveForm(Form):
     marked_for_grading = BooleanField("Mark for Grading")
     
 ## The Actual View ##
-from galahweb import app
+from galah.web.galahweb import app
 from flask.ext.login import current_user
-from galahweb.auth import account_type_required
+from galah.web.galahweb.auth import account_type_required
 from bson.objectid import ObjectId
 from bson.errors import InvalidId
 from flask import abort, render_template
