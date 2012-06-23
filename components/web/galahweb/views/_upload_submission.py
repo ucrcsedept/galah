@@ -84,6 +84,8 @@ def upload_submission(assignment_id):
             # otherwise redirect to the correct view.
             if "error" in kwargs:
                 flash(kwargs["error"], category = "error")
+            elif "message" in kwargs:
+                flash(kwags["message"], category = "message")
             else:
                 flash("File(s) uploaded succesfully.", category = "message")
                 
@@ -142,13 +144,15 @@ def upload_submission(assignment_id):
                 abort_new_submission(new_submission)
                 
                 return craft_response(
-                    error = "File had an unrecognized extension."
+                    error = "Uploaded file (%s) had an unrecognized extension."
+                                % archive.filename
                 )
         except subprocess.CalledProcessError:
             abort_new_submission(new_submission)
             
             return craft_response(
-                error = "File could not be opened as an archive."
+                error = "Uploaded file (%s) could not be opened as an archive."
+                            % archive.filename
             )
         finally:
             # Always remove the temporary file we used to store the archive if
@@ -157,7 +161,7 @@ def upload_submission(assignment_id):
                 os.remove(temp_file)
     else:
         # We did not recieve enough information to do anything
-        return craft_response(error = "Nothing to do.")
+        return craft_response(error = "No files were selected for uploading.")
     
     # Determine what files actually got uploaded and save them into the
     # submission.
