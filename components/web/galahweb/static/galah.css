@@ -22,10 +22,10 @@ a {
 }
 
 /* Global Classes */
-.heading { font-family: Helvetica, "Helvetica Neue", Arial, sans-serif; }
+.heading, label { font-family: Helvetica, "Helvetica Neue", Arial, sans-serif; }
 
 /* Top Login Bar */
-#topbar > #login_status, #topbar > #flashes > div{
+#topbar > #login_status, #topbar > #flashes > div {
     display: block;
     border: 1px solid #ccc;
     padding: 4px;
@@ -56,6 +56,28 @@ a {
 }
 
 /* Assignment Page */
+#upload_archive {
+    background-color: white;
+    border: 1px solid #ccc;
+    padding: 5px;
+}
+
+#upload_archive > h2 { margin: 0px 0px 5px 0px; }
+
+#upload_archive input {
+    display: inline-block; 
+}
+
+#upload_archive .simple_file_input {
+    padding: 5px;
+    border: 1px solid #ccc;
+}
+
+#upload_archive #submit_archive {
+    height: 27px;
+    width: 100px;
+}
+
 #submissions .uploaded_filenames {
     line-height: 30px;
 }
