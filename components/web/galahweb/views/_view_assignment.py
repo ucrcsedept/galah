@@ -1,9 +1,10 @@
 ## Create the form that takes simple archives ##
-from flaskext.wtf import Form, FileField, validators
+from flaskext.wtf import Form, FileField, validators, BooleanField
 
 class SimpleArchiveForm(Form):
-    archive = FileField('Archive', [validators.Required()])
-
+    archive = FileField("Archive", [validators.Required()])
+    marked_for_grading = BooleanField("Mark for Grading")
+    
 ## The Actual View ##
 from galahweb import app
 from flask.ext.login import current_user

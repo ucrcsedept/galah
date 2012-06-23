@@ -75,8 +75,6 @@ def upload_submission(assignment_id):
         abort(404)
     
     def craft_response(**kwargs):
-        app.logger.debug(str(kwargs))
-        
         if request.is_xhr:
             # If the request was made via ajax return a JSON object...
             return jsonify(**kwargs)
@@ -104,7 +102,8 @@ def upload_submission(assignment_id):
     new_submission = prepare_new_submission(
         assignment = id,
         user = current_user.id,
-        timestamp = datetime.datetime.now()
+        timestamp = datetime.datetime.now(),
+        marked_for_grading = bool(request.form.get("marked_for_grading"))
     )
     
     # The user is uploading a single archive containing the entire submission
