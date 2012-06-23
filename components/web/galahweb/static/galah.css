@@ -98,191 +98,24 @@ h3 {
 }
 
 /* Assignments Page */
-#assignment_list > .assignment { margin: 20px 0px; }
+#assignments > div { margin: 20px 0px; }
 
-#assignment_list > .assignment > .title {
+#assignments .title {
     font-size: 14pt;
     font-weight: bold;
     border-bottom: 1px solid #CCC;
     margin-bottom: 5px;
 }
 
-#assignment_list > .assignment > .title > .classButton {
+#assignments .class_name {
     font-weight: normal;
     padding: 1px 1px 2px 1px;
     font-size: 75%;
     border: 1px solid #CCC;
     border-width: 1px 1px 0px 1px;
     color: #333;
+    background-color: white;
 }
-
-/* Classes Page */
-#class_list > .class { margin: 20px 0px; }
-
-#class_list > .class > .title {
-    font-size: 14pt;
-    font-weight: bold;
-    border-bottom: 1px solid #CCC;
-    margin-bottom: 5px;
-}
-
-.simple_assignment_list {
-    list-style: none;
-    margin-left: 0.5em;
-    padding-left: 0em;
-}
-
-#class_list > .class > .simple_assignment_list > li { margin-bottom: 0.5em; }
-    
-
-/* Assignment Page */
-#submissions > .submission {
-    margin: 20px 0px 30px 0px;
-    border-bottom: 1px dashed #2647a0;
-    padding-bottom: 30px;
-}
-
-#submissions > .submission > .action_list {
-    background-color: #FFF;
-    border: 1px solid #CCC;
-    padding: 5px;
-}
-
-#submissions > .submission > .action_list > .action > h2 {
-    font-weight: bold;
-    margin: 16px 0px 5px 0px; 
-}
-
-#submissions > .submission > .action_list > .action > .messages { margin: 0px; }
-
-#submissions > .submission > .action_list > .action > .message { margin: 5px 10px; }
-
-
-#submissions > .submission > .action_list > .action:first-child > h3
-    { margin-top: 0px; }
-
-#submissions > .submission > .action_list > .action:last-child > h3
-    { margin-bottom: 0px; }
-
-#submissions > .submission > h2 > .score {
-    float: right;
-    font-weight: bold;
-}
-
-#submissions > .submission > h2 {
-    font-weight: normal;
-    font-size: 14pt;
-    border: none;
-    margin-bottom: 0px;
-}
-
-#assignment_details  > h2:first-of-type { margin-top: 0px; }
-
-#filelist {
-    margin-top: 15px;
-}
-
-#uploadFilesButtonContainer, #selectFilesButtonContainer, #overallProgress {
-    display: inline-block;
-}
-
-#overallProgress {
-    float: right;
-}
-
-table {
-    border-collapse: collapse;
-    width: 100%;
-}
-
-tr {
-    display: table-row;
-    vertical-align: inherit;
-    border-color: inherit;
-}
-
-th {
-    background: #D2D7E6;
-    border-bottom: 0;
-    border-top: 0;
-    color: black;
-    font-weight: bold;
-    line-height: 1.3;
-    white-space: nowrap;
-}
-
-td, th {
-    padding: 5px 12px;
-    vertical-align: top;
-}
-
-.yellowBackground {
-    background: #F2E699;
-}
-
-.serverdata {
-    font-size: 0.8em;
-}
-
-.yui3-tab-panel-selected { display: block; }
-
-.yui3-tabview-list, .yui3-tab {
-    margin: 0;
-    padding: 0;
-    list-style: none;
-}
-
-.yui3-tab {
-    display:inline;
-    vertical-align:bottom;
-    cursor:pointer;
-}
-
-.yui3-tab-label {
-    display:inline-block;
-    padding:6px 10px;
-    position:relative;
-    text-decoration:none;
-    vertical-align:bottom;
-}
-
-.yui3-tabview-list {
-    border:solid #2647a0;
-    border-width:0 0 5px;
-}
-
-.yui3-tab {
-    margin:0 .2em 0 0;
-    padding:1px 0 0;
-}
-
-.yui3-tab-label {
-    font-family: Helvetica, "Helvetica Neue", Arial, sans-serif;
-    background:#e8e8e8;
-    border:solid #a3a3a3;
-    border-width:1px 1px 0;
-    color:#000;
-    cursor:pointer;
-    font-size:85%;
-    padding:.3em .75em;
-    text-decoration:none;
-    margin-right: 0.5em;
-}
-
-.yui3-tab-label:hover, .yui3-tab-label:focus {
-    background:#bfdaff;
-    outline:0;
-}
-
-.yui3-tab-selected .yui3-tab-label, .yui3-tab-selected .yui3-tab-label:focus,
-    .yui3-skin-sam .yui3-tab-selected .yui3-tab-label:hover {
-    background:#2647a0;
-    color:#fff;
-}
-
-.yui3-tab-selected .yui3-tab-label { border-color:#243356; }
-
-.yui3-tabview-panel { padding: .5em 0px; }
 
 /* Login Page */
 #login {
@@ -323,53 +156,7 @@ td, th {
     height: 33px;
 }
 
-/* Logout Page */
-#logout {
-    text-align: center;
-}
-
-#logout > div:first-child {
-    margin-top: 1em;
-    font-size: 18pt;
-    font-weight: bold;
-}
-
-/* Class Page */
-.checkbox_list { margin: 1em 0em; }
-
-/* misc */
-.attributeList .attribute {
-    font-weight: bold;
-    float: left;
-    text-transform: capitalize;
-    width: 5em;
-}
-
-/* Overlay Look/Feel */
-.yui3-overlay-content {
-    background-color: #ECEFFB;  
-    border: 1px solid #9EA8C6;
-    border-radius: 3px;
-    box-shadow: 3px 3px 5px rgba(0, 0, 0, 0.25);
-}
-
-.yui3-overlay-content .yui3-widget-hd {
-    background-color: #B6BFDA;  
-    color: #30418C;
-    font-size: 120%;
-    font-weight: bold;
-    padding: 0.2em 0.5em 0.3em;
-    border-radius: 2px 2px 0 0;
-}
-
-.yui3-overlay-content .yui3-widget-bd { padding: 0.4em 0.6em 0.5em; }
-
-.yui3-overlay-content .yui3-widget-ft {
-    background-color:#DFE3F5;
-    padding: 0.4em 0.6em 0.5em;
-    border-radius: 0 0 2px 2px;
-}
-
+/* Background Gradient */
 body 
 {
     /* Gradient*/
