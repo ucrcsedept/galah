@@ -25,14 +25,21 @@ a {
 .heading { font-family: Helvetica, "Helvetica Neue", Arial, sans-serif; }
 
 /* Top Login Bar */
-#topbar > div {
+#topbar > #login_status, #topbar > #flashes > div{
     display: block;
-    background-color: white;
     border: 1px solid #ccc;
     padding: 4px;
     font-family: Arial, Helvetica, sans-serif;
     margin-bottom: 10px;
 }
+
+#topbar > #login_status { background-color: white; }
+
+#topbar > #flashes { text-align: center; }
+
+#topbar > #flashes > .message { background-color: #FFFFD5; }
+
+#topbar > #flashes > .error { background-color: #FDBEB5; }
 
 /* Global Header */
 #header { font-weight: bold; }
