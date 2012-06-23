@@ -9,11 +9,11 @@
             <option value="class">Class</option>
         </select>
     </div>
-    <div id="assignment_list">
+    <div id="assignments">
     {% for i in assignments %} 
-        <div class="assignment">
+        <div>
             <div class="title heading">
-                <span class="classButton">{{ i.class_name}}</span> <a href="/assignments/{{ i.id }}">{{ i.name }}</a>
+                <span class="class_name">{{ i.class_name}}</span> <a href="/assignments/{{ i.id }}">{{ i.name }}</a>
             </div>
             <div class="due">due {{ i.due_pretty }}</div>
         </div>
