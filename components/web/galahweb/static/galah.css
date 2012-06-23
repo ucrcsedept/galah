@@ -130,12 +130,12 @@ h3 {
     color: #c00;
 }
 
-#login .fields > label {
-    font-family: Helvetica, "Helvetica Neue", Arial, sans-serif;
+#login .fields > .heading {
     margin: 0px 0px 3px 0px;
     cursor: pointer;
-    display: block;
 }
+
+#login .fields > .heading > .error { color: red; }
 
 #login .fields > input {
     border: 1px solid #333;
