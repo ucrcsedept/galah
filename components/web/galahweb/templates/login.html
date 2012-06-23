@@ -13,15 +13,20 @@
         <form method="post" action=".">
             <div class="fields">
             {{ form.hidden_tag() }}
-            {{ form.email.label }} {{ form.email() }}
-            {{ form.password.label }} {{ form.password() }}
+            <div class="heading">
+                {{ form.email.label }}
+                {% if form.email.errors %}
+                <span class="error">({{ form.email.errors[0] }})</span>
+                {% endif %}
             </div>
-            <div class="errors">
-            {% for field in form %}
-                {% for err in field.errors %}
-                <div>{{ err }}</div>
-                {% endfor %}
-            {% endfor %}
+            {{ form.email() }}
+            <div class="heading">
+                {{ form.password.label }}
+                {% if form.password.errors %}
+                <span class="error">({{ form.password.errors[0] }})</span>
+                {% endif %}
+            </div>
+            {{ form.password() }}
             </div>
             <div class="submit">
                 <input class="submit" type="submit" value="Login">

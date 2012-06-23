@@ -34,7 +34,7 @@ from galah.db.crypto.passcrypt import check_seal, deserialize_seal
 from galah.db.models import User
 from flask.ext.login import login_user
 from galahweb.auth import FlaskUser
-from flask import redirect, url_for
+from flask import redirect, url_for, flash
 
 @app.route("/login", methods = ["GET", "POST"])
 @app.route("/", methods = ["GET", "POST"])
@@ -50,9 +50,11 @@ def login():
         
         # Check if the entered password is correct
         if not check_seal(form.password.data, deserialize_seal(str(user.seal))):
-            form.errors["global"] = ["Incorrect email + password combination."]
+            flash("Incorrect email or password.", category = "error")
         else:
             login_user(user)
             return redirect(form.redirect_target or url_for("browse_assignments"))
+    
+    app.logger.debug(str(form.errors))
     
     return render_template("login.html", form = form)
