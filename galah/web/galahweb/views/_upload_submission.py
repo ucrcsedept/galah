@@ -1,20 +1,20 @@
 ## The Actual View ##
-from galahweb import app
+from galah.web.galahweb import app
 from flask.ext.login import current_user
-from galahweb.auth import account_type_required
+from galah.web.galahweb.auth import account_type_required
 from bson.objectid import ObjectId
 from bson.errors import InvalidId
 from flask import abort, render_template, request, flash, redirect, jsonify, \
                   url_for
 from galah.db.models import Submission, Assignment
-from galahweb.util import is_url_on_site
+from galah.web.galahweb.util import is_url_on_site
 import os.path
 import subprocess
 import datetime
 import shutil
 import tempfile
 
-SUBMISSION_DIRECTORY = "/var/local/galah.web/submissions/"
+SUBMISSION_DIRECTORY = "/var/local/galah.web.galahweb/submissions/"
 assert SUBMISSION_DIRECTORY[0] == "/" # Directory must be given as absolute path
 
 def prepare_new_submission(**kwargs):

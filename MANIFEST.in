@@ -1,0 +1,2 @@
+recursive-include galah/web/galahweb/templates *
+recursive-include galah/web/galahweb/static *

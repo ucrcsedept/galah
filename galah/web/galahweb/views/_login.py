@@ -1,7 +1,7 @@
 ## Create the base form ##
 from flask import request, url_for, render_template
 from flaskext.wtf import Form, HiddenField
-from galahweb.util import is_url_on_site
+from galah.web.galahweb.util import is_url_on_site
 
 class RedirectForm(Form):
     next = HiddenField()
@@ -29,11 +29,11 @@ class LoginForm(RedirectForm):
     password = PasswordField('Password', [validators.Required()])
 
 # The actual view
-from galahweb import app
+from galah.web.galahweb import app
 from galah.db.crypto.passcrypt import check_seal, deserialize_seal
 from galah.db.models import User
 from flask.ext.login import login_user
-from galahweb.auth import FlaskUser
+from galah.web.galahweb.auth import FlaskUser
 from flask import redirect, url_for, flash
 
 @app.route("/login", methods = ["GET", "POST"])
