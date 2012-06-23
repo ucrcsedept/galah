@@ -17,6 +17,13 @@
 	    <h2>
 		Submission on {{ submission.timestamp_pretty }}
 	    </h2>
+	    {% if submission.uploaded_filenames %}
+	    <ul class="uploaded_filenames">
+	    {% for i in submission.uploaded_filenames %}
+		<li>{{ i }}</li>
+	    {% endfor %}
+	    </ul>
+	    {% endif %}
 	</div>
     </div>
 {% endfor %}
