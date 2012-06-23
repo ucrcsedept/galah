@@ -24,42 +24,14 @@ a {
 /* Global Classes */
 .heading { font-family: Helvetica, "Helvetica Neue", Arial, sans-serif; }
 
-.attention {
-    font-weight: bold;
-    font-size: 14pt;
-    margin: 10px 0px;
-}
-
 /* Top Login Bar */
 #topbar > div {
-    /*float: right;*/
     display: block;
-    margin-left: auto;
     background-color: white;
     border: 1px solid #ccc;
     padding: 4px;
     font-family: Arial, Helvetica, sans-serif;
     margin-bottom: 10px;
-}
-
-/* Home */
-#home > #navbar > a > .heading {
-    font-size: 18pt;
-    font-weight: bold;
-}
-
-#home > #navbar > a > span {
-    display: block;
-}
-
-#home > #navbar > a {
-    display: block;
-    margin: 20px 40px;
-    padding: 10px;
-    background-color: #E8E8E8;
-    border: 1px solid #333;
-    text-align: center;
-    color: #333;
 }
 
 /* Global Header */
