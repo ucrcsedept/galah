@@ -24,14 +24,25 @@
     </div>
     <div id="topbar">
     {%- if current_user %}
-        <div>
+        <div id="login_status">
             You are logged in as <strong>{{ current_user.id }}</strong> (<a href="/logout">logout</a>)
         </div>
     {% else %}
-        <div>
+        <div id="login_status">
             You are not logged in (<a href="/login">login</a>)
         </div>
     {% endif -%}
+        {% with messages = get_flashed_messages(with_categories = True) %}
+        {% if messages %}
+        <div id="flashes">
+            {% for category, message in messages %}
+            <div class="{{ category }}">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
     </div>
             
     {%- block content %}{% endblock -%}
