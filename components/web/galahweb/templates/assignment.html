@@ -2,12 +2,19 @@
 {% block title %}{{ assignment.name }}{% endblock %}
 {% block path %}&rarr; <a href="/assignments">assignments</a> &rarr; <a href="/assignments/{{ assignment.id }}">{{ assignment.name }}</a>{% endblock %}
 {% block content %}
-    <div class="tab">
+    <div class="tab" id="upload_archive">
 	<h2>Upload an Archive</h2>
+	<div>
+	    This is the basic file uploader. The only accepted file types are
+	    tar files (<em>.tar</em> and <em>.tar.gz</em>) and zip files
+	    (<em>.zip</em>).
+	</div>
 	<form method="post" action="upload" enctype="multipart/form-data">
 	    {{ simple_archive_form.hidden_tag() }}
-	    {{ simple_archive_form.archive.label }} {{ simple_archive_form.archive() }}
-	    <input type="submit" value="Upload">
+	    <div style="text-align: center;">
+		{{ simple_archive_form.archive(class_ = "simple_file_input") }}
+		<input id="submit_archive" type="submit" value="Upload">
+	    </div>
 	</form>
     </div>
     
