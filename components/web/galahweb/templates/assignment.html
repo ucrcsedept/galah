@@ -18,15 +18,14 @@
 	</form>
     </div>
     
-{% for submission in submissions %}
     <div id="submissions">
+    {% for submission in submissions %}
 	<div class="submission">
-	    <h2>
+	    <h3>
 		Submission on {{ submission.timestamp_pretty }}
-	    </h2>
+	    </h3>
 	    {% if submission.uploaded_filenames %}
 	    <div class="uploaded_filenames">
-		<span class="heading">Files:</span>
 		<ul class="uploaded_filenames">
 		{% for i in submission.uploaded_filenames %}
 		    <li>{{ i }}</li>
@@ -35,8 +34,8 @@
 	    </div>
 	    {% endif %}
 	</div>
+    {% endfor %}
     </div>
-{% endfor %}
 {% if not submissions %}
     <div>
 	(No Submissions Yet)

@@ -95,6 +95,13 @@ a {
     display: inline;
 }
 
+#submissions h3 {
+    margin-bottom: 4px;
+    background-color: #4F81BD;
+    color: white;
+    padding: 4px;
+}
+
 /* Heiarchal Headings */
 h1, h2, h3, h4 { font-family: Helvetica, "Helvetica Neue", Arial, sans-serif; }
 
