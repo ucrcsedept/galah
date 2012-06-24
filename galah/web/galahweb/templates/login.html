@@ -2,10 +2,10 @@
 {% block title %}Login{% endblock %}
 {% block path %}&rarr; <a href="/login">login</a>{% endblock %}
 {% block includes %}
-    <script>
-        YUI().use("node", function(Y) {
-            Y.one("#email").focus()
-        })
+    <script type="text/javascript">
+    $(function() {
+        $("#email").focus()
+    })
     </script>
 {% endblock %}
 {% block content %}
