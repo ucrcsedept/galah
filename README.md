@@ -17,8 +17,13 @@ for the students and teachers to see the results of the testing.
 Licensed under the GPLv3. When I get around to it I will stick licensing
 notices all over the place.
 
-## Deadline
+## News
 
-I have ceased attending my university this quarter to finish this, thus I am
-working on a tight deadline. If you can help me you have no idea how
-appreciative I would be. This project is my (John Sullivan's) life right now.
+### Sunday, June 24, 2012
+
+Version 0.1beta1 has been released. This release contains only galah.web and
+galah.db running without support for interacting with the testing backend. All
+functionality needed for deploying in a production environment is there and
+most of it is documented.
+
+Exciting day today :).
