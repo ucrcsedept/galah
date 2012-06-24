@@ -13,6 +13,13 @@
     <title>{% block title %}{% endblock %} - Galah</title>
     <link rel="stylesheet" href="/static/galah.css"></link>
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+    <script type="text/javascript">
+    $(function() {
+        var flashes = $("#flashes").children()
+        flashes.hide()
+        flashes.fadeIn(600)
+    })
+    </script>
     {%- block includes %}{% endblock -%}
 </head>
 <body>
