@@ -1,1 +1,1 @@
-from galahweb import *
+from galahweb import app
