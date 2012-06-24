@@ -46,10 +46,14 @@ def login():
     # valid)
     if form.validate_on_submit():
         # Find the user with the given email
-        user = FlaskUser(User.objects.get(email = form.email.data))
+        try:
+            user = FlaskUser(User.objects.get(email = form.email.data))
+        except User.DoesNotExist:
+            user = None
         
         # Check if the entered password is correct
-        if not check_seal(form.password.data, deserialize_seal(str(user.seal))):
+        if not user or \
+           not check_seal(form.password.data, deserialize_seal(str(user.seal))):
             flash("Incorrect email or password.", category = "error")
         else:
             login_user(user)
