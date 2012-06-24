@@ -14,7 +14,7 @@ import datetime
 import shutil
 import tempfile
 
-SUBMISSION_DIRECTORY = "/var/local/galah.web.galahweb/submissions/"
+SUBMISSION_DIRECTORY = "/var/local/galah.web/submissions/"
 assert SUBMISSION_DIRECTORY[0] == "/" # Directory must be given as absolute path
 
 def prepare_new_submission(**kwargs):
