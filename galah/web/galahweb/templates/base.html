@@ -15,9 +15,10 @@
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
     <script type="text/javascript">
     $(function() {
-        var flashes = $("#flashes").children()
-        flashes.hide()
-        flashes.fadeIn(600)
+        $(".attention").each(function(index) {
+            $(this).hide()
+            $(this).delay(200*index).fadeIn(300)
+        })
     })
     </script>
     {%- block includes %}{% endblock -%}
@@ -44,9 +45,11 @@
         {% if messages %}
         <div id="flashes">
             {% for category, message in messages %}
-            <div class="{{ category }}">
+            {% if category in ("error", "message") %}
+            <div class="attention {{ category }}">
                 {{ message }}
             </div>
+            {% endif %}
             {% endfor %}
         </div>
         {% endif %}
