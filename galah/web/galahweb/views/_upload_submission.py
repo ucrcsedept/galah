@@ -95,7 +95,7 @@ def upload_submission(assignment_id):
                     "view_assignment", 
                     assignment_id = assignment_id
                 )
-                
+            
             return redirect(redirect_to)
     
     # Craft a new submission
@@ -176,5 +176,8 @@ def upload_submission(assignment_id):
     # Persist! Otherwise nobody will know what happened this day.
     new_submission.save()
     
+    # Communicate to the next page what submission was just added.
+    flash(new_submission.id, category = "new_submission")
+    
     # Everything seems to have gone well
-    return craft_response()
+    return craft_response(new_submission = new_submission)

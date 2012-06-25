@@ -11,7 +11,7 @@ from flask.ext.login import current_user
 from galah.web.galahweb.auth import account_type_required
 from bson.objectid import ObjectId
 from bson.errors import InvalidId
-from flask import abort, render_template
+from flask import abort, render_template, get_flashed_messages
 from galah.db.models import Assignment, Submission
 from galah.db.helpers.pretty import pretty_time
 
@@ -45,5 +45,6 @@ def view_assignment(assignment_id):
         "assignment.html", 
         assignment = assignment, 
         submissions = submissions,
-        simple_archive_form = simple_archive_form
+        simple_archive_form = simple_archive_form,
+        new_submissions = [v for k, v in get_flashed_messages(with_categories = True) if k == "new_submission"]
     )

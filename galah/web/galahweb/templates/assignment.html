@@ -21,7 +21,11 @@
     
     <div id="submissions">
     {% for submission in submissions %}
+    {% if submission.id in new_submissions %}
+	<div class="submission attention">
+    {% else %}
 	<div class="submission">
+    {% endif %}
 	    <h3>
 		Submission on {{ submission.timestamp_pretty }}
 	    </h3>
