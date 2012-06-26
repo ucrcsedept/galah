@@ -4,3 +4,4 @@ from _view_assignment import view_assignment
 from _upload_submission import upload_submission
 from _logout import logout
 from _error import error
+from _home import home
