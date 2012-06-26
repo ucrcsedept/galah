@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}{{ error_description }}{% endblock %}
+{% block path %}&rarr; <a href="/error">Oh No!</a>{% endblock %}
+{% block content %}
+    <div id="error_page">
+        <div id="ascii_art"><pre>{{ art_piece.art }}</pre></div>
+        <div id="error_message" class="heading">{{ message|safe }}</div>
+        <div id="ascii_art_author">ASCII Art by {{ art_piece.author }}</div>
+    </div>
+{% endblock %}
