@@ -22,7 +22,12 @@ if "LOG_HANDLERS" in app.config:
     # Add any handlers the user wants
     for i in app.config["LOG_HANDLERS"]:
         app.logger.addHandler(i)
-            
+
+import mongoengine
+if "MONGODB" in app.config:
+    mongoengine.connect(app.config["MONGODB"])
+else:
+    mongoengine.connect("galah")
 
 # Plug the auth system into our app
 from auth import login_manager
