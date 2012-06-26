@@ -19,6 +19,20 @@ notices all over the place.
 
 ## News
 
+### Monday, June 25, 2012
+
+Changing version scheme to something a little less ridiculous. I don't really
+know what my version scheme was before but now I'll follow more standard
+conventions. MajorVersion.MinorVersion.Patch[rc#], in other words what you'd
+expect. I will refer to the previous release 0.1beta1 as 0.1rc1 from now on.
+The next "release" will be 0.1rc2. When I feel confident that a lot of the
+bugs are worked out we'll release 0.1.
+
+Each component of Galah is pretty distinct and decoupled from the other
+componenets of Galah but I don't want to make multiple repositories for each
+unless each one grows very large in size (which they shouldn't), so there
+won't be seperate versioning for each component.
+
 ### Sunday, June 24, 2012
 
 Version 0.1beta1 has been released. This release contains only galah.web and
