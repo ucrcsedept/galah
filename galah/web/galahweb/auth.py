@@ -31,7 +31,7 @@ def account_type_required(account_type):
             if not current_user.is_authenticated() or \
                current_user.account_type != account_type:
                 flash("Only %s users are permitted to access this page."
-                          % account_type)
+                          % account_type, category = "error")
                 return current_app.login_manager.unauthorized()
                 
             return func(*args, **kwargs)
