@@ -15,7 +15,38 @@ for the students and teachers to see the results of the testing.
 ## License
 
 Licensed under the GPLv3. When I get around to it I will stick licensing
-notices all over the place.
+notices all over the place.i
+
+## Credit and Contributors
+
+For now this will contain all the contributors and credits due as it is a small
+list. It may move to a proper COLLABORATORS.txt file or some other device
+later.
+
+Thank you all of you!
+
+### Ben Kellogg
+
+Helped considerably with galah.sheep, wouldn't have been able to finish it
+without him.
+
+### UCR Staff & Faculty
+
+Victor Hill, Kris Miller and Brian Linard have all been
+enormously helpful in getting Galah off the ground and into production.
+That's not even mentioning the other staff and faculty at UCR who have
+shared their knowledge with me. Thank you everyone who has helped me grow
+as a software engineer.
+
+Victor Hill was also the one who initially concieved of Galah, I just
+implemented it.
+
+### Christopher Johnson
+
+Has a very nice site at www.chris.com that I got some ASCII birds from. I would
+like to grab some more in the future so the error pages can generate a random
+ASCII bird every time you go them. Now error pages are fun too!
+
 
 ## News
 
