@@ -55,6 +55,27 @@ a {
     padding-left: 0.1em;
 }
 
+/* Error Page */
+#error_page > #ascii_art {
+    font-family: "Courier New", Courier, monospace;
+    color: black;
+    font-size: 18pt;
+    white-space: pre;
+    text-align: center;
+    font-weight: bold;
+}
+
+#error_page > #error_message {
+    font-size: 24pt;
+    font-weight: bold;
+    text-align: center;
+}
+
+#error_page > #ascii_art_author {
+    text-align: center;
+    margin-top: 30px;
+}
+
 /* Assignment Page */
 #upload_archive {
     background-color: white;
