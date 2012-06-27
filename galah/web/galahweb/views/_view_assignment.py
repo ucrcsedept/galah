@@ -24,15 +24,17 @@ def view_assignment(assignment_id):
     try:
         id = ObjectId(assignment_id)
     except InvalidId:
-        app.logger.debug("Invalid ID")
+        app.logger.debug("Invalid ID (%s)" % str(id))
         
         abort(404)
     
     # Retrieve the assignment
-    # TODO: Add error handling here.. Not sure what exception it throws, trying
-    # it out made me think there are errors in mongoengine as I got an
-    # AttributeError
-    assignment = Assignment.objects.get(id = id)
+    try:
+        assignment = Assignment.objects.get(id = id)
+    except Assignment.DoesNotExist:
+        app.logger.debug("Non-extant ID (%s)" % str(id))
+        
+        abort(404)
     
     # Get all of the submissions for this assignmnet
     submissions = list(Submission.objects(user = current_user.id, assignment = id))
