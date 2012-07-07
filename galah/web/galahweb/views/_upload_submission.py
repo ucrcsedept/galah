@@ -13,6 +13,7 @@ import subprocess
 import datetime
 import shutil
 import tempfile
+import datetime
 
 SUBMISSION_DIRECTORY = "/var/local/galah.web/submissions/"
 assert SUBMISSION_DIRECTORY[0] == "/" # Directory must be given as absolute path
@@ -69,10 +70,12 @@ def upload_submission(assignment_id):
         abort(404)
     
     # Ensure that an assignment with the provided id actually exists
-    if Assignment.objects(id = id).limit(1).count() == 0:
+    try:
+        assignment = Assignment.objects.get(id = id)
+    except Assignment.DoesNotExist:
         app.logger.debug("Invalid ID: Assignment does not exist.")
         
-        abort(404)
+        abort(404)        
     
     def craft_response(**kwargs):
         if request.is_xhr:
@@ -97,6 +100,13 @@ def upload_submission(assignment_id):
                 )
             
             return redirect(redirect_to)
+    
+    # Check if the assignment's cutoff date has passed
+    if assignment.due_cutoff < datetime.datetime.today():
+        return craft_response(
+            error = "The cutoff date has already passed, your submission was "
+                    "not accepted."
+        )
     
     # Craft a new submission
     new_submission = prepare_new_submission(

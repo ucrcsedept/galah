@@ -21,6 +21,7 @@ class TestSpecification(EmbeddedDocument):
 class Assignment(Document):
     name = StringField(required = True)
     due = DateTimeField(required = True)
+    due_cutoff = DateTimeField()
     for_class = ObjectIdField(required = True)
     
     # English description of each of the tests

@@ -2,6 +2,7 @@
 {% block title %}{{ assignment.name }}{% endblock %}
 {% block path %}&rarr; <a href="/assignments">assignments</a> &rarr; <a href="/assignments/{{ assignment.id }}">{{ assignment.name }}</a>{% endblock %}
 {% block content %}
+    {% if not cutoff_time %}
     <div class="tab" id="upload_archive">
 	<h2>Upload an Archive</h2>
 	<div>
@@ -17,6 +18,11 @@
 	    </div>
 	</form>
     </div>
+    {% else %}
+    <div style="text-align: center;">
+	No more submissions will be accepted (cutoff was {{ cutoff_time }}).
+    </div>
+    {% endif %}
     
     <div id="submissions">
     {% for submission in submissions %}
