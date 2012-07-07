@@ -3,7 +3,6 @@ from flaskext.wtf import Form, FileField, validators, BooleanField
 
 class SimpleArchiveForm(Form):
     archive = FileField("Archive", [validators.Required()])
-    marked_for_grading = BooleanField("Mark for Grading")
     
 ## The Actual View ##
 from galah.web.galahweb import app
@@ -13,7 +12,8 @@ from bson.objectid import ObjectId
 from bson.errors import InvalidId
 from flask import abort, render_template, get_flashed_messages
 from galah.db.models import Assignment, Submission
-from galah.db.helpers.pretty import pretty_time
+from galah.db.helpers.pretty import pretty_time, pretty_time_distance
+import datetime
 
 @app.route("/assignments/<assignment_id>/")
 @account_type_required("student")
@@ -43,8 +43,16 @@ def view_assignment(assignment_id):
     for i in submissions:
         i.timestamp_pretty = pretty_time(i.timestamp)
     
+    # Figure out if submissions should be allowed
+    cutoff_time = None
+    if assignment.due_cutoff < datetime.datetime.today():
+        cutoff_time = pretty_time_distance(
+            datetime.datetime.today(), assignment.due_cutoff
+        )
+    
     return render_template(
-        "assignment.html", 
+        "assignment.html",
+        cutoff_time = cutoff_time,
         assignment = assignment, 
         submissions = submissions,
         simple_archive_form = simple_archive_form,

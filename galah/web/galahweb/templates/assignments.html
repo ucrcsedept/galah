@@ -8,7 +8,9 @@
             <div class="title heading">
                 <span class="class_name">{{ i.class_name}}</span> <a href="/assignments/{{ i.id }}">{{ i.name }}</a>
             </div>
-            <div class="due">due {{ i.due_pretty }}</div>
+            <div class="due">
+                due {{ i.due_pretty }} {% if i.due_cutoff_pretty %}(cutoff {{ i.due_cutoff_pretty }}){% endif %}
+            </div>
         </div>
     {% endfor %}
     {% if not assignments %}

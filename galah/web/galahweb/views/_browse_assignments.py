@@ -15,7 +15,7 @@ def browse_assignments():
     # Get all of the assignments in those classes
     assignments = list(Assignment.objects(
         for_class__in = current_user.classes
-    ).only("name", "due", "for_class"))
+    ).only("name", "due", "due_cutoff", "for_class"))
 
     # Add a property to all the assignments so the template can display their
     # respective class easier. Additionally, add a plain text version of the
@@ -31,5 +31,12 @@ def browse_assignments():
             i.class_name = "DNE"
             
         i.due_pretty = pretty_time_distance(now, i.due)
+        
+        print vars(i)
+        
+        if i.due_cutoff:
+            i.due_cutoff_pretty = pretty_time_distance(now, i.due_cutoff)
+        else:
+            i.due_cutoff_pretty = None
         
     return render_template("assignments.html", assignments = assignments)
