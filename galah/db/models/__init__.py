@@ -19,3 +19,6 @@ from assignments import Assignment
 
 import submissions
 from submissions import Submission
+
+import archives
+from archives import Archive
