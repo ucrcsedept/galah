@@ -86,9 +86,45 @@ def call(api_name, *args, **kwargs):
     # Nothing bad happened, go ahead and return what the server sent back
     return request.text
 
+import sys
+from optparse import OptionParser, make_option
+def parse_arguments(args = sys.argv[1:]):
+    option_list = [
+        make_option(
+            "--user", "-u", metavar = "USERNAME",
+            help = "The username to authenticate with. The password should be "
+                   "available in the evironmental variable GALAH_PASSWORD "
+                   "if this option is used."
+        )
+    ]
+
+    parser = OptionParser(
+        description = "Command line interface to Galah for use by instructors "
+                      "and administrators.",
+        option_list = option_list,
+        epilog = "Example usage in bash: GALAH_PASSWORD=test python "
+                 "api_client.py -u john@doe.com get_submissions "
+                 "SOME0ASSIGNMENT0ID"
+    )
+
+    return parser.parse_args(args)
+
+import os
 if __name__ == "__main__":
-    print login("jsull003@ucr.edu", "muffin")
+    options, args = parse_arguments()
+
+    if options.user:
+        try:
+            print login(options.user, os.environ.get("GALAH_PASSWORD"))
+        except RuntimeError:
+            print "Could not log in with provided user name and password. "\
+                  "(Did you remember to set GALAH_PASSWORD?)"
+
+            exit(1)
     
     # This will fail because duckface is not a proper email, but you should get
-    # passed the authentication...
-    print call("create_user", "duckface", "muffin")
+    # past the authentication...
+    try:
+        print call(*args)
+    except RuntimeError as e:
+        print str(e)
