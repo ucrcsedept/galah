@@ -103,6 +103,12 @@ def parse_arguments(args = sys.argv[1:]):
             "--config", "-c", metavar = "FILE",
             help = "The configuration file to use. By default "
                    "~/.galah/config/api_client.config is used if available."
+        ),
+        make_option(
+            "--shell", "-s", action = "store_true",
+            help = "If specified, you will be placed in an interactive "
+                   "bash shell that will allow you to execute api commands as "
+                   "if they were regular system commands."
         )
     ]
 
@@ -117,7 +123,7 @@ def parse_arguments(args = sys.argv[1:]):
 
     options, args = parser.parse_args(args)
 
-    if len(args) == 0:
+    if not options.shell and len(args) == 0:
         parser.error("At least one argument must be supplied.")
 
     return (options, args)
@@ -129,9 +135,52 @@ def parse_configuration(config_file):
 
     return config
 
+def exec_to_shell():
+    # The name of the currently execute script (ex: api_client.py)
+    script_location, script_name = os.path.split(__file__)
+    script_location = os.path.abspath(script_location)
+
+    # Retrieve all of the available commands from the server
+    api_info = json.loads(call("get_api_info"))
+    commands = [i["name"] for i in api_info]
+
+    rcfile_path = os.path.join(os.environ["HOME"], ".galah/tmp/shellrc")
+
+    rcfile = None
+    if "HOME" in os.environ:
+        try:
+            os.makedirs(os.path.dirname(rcfile_path))
+        except OSError:
+            pass
+
+        try:
+            rcfile = open(rcfile_path, "w")
+        except IOError:
+            pass
+
+    if rcfile == None:
+        rcfile, rcfile_path = tempfile.mkstemp()
+
+        print rcfile_path
+        sys.stdout.flush()
+
+    print >> rcfile, "PATH=%s:$PATH" % script_location
+
+    for i in commands:
+        print >> rcfile, 'alias %s="%s %s"' % (i, script_name, i)
+
+    # Manually ensure that there's nothing buffered as no cleanup will occur
+    # when we exec below.
+    rcfile.flush()
+
+    os.execlp("bash", "bash", "--rcfile", rcfile_path)
+
 import os
 if __name__ == "__main__":
     options, args = parse_arguments()
+
+    if options.shell:
+        exec_to_shell()
 
     if options.config:
         try:
