@@ -47,7 +47,13 @@ def api_call():
         if type(request.json) is list and request.json:
             # The API call's name is the first item in the list, so use that
             # to grab the actual APICall object we need.
-            api_call = api_calls[request.json.pop(0)]
+            api_name = request.json.pop(0)
+
+            try:
+                api_call = api_calls[api_name]
+            except KeyError:
+                raise RuntimeError("%s is not a recognized API call."
+                        % api_name)
             
             return Response(
                 response = api_call(current_user, *request.json),

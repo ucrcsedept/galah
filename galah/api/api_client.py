@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+
+# The default configuration settings
 config = {
     "api_url": "http://localhost:5000/api/call",
     "login_url": "http://localhost:5000/api/login"
@@ -95,6 +98,11 @@ def parse_arguments(args = sys.argv[1:]):
             help = "The username to authenticate with. The password should be "
                    "available in the evironmental variable GALAH_PASSWORD "
                    "if this option is used."
+        ),
+        make_option(
+            "--config", "-c", metavar = "FILE",
+            help = "The configuration file to use. By default "
+                   "~/.galah/config/api_client.config is used if available."
         )
     ]
 
@@ -107,24 +115,80 @@ def parse_arguments(args = sys.argv[1:]):
                  "SOME0ASSIGNMENT0ID"
     )
 
-    return parser.parse_args(args)
+    options, args = parser.parse_args(args)
+
+    if len(args) == 0:
+        parser.error("At least one argument must be supplied.")
+
+    return (options, args)
+
+def parse_configuration(config_file):
+    import json
+
+    config = json.load(config_file)
+
+    return config
 
 import os
 if __name__ == "__main__":
     options, args = parse_arguments()
 
-    if options.user:
+    if options.config:
         try:
-            print login(options.user, os.environ.get("GALAH_PASSWORD"))
-        except RuntimeError:
-            print "Could not log in with provided user name and password. "\
-                  "(Did you remember to set GALAH_PASSWORD?)"
+            config_file = open(options.config)
+
+            config.update(parse_configuration(config_file))
+        except IOError:
+            exit("File '%s' could not be opened for reading." % config_file)
+    else:
+        try:
+            config_file = open(os.path.join(
+                os.environ["HOME"], ".galah/config/api_client.config"
+            ))
+
+            config.update(parse_configuration(config_file))
+        except (IOError, KeyError):
+            pass
+
+    user = options.user or config.get("user")
+    password = os.environ.get("GALAH_PASSWORD") or config.get("password")
+
+    if user and not password:
+        exit(
+            "Username specified but no password given (did you forget to set "
+            "GALAH_PASSWORD?)."
+        )
+
+    if user and password:
+        try:
+            login(user, password)
+
+            print "--Logged in as %s--" % user
+        except requests.exceptions.ConnectionError as e:
+            print >> sys.stderr, "Could not connect with the given url '%s':" \
+                    % config["login_url"]
+            print >> sys.stderr, "\t" + str(e)
 
             exit(1)
+        except RuntimeError:
+            print >> sys.stderr, "Could not log in with provided user name " \
+                  "and password. (Did you remember to set GALAH_PASSWORD?)"
+
+            exit(1)
+    else:
+        print "--Not logged in--"
     
     # This will fail because duckface is not a proper email, but you should get
     # past the authentication...
     try:
-        print call(*args)
+        try:
+            print call(*args)
+        except requests.exceptions.ConnectionError as e:
+            print >> sys.stderr, "Could not connect with the given url '%s':" \
+                    % config["api_url"]
+            print >> sys.stderr, "\t" + str(e)
+
+            exit(1)
+
     except RuntimeError as e:
         print str(e)
