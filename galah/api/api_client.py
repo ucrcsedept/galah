@@ -136,7 +136,7 @@ def parse_configuration(config_file):
     return config
 
 def exec_to_shell():
-    # The name of the currently execute script (ex: api_client.py)
+    # The name of the currently executing script (ex: api_client.py)
     script_location, script_name = os.path.split(__file__)
     script_location = os.path.abspath(script_location)
 
@@ -164,10 +164,15 @@ def exec_to_shell():
         print rcfile_path
         sys.stdout.flush()
 
+    # Add the location of the api client to the PATH
     print >> rcfile, "PATH=%s:$PATH" % script_location
 
+    # Add aliases for each command that just wrap the api client
     for i in commands:
         print >> rcfile, 'alias %s="%s %s"' % (i, script_name, i)
+
+    # Change the prompt a little bit so users know their in a modified shell
+    print >> rcfile, 'PS1="\\[\033[1;34m\\](Galah) $PS1\\[\033[0m\\]"'
 
     # Manually ensure that there's nothing buffered as no cleanup will occur
     # when we exec below.
