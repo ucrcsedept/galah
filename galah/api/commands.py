@@ -61,17 +61,22 @@ class APICall(object):
         # Only pass the current user to the function if the function wants it
         if len(self.argspec[0]) != 0 and self.argspec[0][0] == "current_user":
             return str(self.wrapped_function(current_user, *args, **kwargs))
-        else:
+        else: 
             return str(self.wrapped_function(*args, **kwargs))
 
-def api_call(allowed = None):
+from decorator import decorator
+
+def _api_call(allowed = None):
     """Decorator that wraps a function with the :class: APICall class."""
     
     if isinstance(allowed, basestring):
         allowed = (allowed, )
-    
-    def wrapped(func):
-        return APICall(func, allowed)
+
+    @decorator
+    def wrapped(func, *args, **kwargs):
+        _api_call = APICall(func, allowed)
+
+        return _api_call(*args, **kwargs)
         
     return wrapped
 
@@ -151,7 +156,7 @@ def _to_datetime(time):
         )
         
 ## Below are the actual API calls ##
-@api_call()
+@_api_call()
 def get_api_info():
     # This function should be memoized
     
@@ -180,7 +185,7 @@ def get_api_info():
 
 from galah.db.crypto.passcrypt import serialize_seal, seal
 from mongoengine import OperationError
-@api_call("admin")
+@_api_call("admin")
 def create_user(email, password, account_type = "student",
                 send_receipt = False):
     """Creates a user with the given credentials. Be very careful executing this
@@ -223,7 +228,7 @@ def create_user(email, password, account_type = "student",
     
     return "Success! %s created." % _user_to_str(new_user)
 
-@api_call(("admin", "teacher"))
+@_api_call(("admin", "teacher"))
 def find_user(current_user, email_contains = "", account_type = "",
               enrolled_in = ""):
     query = {}
@@ -255,7 +260,7 @@ def find_user(current_user, email_contains = "", account_type = "",
     return "%d user(s) found matching query {%s}.\n\t%s" % \
             (len(matches), query_description, result_string)
 
-@api_call(("admin", "teacher"))
+@_api_call(("admin", "teacher"))
 def user_info(current_user, email):
     user = _get_user(email, current_user)
 
@@ -268,7 +273,7 @@ def user_info(current_user, email):
     else:
         return "%s is enrolled in:\n\t%s" % (_user_to_str(user), class_list)
 
-@api_call("admin")
+@_api_call("admin")
 def delete_user(current_user, email):
     """Deletes a user with the given email. **This is irreversable.**
 
@@ -284,7 +289,7 @@ def delete_user(current_user, email):
         
     return "Success! %s deleted." % _user_to_str(to_delete)
     
-@api_call(("admin", "teacher"))
+@_api_call(("admin", "teacher"))
 def find_class(current_user, name_contains = "", instructor = ""):
     """
     Finds a classes or classes that match the given query and displays
@@ -324,7 +329,7 @@ def find_class(current_user, name_contains = "", instructor = ""):
     return "%s teaching %d class(es) with '%s' in their name.\n\t%s" % \
             (instructor_string, len(matches), name_contains, result_string)
 
-@api_call(("admin", "teacher"))
+@_api_call(("admin", "teacher"))
 def enroll_student(current_user, email, enroll_in):
     """Enrolls a student in a given class. May be used on teachers to assign
     them to classes.
@@ -358,7 +363,7 @@ def enroll_student(current_user, email, enroll_in):
         _user_to_str(user), _class_to_str(the_class)
     )
 
-@api_call("admin")
+@_api_call("admin")
 def assign_teacher(current_user, email, assign_to):
     """Assigns a teacher to teach a particular course. Alias of enroll_student.
 
@@ -370,7 +375,7 @@ def assign_teacher(current_user, email, assign_to):
 
     return enroll_student(current_user, email, assign_to)
 
-@api_call(("admin", "teacher"))
+@_api_call(("admin", "teacher"))
 def drop_student(current_user, email, drop_from):
     """Drops a student (or un-enrolls) a student from a given class. May be
     used on teachers to un-assign them from classes.
@@ -404,7 +409,7 @@ def drop_student(current_user, email, drop_from):
         _user_to_str(user), _class_to_str(the_class)
     )
 
-@api_call("admin")
+@_api_call("admin")
 def create_class(name):
     """Creates a class with the given name.
 
@@ -421,7 +426,7 @@ def create_class(name):
     
     return "Success! %s created." % _class_to_str(new_class)
 
-@api_call("admin")
+@_api_call("admin")
 def delete_class(to_delete):
     """Deletes a class and all assignments assigned to it.
 
@@ -453,7 +458,7 @@ def delete_class(to_delete):
             % _class_to_str(the_class)) + \
             "\n\t".join(_assignment_to_str(i) for i in assignments)
 
-@api_call(("admin", "teacher"))
+@_api_call(("admin", "teacher"))
 def create_assignment(current_user, name, due, for_class):
     """Creates an assignment.
 
@@ -488,7 +493,7 @@ def create_assignment(current_user, name, due, for_class):
     
     return "Success! %s created." % _assignment_to_str(new_assignment)
 
-@api_call(("admin", "teacher"))
+@_api_call(("admin", "teacher"))
 def modify_assignment(current_user, id, name = "", due = "", for_class = ""):
     """Modifies an existing assignment.
 
@@ -544,7 +549,7 @@ def modify_assignment(current_user, id, name = "", due = "", for_class = ""):
     return "Success! %s changed to %s." % \
             (old_assignment_string, _assignment_to_str(assignment))
 
-@api_call(("admin", "teacher"))
+@_api_call(("admin", "teacher"))
 def delete_assignment(current_user, id):
     """Deletes an assignment.
 
@@ -631,7 +636,7 @@ def tar_tasks():
         archive.save()
         
 
-@api_call(("admin", "teacher"))
+@_api_call(("admin", "teacher"))
 def get_submissions(current_user, assignment, email = None):
     """Creates an archive of students' submissions that a teacher or admin
     can download.
