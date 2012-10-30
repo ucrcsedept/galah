@@ -1,6 +1,6 @@
 ## Create the base form ##
 from flask import request, url_for, render_template
-from flaskext.wtf import Form, HiddenField
+from flask.ext.wtf import Form, HiddenField
 from galah.web.galahweb.util import is_url_on_site
 
 class RedirectForm(Form):
@@ -21,7 +21,7 @@ class RedirectForm(Form):
 
 ## Create the login form ##
 from flask import redirect
-from flaskext.wtf import Form, TextField, PasswordField, validators
+from flask.ext.wtf import Form, TextField, PasswordField, validators
 from galah.db.models import User
 
 class LoginForm(RedirectForm):
