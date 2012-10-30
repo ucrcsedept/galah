@@ -1,5 +1,5 @@
 ## Create the form that takes simple archives ##
-from flaskext.wtf import Form, FileField, validators, BooleanField
+from flask.ext.wtf import Form, FileField, validators, BooleanField
 
 class SimpleArchiveForm(Form):
     archive = FileField("Archive", [validators.Required()])

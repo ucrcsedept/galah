@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name = "galah",
-    version = "0.1beta1",
+    version = "0.1beta2",
     packages = find_packages( 
         exclude = [
             "galah.sheep*", 
@@ -25,7 +25,8 @@ setup(
         "Flask-Login>=0.1.3", 
         "Flask-WTF>=0.6",
         "WTForms>=1.0.1",
-        "mongoengine>=0.6.9"
+        "mongoengine>=0.6.9",
+        "decorator>=3.4.0"
     ],
 
     package_data = {
