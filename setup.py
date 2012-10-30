@@ -26,7 +26,8 @@ setup(
         "Flask-WTF>=0.6",
         "WTForms>=1.0.1",
         "mongoengine>=0.6.9",
-        "decorator>=3.4.0"
+        "decorator>=3.4.0",
+        "requests>=0.14.1"
     ],
 
     package_data = {
