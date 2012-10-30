@@ -699,8 +699,11 @@ def get_submissions(current_user, assignment, email = None):
                 % (str(new_archive.id), current_jobs, str(new_archive.id)))
 
 
-
-api_calls = dict((k, v) for k, v in globals().items() if isinstance(v, APICall))
+from types import FunctionType
+api_calls = dict(
+    (k, v) for k, v in globals().items()
+        if isinstance(v, FunctionType) and not k.startswith("_")
+)
 
 if __name__ == "__main__":
     import json
