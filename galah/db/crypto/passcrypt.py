@@ -17,7 +17,7 @@ def hash(password, algorithm, salt, cost_factor, **kwargs):
     """
     
     if algorithm == "pbkdf2":
-        return pbkdf2.pbkdf2_bin(password, salt, cost_factor, **kwargs)
+        return pbkdf2.pbkdf2_bin(str(password), salt, cost_factor, **kwargs)
     else:
         raise ValueError("algorithm: Specified algorithm is not recognized.")
 
@@ -51,7 +51,7 @@ def check_seal(password, seal):
     # Create the hash of the password we will check against the seal. Note its
     # important that password is a string (not unicode) because ord() needs to
     # work with it.
-    check_hash = hash(str(password), seal.algorithm, seal.salt, seal.cost_factor)
+    check_hash = hash(password, seal.algorithm, seal.salt, seal.cost_factor)
     
     return safeStrCmp(check_hash, seal.hash)
     
