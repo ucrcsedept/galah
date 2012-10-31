@@ -22,14 +22,14 @@ def pretty_timedelta(zdelta):
         days = zdelta.days % 30
         stringParts.append("in")
     
-    months = days / 30
+    months = abs(zdelta.days) / 30
     hours = zdelta.seconds / (60 * 60)
     minutes = (zdelta.seconds % (60 * 60)) / 60
     seconds = (zdelta.seconds % 60)
     
     # Add the months part
     if months != 0:
-        return str(months) + plural_if(" month", months)
+        return "in more than " + str(months) + plural_if(" month", months)
     
     # Add the days part
     if days != 0:
