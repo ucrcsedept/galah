@@ -1,5 +1,7 @@
 # Galah
 
+**Documentation for galah.api available at https://galah-api.readthedocs.org/en/latest/!**
+
 ## What is Galah?
 
 Galah is a teaching utility that automatically analyzes students' code as
