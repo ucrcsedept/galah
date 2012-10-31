@@ -6,6 +6,7 @@ from bson.errors import InvalidId
 from galah.db.models import *
 import json
 from collections import namedtuple
+from mongoengine import ValidationError
 
 #: An anonymous admin user useful when accessing this module from the local
 #: system.
@@ -72,13 +73,10 @@ def _api_call(allowed = None):
     if isinstance(allowed, basestring):
         allowed = (allowed, )
 
-    @decorator
-    def wrapped(func, *args, **kwargs):
-        _api_call = APICall(func, allowed)
+    def inner(func):
+        return APICall(func, allowed)
 
-        return _api_call(*args, **kwargs)
-        
-    return wrapped
+    return inner
 
 ## Some useful low level functions ##
 def _get_user(email, current_user):
@@ -107,15 +105,13 @@ def _assignment_to_str(assignment):
 
 def _get_class(query, instructor = None):
     try:
-        query_dict = {"name__icontains": ObjectId(query)}
+        query_dict = {"id": ObjectId(query)}
         if instructor:
             query_dict["id__in"] = instructor.classes
 
         # Check if the user provided a valid ObjectId
         return Class.objects.get(**query_dict)
-    except Class.DoesNotExist:
-        raise RuntimeError("Class with ID %s does not exist." % query)
-    except InvalidId:
+    except (Class.DoesNotExist, InvalidId):
         pass
 
     query_dict = {"name__icontains": query}
@@ -152,7 +148,7 @@ def _to_datetime(time):
         return datetime.datetime.strptime(time, "%m/%d/%Y %H:%M:%S")
     except (OverflowError, ValueError):
         raise ValueError(
-            "Could not convert the %s into a time object." % repr(time)
+            "Could not convert %s into a time object." % repr(time)
         )
         
 ## Below are the actual API calls ##
@@ -186,35 +182,7 @@ def get_api_info():
 from galah.db.crypto.passcrypt import serialize_seal, seal
 from mongoengine import OperationError
 @_api_call("admin")
-def create_user(email, password, account_type = "student",
-                send_receipt = False):
-    """Creates a user with the given credentials. Be very careful executing this
-    API as the password may be momentarilly visible in a ps listing. Ensure you
-    are in a secure terminal.
-
-    Also, if the Galah webserver is not set up to use HTTPS, you should take
-    effort to make sure you're on the same network as Galah.
-    
-    :param email: The email the user will use to sign in.
-    
-    :param password: The users password, it will be immediately hashed (unless
-                     **send_receipt** is True in which case it will send an
-                     email to the user containing their password).
-
-    :param account_type: The account type. Current available options are
-                         student, teacher, or admin. Multiple account types are
-                         not legal.
-
-    :param send_receipt: If True the given email will be sent an email
-                         containing their credentials.
-    :type send_receipt: bool
-
-    :raises RuntimeError: If the user could not be created.
-
-    :raises SMTPException: If an email receipt could not be sent.
-    
-    """
-
+def create_user(email, password, account_type = "student"):
     new_user = User(
         email = email, 
         seal = serialize_seal(seal(password)), 
@@ -227,6 +195,33 @@ def create_user(email, password, account_type = "student",
         raise RuntimeError("A user with that email already exists.")
     
     return "Success! %s created." % _user_to_str(new_user)
+
+@_api_call("admin")
+def reset_password(current_user, email, new_password):
+    the_user = _get_user(email, current_user)
+
+    the_user.seal = serialize_seal(seal(new_password))
+
+    the_user.save()
+
+    return "Success! Password for %s succesfully reset." \
+                % _user_to_str(the_user)
+
+@_api_call("admin")
+def modify_user(current_user, email, account_type):
+    the_user = _get_user(email, current_user)
+
+    old_user_string = _user_to_str(the_user)
+
+    the_user.account_type = account_type
+
+    try:
+        the_user.save()
+    except ValidationError:
+        raise RuntimeError("%s is not a valid account type." % account_type)
+
+    return "Success! %s has been retyped as a %s" \
+                % (old_user_string, account_type)
 
 @_api_call(("admin", "teacher"))
 def find_user(current_user, email_contains = "", account_type = "",
@@ -274,15 +269,7 @@ def user_info(current_user, email):
         return "%s is enrolled in:\n\t%s" % (_user_to_str(user), class_list)
 
 @_api_call("admin")
-def delete_user(current_user, email):
-    """Deletes a user with the given email. **This is irreversable.**
-
-    :param email: The user-to-be-deleted's email.
-
-    :raises RuntimeError: If the user could not be deleted
-
-    """
-    
+def delete_user(current_user, email):    
     to_delete = _get_user(email, current_user)
 
     to_delete.delete()
@@ -290,32 +277,15 @@ def delete_user(current_user, email):
     return "Success! %s deleted." % _user_to_str(to_delete)
     
 @_api_call(("admin", "teacher"))
-def find_class(current_user, name_contains = "", instructor = ""):
-    """
-    Finds a classes or classes that match the given query and displays
-    information on them. Instructor will default to the current user, meaning
-    by default only classes you are teaching will be displayed (this is not the
-    case for admins).
-    
-    :param name_contains: A part of (or the whole) name of the class. Case
-                          insensitive.
-
-    :param instructor: An instructor for the class. Defaults to the current
-                       user (unless you are an admin). "any" may be specified
-                       to search all classes.
-    
-    :raises RuntimeError: If the database could not be queried.
-                          
-    """
-
-    if not instructor and current_user.account_type != "admin":
+def find_class(current_user, name_contains = "", enrollee = ""):
+    if not enrollee and current_user.account_type != "admin":
         query = {"id__in": current_user.classes}
         instructor_string = "You are"
-    elif instructor == "any" or current_user.account_type == "admin":
+    elif enrollee == "any" or current_user.account_type == "admin":
         query = {}
         instructor_string = "Anyone is"
     else:
-        the_instructor = _get_user(instructor, current_user)
+        the_instructor = _get_user(enrollee, current_user)
         query = {"id__in": the_instructor.classes}
         instructor_string = _user_to_str(the_instructor) + " is"
         
@@ -331,18 +301,6 @@ def find_class(current_user, name_contains = "", instructor = ""):
 
 @_api_call(("admin", "teacher"))
 def enroll_student(current_user, email, enroll_in):
-    """Enrolls a student in a given class. May be used on teachers to assign
-    them to classes.
-
-    :param email: The student's email.
-    
-    :param enroll_in: Part of the name (case-insensitive) or the ID of the
-                      class to enroll the student in.
-
-    :raises RuntimeError: If the user could not be enrolled.
-
-    """
-    
     user = _get_user(email, current_user)
 
     if current_user.account_type != "admin" and \
@@ -365,31 +323,10 @@ def enroll_student(current_user, email, enroll_in):
 
 @_api_call("admin")
 def assign_teacher(current_user, email, assign_to):
-    """Assigns a teacher to teach a particular course. Alias of enroll_student.
-
-    :param email: The teacher's email.
-
-    :param assign_to: The course to assign the teacher to.
-
-    """
-
     return enroll_student(current_user, email, assign_to)
 
 @_api_call(("admin", "teacher"))
-def drop_student(current_user, email, drop_from):
-    """Drops a student (or un-enrolls) a student from a given class. May be
-    used on teachers to un-assign them from classes.
-
-    :param email: The student's email.
-
-    :param drop_from: The ID or name of the class to drop the student from.
-
-    :returns: None
-
-    :raises RuntimeError: If the student could not be dropped.
-
-    """
-    
+def drop_student(current_user, email, drop_from):    
     if current_user.account_type == "admin":
         the_class = _get_class(drop_from)
     else:
@@ -409,39 +346,59 @@ def drop_student(current_user, email, drop_from):
         _user_to_str(user), _class_to_str(the_class)
     )
 
+@_api_call(("admin", "teacher"))
+def unassign_teacher(current_user, email, drop_from):
+    return drop_student(current_user, email, drop_from)
+
+@_api_call(("admin", "teacher"))
+def class_info(for_class):
+    the_class = _get_class(for_class)
+
+    assignments = Assignment.objects(for_class = the_class.id)
+    if assignments:
+        assignments_string = "\n\t".join(
+            _assignment_to_str(i) for i in assignments
+        )
+    else:
+        assignments_string = "(No assignments)"
+
+    return _class_to_str(the_class) + " has assignments:\n\t" + \
+            assignments_string
+
 @_api_call("admin")
 def create_class(name):
-    """Creates a class with the given name.
-
-    :param name: The name of the class to create.
-
-    :returns: The newly created class object.
-
-    :raises RuntimeError: If the class could not be created.
-
-    """
-
     new_class = Class(name = name)
     new_class.save()
     
     return "Success! %s created." % _class_to_str(new_class)
 
 @_api_call("admin")
+def modify_class(the_class, name):
+    if not name:
+        raise RuntimeError("name cannot be empty.")
+
+    the_class = _get_class(the_class)
+
+    old_class_string = _class_to_str(the_class)
+
+    the_class.name = name
+
+    the_class.save()
+
+    return "Success! %s has been renamed to '%s'" % (old_class_string, name)
+
+@_api_call("admin")
 def delete_class(to_delete):
-    """Deletes a class and all assignments assigned to it.
-
-    :param id: The ID of the class to delete.
-
-    :returns: None
-
-    :raises RuntimeError: If the class could not be deleted.
-
-    """
-
     the_class = _get_class(to_delete)
         
     # Get all of the assignments for the class
     assignments = list(Assignment.objects(for_class = the_class.id))
+
+    if assignments:
+        assignments_string = \
+            "\n\t".join(_assignment_to_str(i) for i in assignments)
+    else:
+        assignments_string = "(No assignments found)"
 
     # Then delete them
     Assignment.objects(for_class = the_class.id).delete()
@@ -454,67 +411,52 @@ def delete_class(to_delete):
         
     the_class.delete()
     
-    return ("Success! %s deleted, and all of its assignments:\n\t"
-            % _class_to_str(the_class)) + \
-            "\n\t".join(_assignment_to_str(i) for i in assignments)
+    return ("Success! %s deleted, and all of its assignments:\n\t%s"
+                % (_class_to_str(the_class), assignments_string))
 
 @_api_call(("admin", "teacher"))
-def create_assignment(current_user, name, due, for_class):
-    """Creates an assignment.
+def create_assignment(current_user, name, due, for_class, due_cutoff = ""):
+    # The attributes of the assignmnet we're creating
+    atts = {"name": name}
 
-    :param name: The name of the assignment.
+    atts["due"] = _to_datetime(due)
 
-    :param due: The due date of the assignmet, ex: "10/20/2012 10:09:00".
-
-    :param for_class: The ID of the class the assignment is for.
-
-    :returns: The newly created assignment.
-
-    :raises RuntimeError: If the asssignment could not be created.
-
-    :raises RuntimeError: If you are not a teacher of for_class.
-
-    """
-
-    due = _to_datetime(due)
+    if due_cutoff:
+        atts["due_cutoff"] = _to_datetime(due_cutoff)
 
     the_class = _get_class(for_class)
 
     if current_user.account_type != "admin" and \
-            for_class not in current_user.classes:
+            the_class.id not in current_user.classes:
         raise RuntimeError(
             "You cannot create an assignment for a class you are not teaching."
         )
 
+    atts["for_class"] = the_class.id
 
-    new_assignment = Assignment(name = name, due = due,
-                                for_class = the_class.id)
+    print atts
+    new_assignment = Assignment(**atts)
     new_assignment.save()
     
     return "Success! %s created." % _assignment_to_str(new_assignment)
 
 @_api_call(("admin", "teacher"))
-def modify_assignment(current_user, id, name = "", due = "", for_class = ""):
-    """Modifies an existing assignment.
+def assignment_info(id):
+    assignment = _get_assignment(id)
 
-    :param id: The ID of the assignment to modify.
+    attribute_strings = []
+    for k, v in assignment._data.items():
+        if k and v:
+            attribute_strings.append("%s = %s" % (k, v))
 
-    :param name: The new name of the assignment, may be blank to leave the
-                 original name unchanged.
+    attributes = "\n\t".join(attribute_strings)
 
-    :param due: The new due date of the assignment, ex: "10/20/2012 10:09:00".
-                may be blank to leave the original due date unchanged.
+    return "Properties of %s:\n\t%s" \
+                % (_assignment_to_str(assignment), attributes)
 
-    :param for_class: The new ID or partial name of the class the assignment is
-                      for. May beblank to leave the original class unchanged.
-
-    :raises RuntimeError: If the assignment could not be found.
-    
-    :raises RuntimeError: If current_user is not a teacher of the new for_class
-                          or the original.
-
-    """
-
+@_api_call(("admin", "teacher"))
+def modify_assignment(current_user, id, name = "", due = "", for_class = "",
+                      due_cutoff = ""):
     assignment = _get_assignment(id)
 
     # Save the string representation of the original assignment show we can show
@@ -527,27 +469,62 @@ def modify_assignment(current_user, id, name = "", due = "", for_class = ""):
             "You can only modify assignments for classes you teach."
         )
 
-    if name:
-        assignment.name = assignment.name
-    if due:
-        assignment.due = _to_datetime(due)
-    if for_class:
-        try:
-            assignment.for_class = _get_class(for_class)
+    change_log = []
 
-            if current_user.account_type != "admin" and \
-                    assignment.for_class not in current_user.classes:
-                raise RuntimeError(
-                    "You cannot reassign an assignment to a class you're not "
-                    "teaching."
-                )
-        except InvalidId:
-            raise RuntimeError("Class ID %s is not a valid ID." % for_class)
+    if name:
+        change_log.append(
+            "Name changed from '%s' to '%s'." % (assignment.name, name)
+        )
+
+        assignment.name = name
+
+    if due:
+        due_date = _to_datetime(due)
+
+        change_log.append(
+            "Due date changed from '%s' to '%s'."
+                % (str(assignment.due), str(due_date))
+        )
+
+        assignment.due = due_date
+
+    if due_cutoff:
+        cutoff_date = _to_datetime(due)
+
+        change_log.append(
+            "Cutoff date changed from '%s' to '%s'."
+                % (str(assignment.due_cutoff), str(cutoff_date))
+        )
+
+        assignment.due_cutoff = cutoff_date
+
+    if for_class:
+        old_class = Class.objects.get(id = ObjectId(assignment.for_class))
+        new_class = _get_class(for_class)
+
+        change_log.append(
+            "Class changed from %s to %s."
+                % (_class_to_str(old_class), _class_to_str(new_class))
+        )
+
+        assignment.for_class = new_class.id
+
+        if current_user.account_type != "admin" and \
+                assignment.for_class not in current_user.classes:
+            raise RuntimeError(
+                "You cannot reassign an assignment to a class you're not "
+                "teaching."
+            )
 
     assignment.save()
 
-    return "Success! %s changed to %s." % \
-            (old_assignment_string, _assignment_to_str(assignment))
+    if change_log:
+        change_log_string = "\n\t".join(change_log)
+    else:
+        change_log_string = "(No changes)"
+
+    return "Success! The following changes were applied to %s.\n\t%s" \
+                % (old_assignment_string, change_log_string)
 
 @_api_call(("admin", "teacher"))
 def delete_assignment(current_user, id):
@@ -568,6 +545,8 @@ def delete_assignment(current_user, id):
         raise RuntimeError(
             "You cannot delete an assignment for a class you're not teaching."
         )
+
+    to_delete.delete()
     
     return "Success! %s deleted." % _assignment_to_str(to_delete)
 
@@ -700,10 +679,7 @@ def get_submissions(current_user, assignment, email = None):
 
 
 from types import FunctionType
-api_calls = dict(
-    (k, v) for k, v in globals().items()
-        if isinstance(v, FunctionType) and not k.startswith("_")
-)
+api_calls = dict((k, v) for k, v in globals().items() if isinstance(v, APICall))
 
 if __name__ == "__main__":
     import json

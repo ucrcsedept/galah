@@ -41,25 +41,18 @@ def api_call():
         # Make sure we got some data we can work with
         if request.json is None:
             raise RuntimeError("No request data sent.")
-            
+
         # The top level object must be either a non-empty list or a dictionary
-        # with an api_call key.
+        # with an api_call key. They will have similar information either way
+        # however, so here we extract that information.
         if type(request.json) is list and request.json:
             # The API call's name is the first item in the list, so use that
             # to grab the actual APICall object we need.
             api_name = request.json.pop(0)
 
-            try:
-                api_call = api_calls[api_name]
-            except KeyError:
-                raise RuntimeError("%s is not a recognized API call."
-                        % api_name)
-            
-            return Response(
-                response = api_call(current_user, *request.json),
-                headers = {"X-CallSuccess": "True"},
-                mimetype = "text/plain"
-            )
+            api_args = list(request.json)
+
+            api_kwargs = {}
         elif type(i) is dict and "api_call" in request.json:
             # Don't let the user insert their own current_user argument
             if "current_user" in request.json:
@@ -67,19 +60,26 @@ def api_call():
                 
             # Resolve the name of the API call and retrieve the actual
             # APICall object we need.
-            api_call = api_calls[request.json["api_name"]]
-            
-            # Any positional arguments are contained in the entry keyed
-            # under "args" in the dictionary, and are contained as a list.
-            if "args" in request.json and type(request.json["args"]) is list:
-                args = request.json["args"]
-                del request.json["args"]
-            else:
-                args = []
-                
-            return api_call(current_user, *args, **request.json)
+            api_name = request.json["api_name"]
+            api_args = request.json["args"]
+
+            del request.json["api_name"]
+            del request.json["args"]
+
+            api_kwargs = dict(**request.json)
         else:
             raise ValueError("Request data not formed correctly.")
+
+        if api_name in api_calls:
+            api_call = api_calls[api_name]
+        else:
+            raise RuntimeError("%s is not a recognized API call." % api_name)
+
+        return Response(
+            response = api_call(current_user, *api_args, **api_kwargs),
+            headers = {"X-CallSuccess": "True"},
+            mimetype = "text/plain"
+        )
     except Exception as e:
         app.logger.exception("Exception occured while processing API request.")
         
