@@ -45,7 +45,8 @@ def view_assignment(assignment_id):
     
     # Figure out if submissions should be allowed
     cutoff_time = None
-    if assignment.due_cutoff < datetime.datetime.today():
+    if assignment.due_cutoff and \
+            assignment.due_cutoff < datetime.datetime.today():
         cutoff_time = pretty_time_distance(
             datetime.datetime.today(), assignment.due_cutoff
         )
