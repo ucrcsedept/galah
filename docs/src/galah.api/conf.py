@@ -7,11 +7,7 @@
 
 import sys, os
 
-sys.path.insert(0, os.path.abspath('../../../'))
-
 # -- General configuration -----------------------------------------------------
-
-extensions = ['sphinx.ext.autodoc']
 
 # The suffix of source filenames.
 source_suffix = '.rst'
@@ -33,18 +29,27 @@ pygments_style = 'sphinx'
 
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
-man_pages = [
-    ('index', 'galah.api.commands', u'Galah\'s API Documentation',
-     [u'John Sullivan'], 1)
-]
+def get_man_pages(root_dir):
+	from os import listdir
+	from os.path import isfile, join, splitext
 
-# -- Autodoc signal handlers ---------------------------------------------------
+	pages = []
+	for i in listdir(root_dir):
+		file_path = join(root_dir, i)
+		file_name = splitext(i)[0]
 
-# Will skip all documentable objects that aren't exposed API functions
-def should_skip(app, what, name, obj, skip, options):
-	from types import FunctionType
+		if not isfile(file_path):
+			continue
 
-	return name.startswith("_") or type(obj) is not FunctionType
+		pages.append((
+			join(root_dir, file_name), 
+			file_name,
+			u"Galah API: %s documentation" % file_name,
+			[u"John Sullivan"],
+			1
+		))
 
-def setup(app):
-	app.connect('autodoc-skip-member', should_skip)
+	return pages
+
+
+man_pages = get_man_pages("commands")
