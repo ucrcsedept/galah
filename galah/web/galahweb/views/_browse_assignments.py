@@ -32,8 +32,6 @@ def browse_assignments():
             
         i.due_pretty = pretty_time_distance(now, i.due)
         
-        print vars(i)
-        
         if i.due_cutoff:
             i.due_cutoff_pretty = pretty_time_distance(now, i.due_cutoff)
         else:

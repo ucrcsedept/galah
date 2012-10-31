@@ -59,6 +59,4 @@ def login():
             login_user(user)
             return redirect(form.redirect_target or url_for("browse_assignments"))
     
-    app.logger.debug(str(form.errors))
-    
     return render_template("login.html", form = form)
