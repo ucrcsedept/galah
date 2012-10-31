@@ -102,7 +102,8 @@ def upload_submission(assignment_id):
             return redirect(redirect_to)
     
     # Check if the assignment's cutoff date has passed
-    if assignment.due_cutoff < datetime.datetime.today():
+    if assignment.due_cutoff and \
+            assignment.due_cutoff < datetime.datetime.today():
         return craft_response(
             error = "The cutoff date has already passed, your submission was "
                     "not accepted."
