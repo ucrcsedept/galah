@@ -167,6 +167,9 @@ def exec_to_shell():
     # Add the location of the api client to the PATH
     print >> rcfile, "PATH=%s:$PATH" % script_location
 
+    # Add the location of the man files to the MANPATH
+    print >> rcfile, "export MANPATH=./man/:`manpath`"
+
     # Add aliases for each command that just wrap the api client
     for i in commands:
         print >> rcfile, 'alias %s="%s %s"' % (i, script_name, i)
