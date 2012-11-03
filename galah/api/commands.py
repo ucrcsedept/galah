@@ -550,9 +550,12 @@ def delete_assignment(current_user, id):
     
     return "Success! %s deleted." % _assignment_to_str(to_delete)      
 
-import tar_tasks
 @_api_call(("admin", "teacher"))
 def get_archive(current_user, assignment, email = ""):
+    # tar_tasks imports galahweb because it wants access to the logger, to
+    # prevent a circular dependency we won't load the module until we need it.
+    import tar_tasks
+
     the_assignment = _get_assignment(assignment).id
 
     jobs_ahead = tar_tasks.queue_size()
