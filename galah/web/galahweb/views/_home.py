@@ -4,6 +4,7 @@ from galah.web.galahweb.auth import FlaskUser
 from flask import redirect, url_for, flash
 
 @app.route("/home")
+@app.route("/", methods = ["GET", "POST"])
 def home():
     if not current_user.is_authenticated():
         return redirect(url_for("login"))
