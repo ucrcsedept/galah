@@ -6,7 +6,7 @@ Modifies an existing assignment.
 Reference
 ---------
 
-.. function:: modify_assignment([id, name = '', due = '', for_class = '', due_cutoff = ''])
+.. function:: modify_assignment([id, name = '', due = '', for_class = '', due_cutoff = '']):
 
     :param id: The ID of the assignment to modify.
 

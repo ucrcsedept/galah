@@ -6,7 +6,7 @@ Creates a class with the given name.
 Reference
 ---------
 
-.. function:: create_class(name)
+.. function:: create_class(name):
     
     :param name: The name of the class to create.
 

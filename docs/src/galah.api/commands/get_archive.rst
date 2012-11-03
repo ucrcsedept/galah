@@ -29,7 +29,7 @@ timestamp, the timestamped directory will follow the format
 Reference
 ---------
 
-.. function:: get_archie(assignment[, email = ''])
+.. function:: get_archive(assignment[, email = '']):
     
     :param assignment: The exact id of the assignment.
     :param email: You can optionally specify a user's email to filter on, and

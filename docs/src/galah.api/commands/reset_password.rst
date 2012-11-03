@@ -6,7 +6,7 @@ Resets the password of a user to a given password.
 Reference
 ---------
 
-.. function:: reset_password(email, new_password)
+.. function:: reset_password(email, new_password):
     
     :param email: The email of the user to change the password of.
 

@@ -6,7 +6,7 @@ Lists all assignments for a class along with any other class info.
 Reference
 ---------
 
-.. function:: class_info(for_class)
+.. function:: class_info(for_class):
     
     :param for_class: A part of the name of the class or the class's id.
 

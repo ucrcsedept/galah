@@ -10,14 +10,14 @@ functionality and in fact are aliases of eachother.
 Reference
 ---------
 
-.. function:: enroll_student(email, enroll_in)
+.. function:: enroll_student(email, enroll_in):
     
     :param email: The student's email.
     
     :param enroll_in: Part of the name (case-insensitive) or the ID of the
                       class to enroll the student in.
 
-.. function:: assign_teacher(email, enroll_in)
+.. function:: assign_teacher(email, enroll_in):
     
     :param email: The teacher's email.
     

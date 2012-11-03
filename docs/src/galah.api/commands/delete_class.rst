@@ -6,7 +6,7 @@ Deletes a given class and all of its assignments.
 Reference
 ---------
 
-.. function:: delete_class(to_delete)
+.. function:: delete_class(to_delete):
     
     :param to_delete: The name, partial name, or ID of the class to delete.
 

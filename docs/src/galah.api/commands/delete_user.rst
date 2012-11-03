@@ -6,7 +6,7 @@ Deletes the given user from existence.
 Reference
 ---------
 
-.. function:: delete_user(email)
+.. function:: delete_user(email):
     
     :param email: The exact email of the user to delete.
 
