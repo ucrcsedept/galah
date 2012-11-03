@@ -37,7 +37,6 @@ from galah.web.galahweb.auth import FlaskUser
 from flask import redirect, url_for, flash
 
 @app.route("/login", methods = ["GET", "POST"])
-@app.route("/", methods = ["GET", "POST"])
 def login():
     form = LoginForm()
     
