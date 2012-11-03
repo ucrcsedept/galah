@@ -6,7 +6,7 @@ Finds users matching the given credentials
 Reference
 ---------
 
-.. function:: find_user([email_contains = '', account_type = '', enrolled_in = ''])
+.. function:: find_user([email_contains = '', account_type = '', enrolled_in = '']):
     
     :param email_contains: Part of the email to match
     

@@ -6,7 +6,7 @@ Deletes the given assignment.
 Reference
 ---------
 
-.. function:: delete_assignment(id)
+.. function:: delete_assignment(id):
     
     :param id: The exact id of the user to delete.
 

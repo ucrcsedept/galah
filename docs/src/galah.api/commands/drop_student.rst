@@ -10,13 +10,13 @@ functionality and in fact are aliases of eachother.
 Reference
 ---------
 
-.. function:: drop_student(email, drop_from)
+.. function:: drop_student(email, drop_from):
     
     :param email: The student's email.
 
     :param drop_from: The ID or name of the class to drop the student from.
 
-.. function:: unassign_teacher(email, drop_from)
+.. function:: unassign_teacher(email, drop_from):
     
     :param email: The teacher's email.
 

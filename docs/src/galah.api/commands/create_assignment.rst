@@ -6,7 +6,7 @@ Creates an assignment.
 Reference
 ---------
 
-.. function:: create_assignment(name[, due, for_class, due_cutoff = ''])
+.. function:: create_assignment(name[, due, for_class, due_cutoff = '']):
     
     :param name: The name of the assignment.
 

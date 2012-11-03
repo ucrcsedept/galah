@@ -6,7 +6,7 @@ Gets all the properties of an assignment.
 Reference
 ---------
 
-.. function:: assignment_info(id)
+.. function:: assignment_info(id):
     
     :param id: The exact id of the assignment.
 

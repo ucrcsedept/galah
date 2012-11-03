@@ -6,7 +6,7 @@ Changes the account type of a user.
 Reference
 ---------
 
-.. function:: modify_user(email, account_type)
+.. function:: modify_user(email, account_type):
     
     :param email: The email of the user to change the type of.
 

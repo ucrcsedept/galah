@@ -6,7 +6,7 @@ Gets information on the given user including enrolled classes.
 Reference
 ---------
 
-.. function:: user_info(email)
+.. function:: user_info(email):
     
     :param email: The exact email of the user to get info on.
 
