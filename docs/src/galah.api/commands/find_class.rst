@@ -9,7 +9,7 @@ case for admins).
 Reference
 ---------
 
-.. function:: find_class([name_contains = "", enrollee = ""])
+.. function:: find_class([name_contains = '', enrollee = ''])
     
     :param name_contains: A part of (or the whole) name of the class. Case
                           insensitive.

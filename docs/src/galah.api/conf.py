@@ -25,6 +25,12 @@ version = release = '0.2'
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = 'sphinx'
 
+# -- Options for html output ---------------------------------------------------
+
+html_static_path = ["./html_static/"]
+
+html_style = "galah.css"
+
 # -- Options for manual page output --------------------------------------------
 
 # One entry per manual page. List of tuples

@@ -12,7 +12,7 @@ password will be sent as plaintext**.
 Reference
 ---------
 
-.. function:: create_user(email, password[, account_type = "student"])
+.. function:: create_user(email, password[, account_type = 'student'])
 
     :param email: The email the user will use to sign in.
     
