@@ -16,7 +16,7 @@ from galah.db.helpers.pretty import pretty_time, pretty_time_distance
 import datetime
 
 @app.route("/assignments/<assignment_id>/")
-@account_type_required("student")
+@account_type_required(("student", "teacher"))
 def view_assignment(assignment_id):
     simple_archive_form = SimpleArchiveForm()
     

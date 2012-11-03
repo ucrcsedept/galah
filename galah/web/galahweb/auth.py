@@ -24,14 +24,37 @@ class Anonymous(AnonymousUser):
 from functools import wraps
 from flask.ext.login import current_user
 from flask import current_app, flash
+from types import StringType
+from galah.db.helpers.pretty import pretty_list
 def account_type_required(account_type):
+    """
+    A decorator that can be applied to views to only allow access to users with
+    certain account types.
+
+    :param account_type: The account types that are allowed. May either be a
+                         single string (meaning only one account type is
+                         allowed) or a tuple, in which case any account type
+                         within that tuple will be allowed access.
+
+    """
+
+    # We allow the user of this function to specify a string for account_type
+    # signaling that only one type of user is allowed. The rest of the function
+    # except account_type to be a tuple however, so convert it here.
+    if isinstance(account_type, StringType):
+        account_type = (account_type, )
+
+    # Form a nicely formatted string that we will use to provide an error
+    # message to the end-user if they try to access a restricted page.
+    allowed = pretty_list(account_type, none_string = "magical")
+
     def internal_decorator(func):
         @wraps(func)
         def decorated_view(*args, **kwargs):
             if not current_user.is_authenticated() or \
-               current_user.account_type != account_type:
+                    current_user.account_type not in account_type:
                 flash("Only %s users are permitted to access this page."
-                          % account_type, category = "error")
+                          % allowed, category = "error")
                 return current_app.login_manager.unauthorized()
                 
             return func(*args, **kwargs)
