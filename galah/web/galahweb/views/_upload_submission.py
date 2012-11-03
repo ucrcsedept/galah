@@ -59,7 +59,7 @@ def abort_new_submission(submission):
         shutil.rmtree(submission.testables)
 
 @app.route("/assignments/<assignment_id>/upload", methods = ["POST"])
-@account_type_required("student")
+@account_type_required(("student", "teacher"))
 def upload_submission(assignment_id):
     # Convert the assignment in the URL into an ObjectId
     try:

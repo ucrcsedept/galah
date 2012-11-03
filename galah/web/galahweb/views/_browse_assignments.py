@@ -7,7 +7,7 @@ from flask import render_template
 import datetime
 
 @app.route("/assignments")
-@account_type_required("student")
+@account_type_required(("student", "teacher"))
 def browse_assignments():
     # Grab all the current user's classes
     classes = Class.objects(id__in = current_user.classes).only("name")
