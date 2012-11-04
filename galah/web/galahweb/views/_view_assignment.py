@@ -1,8 +1,8 @@
 ## Create the form that takes simple archives ##
-from flask.ext.wtf import Form, FileField, validators, BooleanField
+from flask.ext.wtf import Form, FieldList, FileField, validators, BooleanField
 
 class SimpleArchiveForm(Form):
-    archive = FileField("Archive", [validators.Required()])
+    archive = FieldList(FileField("Archive"), min_entries = 3)
     
 ## The Actual View ##
 from galah.web.galahweb import app

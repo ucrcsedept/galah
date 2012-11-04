@@ -92,11 +92,17 @@ a {
 #upload_archive .simple_file_input {
     padding: 5px;
     border: 1px solid #ccc;
+    width: 80%;
 }
 
 #upload_archive #submit_archive {
     height: 27px;
     width: 100px;
+}
+
+#upload_archive #add_field {
+    height: 27px;
+    width: 140px;
 }
 
 #submissions .uploaded_filenames {
@@ -176,7 +182,7 @@ h3 {
     margin-right: auto;
 }
 
-.login_block .directions {
+.directions {
     text-align: center;
     margin-bottom: 10px;
 }

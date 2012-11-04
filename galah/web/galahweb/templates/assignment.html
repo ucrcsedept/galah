@@ -1,49 +1,72 @@
 {% extends "base.html" %}
 {% block title %}{{ assignment.name }}{% endblock %}
 {% block path %}&rarr; <a href="/assignments">assignments</a> &rarr; <a href="/assignments/{{ assignment.id }}">{{ assignment.name }}</a>{% endblock %}
+{% block includes %}
+	<script type="text/javascript">
+	$(function() {
+		$("#email").focus()
+	})
+	function addFileField() {
+		var new_file = $("#file_input_container").children(":last").clone()
+		var input = $(new_file).children(":last")
+		var old_id = input.attr("id")
+		var new_suffix = parseInt(old_id.substring(old_id.indexOf("-") + 1)) + 1
+		
+		input.attr("id", "archive-" + new_suffix)
+		input.attr("name", "archive-" + new_suffix)
+
+		new_file.appendTo("#file_input_container")
+	}
+	</script>
+{% endblock %}
 {% block content %}
-    {% if not cutoff_time %}
-    <div class="tab" id="upload_archive">
-	<h2>Upload an Archive</h2>
-	<div>
-	    This is the basic file uploader. The only accepted file types are
-	    tar files (<em>.tar</em> and <em>.tar.gz</em>) and zip files
-	    (<em>.zip</em>).
+	{% if not cutoff_time %}
+	<div class="tab" id="upload_archive">
+		<h2>Upload a Submission</h2>
+		<form method="post" action="upload" enctype="multipart/form-data">
+			{{ simple_archive_form.hidden_tag() }}
+			<div class="heading directions">
+				Select one of more files to include in your submission below.
+				Click <b>Add Another Field</b> if you need to include more than
+				3 files <em>(Javascript must be enabled for this to work).</em>.
+			</div>
+			<div style="text-align: center">
+				<div id="file_input_container" style="margin-bottom: 10px">
+					{% for i in simple_archive_form.archive.entries %}
+					<div>{{ i(class_ = "simple_file_input") }}</div>
+					{% endfor %}
+				</div>
+				<input id="add_field" onclick="addFileField()" type="button" value="Add Another Field">
+				<input id="submit_archive" type="submit" value="Upload">
+			</div>
+		</form>
 	</div>
-	<form method="post" action="upload" enctype="multipart/form-data">
-	    {{ simple_archive_form.hidden_tag() }}
-	    <div style="text-align: center;">
-		{{ simple_archive_form.archive(class_ = "simple_file_input") }}
-		<input id="submit_archive" type="submit" value="Upload"><br>
-	    </div>
-	</form>
-    </div>
-    {% else %}
-    <div style="text-align: center;">
-	No more submissions will be accepted (cutoff was {{ cutoff_time }}).
-    </div>
-    {% endif %}
-    
-    <div id="submissions">
-    {% for submission in submissions %}
-    {% if submission.id in new_submissions %}
-	<div class="submission attention">
-    {% else %}
-	<div class="submission">
-    {% endif %}
-	    <h3>
-		Submission on {{ submission.timestamp_pretty }}
-	    </h3>
-	    {% if submission.uploaded_filenames %}
-	    <div class="uploaded_filenames">
-		<ul class="uploaded_filenames">
-		{% for i in submission.uploaded_filenames %}
-		    <li>{{ i }}</li>
+	{% else %}
+	<div style="text-align: center;">
+		No more submissions will be accepted (cutoff was {{ cutoff_time }}).
+	</div>
+	{% endif %}
+	
+	<div id="submissions">
+		{% for submission in submissions %}
+		{% if submission.id in new_submissions %}
+		<div class="submission attention">
+		{% else %}
+		<div class="submission">
+		{% endif %}
+			<h3>
+			Submission on {{ submission.timestamp_pretty }}
+			</h3>
+			{% if submission.uploaded_filenames %}
+			<div class="uploaded_filenames">
+			<ul class="uploaded_filenames">
+			{% for i in submission.uploaded_filenames %}
+				<li>{{ i }}</li>
+			{% endfor %}
+			</ul>
+			</div>
+			{% endif %}
+		</div>
 		{% endfor %}
-		</ul>
-	    </div>
-	    {% endif %}
 	</div>
-    {% endfor %}
-    </div>
 {% endblock %}

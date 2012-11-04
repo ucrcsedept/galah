@@ -8,6 +8,7 @@ from flask import abort, render_template, request, flash, redirect, jsonify, \
                   url_for
 from galah.db.models import Submission, Assignment
 from galah.web.galahweb.util import is_url_on_site
+from werkzeug import secure_filename
 import os.path
 import subprocess
 import datetime
@@ -15,35 +16,10 @@ import shutil
 import tempfile
 import datetime
 
+from _view_assignment import SimpleArchiveForm
+
 SUBMISSION_DIRECTORY = "/var/local/galah.web/submissions/"
 assert SUBMISSION_DIRECTORY[0] == "/" # Directory must be given as absolute path
-
-def prepare_new_submission(**kwargs):
-    """
-    Prepares a new submission object properly initialized with an id and a
-    new testables directory to store the submission in.
-
-    """
-    
-    # Create a new submission from the keyword arguments
-    new_submission = Submission(**kwargs)
-    
-    # Create an id for the new submission if one doesn't yet exist
-    new_submission.id = new_submission.id or ObjectId()
-    
-    if not new_submission.testables:
-        # Craft a unique directory path where we will store the new submission
-        new_submission.testables = os.path.join(
-            SUBMISSION_DIRECTORY, str(new_submission.id)
-        )
-        
-        # Create the directory. We are guarenteed an ObjectId is unique. However
-        # we are not guarenteed that we will have the proper permissions and
-        # that we will be able to make the directory thus this could error
-        # because of that.
-        os.makedirs(new_submission.testables)
-        
-    return new_submission
     
 def abort_new_submission(submission):
     """
@@ -75,31 +51,17 @@ def upload_submission(assignment_id):
     except Assignment.DoesNotExist:
         app.logger.debug("Invalid ID: Assignment does not exist.")
         
-        abort(404)        
+        abort(404)
     
-    def craft_response(**kwargs):
-        if request.is_xhr:
-            # If the request was made via ajax return a JSON object...
-            return jsonify(**kwargs)
-        else:
-            # otherwise redirect to the correct view.
-            if "error" in kwargs:
-                flash(kwargs["error"], category = "error")
-            elif "message" in kwargs:
-                flash(kwags["message"], category = "message")
-            else:
-                flash("File(s) uploaded succesfully.", category = "message")
-                
-            redirect_to = request.args.get("next") or request.referrer
-            
-            if not is_url_on_site(app, redirect_to):
-                # Default going back to the assignment screen
-                redirect_to = url_for(
-                    "view_assignment", 
-                    assignment_id = assignment_id
-                )
-            
-            return redirect(redirect_to)
+    # Figure out where we should redirect the user to once we're done.
+    redirect_to = request.args.get("next") or request.referrer
+
+    if not is_url_on_site(app, redirect_to):
+        # Default going back to the assignment screen
+        redirect_to = url_for(
+            "view_assignment",
+            assignment_id = assignment_id
+        )
     
     # Check if the assignment's cutoff date has passed
     if assignment.due_cutoff and \
@@ -108,82 +70,49 @@ def upload_submission(assignment_id):
             error = "The cutoff date has already passed, your submission was "
                     "not accepted."
         )
-    
-    # Craft a new submission
-    new_submission = prepare_new_submission(
+
+    new_submission = Submission(
         assignment = id,
         user = current_user.id,
         timestamp = datetime.datetime.now(),
-        marked_for_grading = bool(request.form.get("marked_for_grading"))
+        marked_for_grading = True
     )
+    new_submission.id = ObjectId()
+
+    # Craft a unique directory path where we will store the new submission. We
+    # are guarenteed an ObjectId is unique. However we are not guarenteed that
+    # we will have the proper permissions and that we will be able to make the
+    # directory thus this could error because of that.
+    new_submission.testables = os.path.join(
+        SUBMISSION_DIRECTORY, str(new_submission.id)
+    )
+    os.makedirs(new_submission.testables)
+
+    form = SimpleArchiveForm()
+    if not form.validate_on_submit():
+        flash("The files you passed in were invalid.", category = "error")
+        return redirect(redirect_to)
+
+
+    # Save each file the user uploaded into the submissions directory
+    for i in form.archive.entries:
+        if not i.data.filename:
+            continue
+
+        # Figure out where we want to save the user's file
+        file_path = os.path.join(
+            new_submission.testables, secure_filename(i.data.filename)
+        )
+
+        app.logger.debug("Saving user's file to %s." % file_path)
+
+        # Do the actual saving
+        i.data.save(file_path)
     
-    # The user is uploading a single archive containing the entire submission
-    if request.files.get("archive"):
-        archive = request.files["archive"]
-        
-        # Create a temporary file that we will use to store the archive. It is
-        # given to us open and as a tuple with some additional information so we
-        # need to close it and extract only the information we need.
-        temp_file = tempfile.mkstemp()
-        os.close(temp_file[0])
-        temp_file = temp_file[1]
-        
-        # Save the archive over the temp_file we just created
-        archive.save(temp_file)
-        
-        # TODO: Find out if tar is secure! Can the archive be made such that
-        # files will be placed outside of the directory were exporting the
-        # tar into?? If so that's a huge security hole.
-        try:
-            if archive.filename.endswith(".tar"):
-                subprocess.check_call(
-                    ["tar", "xf", temp_file], 
-                    cwd = new_submission.testables
-                )
-            elif archive.filename.endswith(".tar.gz"):
-                subprocess.check_call(
-                    ["tar", "xzf", temp_file], 
-                    cwd = new_submission.testables
-                )
-            elif archive.filename.endswith(".zip"):
-                subprocess.check_call(
-                    ["unzip", temp_file],
-                    cwd = new_submission.testables
-                )
-            else:
-                abort_new_submission(new_submission)
-                
-                return craft_response(
-                    error = "Uploaded file (%s) had an unrecognized extension."
-                                % archive.filename
-                )
-        except subprocess.CalledProcessError:
-            abort_new_submission(new_submission)
-            
-            return craft_response(
-                error = "Uploaded file (%s) could not be opened as an archive."
-                            % archive.filename
-            )
-        finally:
-            # Always remove the temporary file we used to store the archive if
-            # we succesfully created one
-            if temp_file:
-                os.remove(temp_file)
-    else:
-        # We did not recieve enough information to do anything
-        return craft_response(error = "No files were selected for uploading.")
-    
-    # Determine what files actually got uploaded and save them into the
-    # submission.
-    for root, dirnames, filenames in os.walk(new_submission.testables):
-        for filename in filenames:
-            new_submission.uploaded_filenames.append(
-                os.path.relpath(
-                    os.path.join(root, filename), 
-                    new_submission.testables
-                )
-            )
-    
+    new_submission.uploaded_filenames.extend(
+        i.data.filename for i in form.archive.entries if i.data.filename
+    )
+
     # Persist! Otherwise nobody will know what happened this day.
     new_submission.save()
     
@@ -191,4 +120,4 @@ def upload_submission(assignment_id):
     flash(new_submission.id, category = "new_submission")
     
     # Everything seems to have gone well
-    return craft_response(new_submission = new_submission)
+    return redirect(redirect_to)
