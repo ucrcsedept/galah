@@ -76,8 +76,9 @@ def oauth2login(oauth):
         if verified_email != "true":
             raise RuntimeError("Could not verify email")
 
-    request = _session.post(
-        config["login_url"], data = {"email":email, "oauth2":"true"}
+    request = session.post(
+        config["galah_host"] + "/api/login",
+        data = {"email": email, "oauth2": "True"}
     )
 
     request.raise_for_status()
