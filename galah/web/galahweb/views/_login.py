@@ -103,10 +103,10 @@ def authenticate_user():
           user = None
 
       if not user:
-          flash("Account does not exist for this email", "error")
+          flash("A Galah account does not exist for this email.", "error")
       else:
           login_user(user)
-          return redirect(url_for("browse_assignments"))
+          return redirect(url_for("home"))
 
   else:
       flash(u'Sorry, we couldn\'t verify your email', 'error')
