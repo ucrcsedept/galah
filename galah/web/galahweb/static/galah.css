@@ -120,6 +120,7 @@ a {
     border: 1px solid #ccc;
     background-color: white;
     display: inline;
+    white-space: nowrap;
 }
 
 #submissions h3 {
