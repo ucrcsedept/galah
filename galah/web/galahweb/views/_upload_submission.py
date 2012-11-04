@@ -7,6 +7,7 @@ from bson.errors import InvalidId
 from flask import abort, render_template, request, flash, redirect, jsonify, \
                   url_for
 from galah.db.models import Submission, Assignment
+from galah.db.helpers.pretty import pretty_list, plural_if
 from galah.web.galahweb.util import is_url_on_site
 from werkzeug import secure_filename
 import os.path
@@ -71,6 +72,11 @@ def upload_submission(assignment_id):
                     "not accepted."
         )
 
+    form = SimpleArchiveForm()
+    if not form.validate_on_submit():
+        flash("The files you passed in were invalid.", category = "error")
+        return redirect(redirect_to)
+
     new_submission = Submission(
         assignment = id,
         user = current_user.id,
@@ -88,12 +94,6 @@ def upload_submission(assignment_id):
     )
     os.makedirs(new_submission.testables)
 
-    form = SimpleArchiveForm()
-    if not form.validate_on_submit():
-        flash("The files you passed in were invalid.", category = "error")
-        return redirect(redirect_to)
-
-
     # Save each file the user uploaded into the submissions directory
     for i in form.archive.entries:
         if not i.data.filename:
@@ -110,14 +110,23 @@ def upload_submission(assignment_id):
         i.data.save(file_path)
     
     new_submission.uploaded_filenames.extend(
-        i.data.filename for i in form.archive.entries if i.data.filename
+        secure_filename(i.data.filename) for i in form.archive.entries
+            if i.data.filename
     )
 
-    # Persist! Otherwise nobody will know what happened this day.
     new_submission.save()
     
     # Communicate to the next page what submission was just added.
     flash(new_submission.id, category = "new_submission")
+
+    flash(
+        "Successfully uploaded %s %s." %
+                (
+                    plural_if("file", len(new_submission.uploaded_filenames)),
+                    pretty_list(new_submission.uploaded_filenames)
+                ),
+        category = "message"
+    )
     
     # Everything seems to have gone well
     return redirect(redirect_to)

@@ -40,7 +40,7 @@ def pretty_list(the_list, conjunction = "and", none_string = "nothing"):
         return str(the_list[0]) + " " + conjunction + " " + str(the_list[1])
     else:
         # Add every item except the last two together seperated by commas
-        result = ", ".join(the_list[:-2])
+        result = ", ".join(the_list[:-2]) + ", "
 
         # Add the last two items, joined together by a command and the given
         # conjunction
