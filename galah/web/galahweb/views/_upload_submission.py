@@ -21,36 +21,16 @@ from _view_assignment import SimpleArchiveForm
 
 SUBMISSION_DIRECTORY = "/var/local/galah.web/submissions/"
 assert SUBMISSION_DIRECTORY[0] == "/" # Directory must be given as absolute path
-    
-def abort_new_submission(submission):
-    """
-    Deletes and cleans up a submission THAT HAS NOT YET BEEN SAVED to Mongo by
-    deleting the testables directory, etc.
-    
-    Call this if a created submission is found to be invalid during processing.
-    
-    """
-    
-    if submission.testables:
-        # Delete the directory
-        shutil.rmtree(submission.testables)
 
 @app.route("/assignments/<assignment_id>/upload", methods = ["POST"])
 @account_type_required(("student", "teacher"))
 def upload_submission(assignment_id):
-    # Convert the assignment in the URL into an ObjectId
+    # Figure out which assignment the user asked for.
     try:
         id = ObjectId(assignment_id)
-    except InvalidId:
-        app.logger.debug("Invalid ID: Malformed.")
-        
-        abort(404)
-    
-    # Ensure that an assignment with the provided id actually exists
-    try:
         assignment = Assignment.objects.get(id = id)
-    except Assignment.DoesNotExist:
-        app.logger.debug("Invalid ID: Assignment does not exist.")
+    except InvalidId, Assignment.DoesNotExist:
+        app.logger.exception("Could not retrieve assignment.")
         
         abort(404)
     
@@ -121,10 +101,10 @@ def upload_submission(assignment_id):
 
     flash(
         "Successfully uploaded %s %s." %
-                (
-                    plural_if("file", len(new_submission.uploaded_filenames)),
-                    pretty_list(new_submission.uploaded_filenames)
-                ),
+            (
+                plural_if("file", len(new_submission.uploaded_filenames)),
+                pretty_list(new_submission.uploaded_filenames)
+            ),
         category = "message"
     )
     

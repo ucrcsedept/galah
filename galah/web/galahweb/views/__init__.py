@@ -7,3 +7,4 @@ from _error import error
 from _home import home
 from _api import api_login, api_call
 from _get_archive import get_archive
+from _download_submission import download_submission

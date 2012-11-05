@@ -43,7 +43,11 @@ def _run():
             i.delete()
 
         # This is the archive object we will eventually add to the database
-        new_archive = Archive(id = task.id, requester = task.requester)
+        new_archive = Archive(
+            id = task.id,
+            requester = task.requester,
+            archive_type = "assignment_package"
+        )
 
         try:
             # Form the query
@@ -113,7 +117,7 @@ def _run():
             archive_file = tempfile.mkstemp(suffix = ".tar.gz")[1]
 
             # Run tar and do the actual archiving. Will block until it's finished.
-            return_code = subprocess.check_call(
+            subprocess.check_call(
                 [
                     "tar", "--dereference", "--create", "--gzip", "--directory",
                     temp_directory, "--file", archive_file
@@ -128,6 +132,11 @@ def _run():
             new_archive.save(force_insert = True)
         except Exception as e:
             app.logger.exception("An error occured while creating an archive.")
+
+            # If we created a temporary archive file we need to delete it.
+            new_archive.file_location = None
+            if archive_file:
+                os.remove(archive_file)
 
             new_archive.error_string = str(e)
             new_archive.save(force_insert = True)
