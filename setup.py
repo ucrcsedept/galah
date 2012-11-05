@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name = "galah",
-    version = "0.1beta2",
+    version = "0.1rc3",
     packages = find_packages( 
         exclude = [
             "galah.sheep*", 
