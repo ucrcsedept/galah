@@ -291,7 +291,15 @@ def exec_to_shell():
     script_location = os.path.abspath(script_location)
 
     # Retrieve all of the available commands from the server
-    api_info = json.loads(call(False, "get_api_info"))
+    try:
+        api_info = json.loads(call(False, "get_api_info"))
+    except requests.exceptions.ConnectionError as e:
+        print >> sys.stderr, "Could not connect with the given url '%s':" \
+                % config["galah_host"]
+        print >> sys.stderr, "\t" + str(e)
+
+        exit(1)
+
     commands = [i["name"] for i in api_info]
 
     rcfile_path = os.path.join(os.environ["HOME"], ".galah/tmp/shellrc")
@@ -337,9 +345,6 @@ import os
 if __name__ == "__main__":
     options, args = parse_arguments()
 
-    if options.shell:
-        exec_to_shell()
-
     if options.config:
         try:
             config_file = open(options.config)
@@ -356,6 +361,9 @@ if __name__ == "__main__":
             config.update(parse_configuration(config_file))
         except (IOError, KeyError):
             pass
+
+    if options.shell:
+        exec_to_shell()
 
     config["galah_home"] = os.path.expanduser(config["galah_home"])
 
