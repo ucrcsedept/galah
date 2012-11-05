@@ -8,8 +8,11 @@ from bson.objectid import ObjectId, InvalidId
 @app.route("/archives/<archive_id>")
 def get_archive(archive_id):
 	try:
-		archive = Archive.objects.get(id = ObjectId(archive_id))
-	except InvalidId:
+		archive = Archive.objects.get(
+			id = ObjectId(archive_id),
+			archive_type = "assignment_package"
+		)
+	except InvalidId, Archive.DoesNotExist:
 		app.logger.debug("Invalid ID: Malformed")
 
 		abort(404)

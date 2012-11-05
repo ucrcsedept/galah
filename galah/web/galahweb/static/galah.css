@@ -130,6 +130,11 @@ a {
     padding: 4px;
 }
 
+#submissions h3 > a{
+    color: white;
+    text-decoration: underline;
+}
+
 /* Heiarchal Headings */
 h1, h2, h3, h4 { font-family: Helvetica, "Helvetica Neue", Arial, sans-serif; }
 
