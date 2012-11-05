@@ -49,6 +49,10 @@ Has a very nice site at www.chris.com that I got some ASCII birds from. I would
 like to grab some more in the future so the error pages can generate a random
 ASCII bird every time you go them. Now error pages are fun too!
 
+### Chris Manghane
+
+Implemented Galah's support for Google OAuth2.
+
 
 ## News
 
