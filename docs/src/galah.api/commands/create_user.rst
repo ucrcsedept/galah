@@ -12,11 +12,13 @@ password will be sent as plaintext**.
 Reference
 ---------
 
-.. function:: create_user(email, password[, account_type = 'student']):
+.. function:: create_user(email[, password = '', account_type = 'student']):
 
     :param email: The email the user will use to sign in.
     
-    :param password: The users password, it will be immediately hashed.
+    :param password: The users password, it will be immediately hashed. You can
+                     specify a blank password in which case the user will have
+                     to long in through OAuth2.
 
     :param account_type: The account type. Current available options are
                          student, teacher, or admin. Multiple account types are
