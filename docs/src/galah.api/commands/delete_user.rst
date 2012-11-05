@@ -19,3 +19,8 @@ verification step! **So be careful!**
 >>> delete_user test@test.edu
 --Logged in as jsull003@ucr.edu--
 Success! User [email = test@test.edu, account_type = student] deleted.
+
+Permissions
+-----------
+
+**admin** users can use this command.

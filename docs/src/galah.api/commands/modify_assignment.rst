@@ -50,3 +50,9 @@ Success! The following changes were applied to Assignment [id = 50907cca55c4481a
 	Due date changed from '2012-10-20 10:12:00' to '2012-12-01 23:59:59'.
 	Cutoff date changed from 'None' to '2012-12-01 23:59:59'.
 	Class changed from Class [id = 5090634855c448134f67b3e3, name = CS 9000] to Class [id = 509066e855c448134f67b3e4, name = CS 10].
+
+Permissions
+-----------
+
+**admin** users and **teacher** users can use this command. Teacher users can
+only use this command on assignments for classes they are assigned to.

@@ -22,3 +22,8 @@ Here we will elevate the student **test@school.edu** to the status of
 >>> modify_user test@school.edu teacher
 --Logged in as jsull003@ucr.edu--
 Success! User [email = test@school.edu, account_type = student] has been retyped as a teacher
+
+Permissions
+-----------
+
+**admin** users can use this command.

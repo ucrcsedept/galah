@@ -32,3 +32,8 @@ An error occurred processing your request: 2 classes match your query of 'Boring
 --Logged in as jsull003@ucr.edu--
 Success! Class [id = 5090754855c4481920ca9325, name = Boring Class] deleted, and all of its assignments:
 	(No assignments found)
+
+Permissions
+-----------
+
+**admin** users can use this command.

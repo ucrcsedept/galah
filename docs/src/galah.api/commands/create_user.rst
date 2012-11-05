@@ -31,3 +31,8 @@ Creating a student named **test@school.edu** with the password
 >>> create_user test@school.edu gReatPassWord
 --Logged in as jsull003@ucr.edu--
 Success! User [email = test@school.edu, account_type = student] created.
+
+Permissions
+-----------
+
+**admin** users can use this command.

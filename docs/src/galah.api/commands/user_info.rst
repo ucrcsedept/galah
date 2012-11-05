@@ -20,3 +20,8 @@ only one class.
 --Logged in as jsull003@ucr.edu--
 User [email = eadel002@ucr.edu, account_type = student] is enrolled in:
     Class [id = 5090634855c448134f67b3e3, name = CS 9000]
+
+Permissions
+-----------
+
+**admin** and **teacher** users are permitted to use this command.
