@@ -57,6 +57,10 @@ def upload_submission(assignment_id):
         flash("The files you passed in were invalid.", category = "error")
         return redirect(redirect_to)
 
+    if not [i for i in form.archive.entries if i.data.filename]:
+        flash("You did not submit any files.", category = "error")
+        return redirect(redirect_to)
+
     new_submission = Submission(
         assignment = id,
         user = current_user.id,
