@@ -179,6 +179,13 @@ def get_api_info():
     
     return json.dumps(api_info, separators = (",", ":"))
 
+@_api_call()
+def whoami(current_user):
+    if hasattr(current_user, "id"):
+        return current_user.id
+    else:
+        return "Anonymous"
+
 from galah.db.crypto.passcrypt import serialize_seal, seal
 from mongoengine import OperationError
 @_api_call("admin")

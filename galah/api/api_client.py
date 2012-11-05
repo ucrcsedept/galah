@@ -3,10 +3,11 @@
 # The default configuration settings
 config = {
     "galah_host": "http://localhost:5000",
+    "galah_home": "~/.galah"
 }
 
 import json
-def _to_json(obj):
+def to_json(obj):
     """
     Serializes an object into a JSON representation. The returned string will be
     compressed appropriately for network transfer.
@@ -15,7 +16,7 @@ def _to_json(obj):
     
     return json.dumps(obj, separators = (",", ":"))
 
-def _form_call(api_name, *args, **kwargs):
+def form_call(api_name, *args, **kwargs):
     """
     Creates a tuple or dict (depending on the existence of keyword arguments)
     that can be serialized to JSON and sent to galah.api.
@@ -40,6 +41,7 @@ from oauth2client.file import Storage
 # Google OAuth2
 from oauth2client.client import OAuth2WebServerFlow
 
+import os
 import httplib2
 
 # Google OAuth2 flow object to get user's email.
@@ -52,6 +54,34 @@ flow = OAuth2WebServerFlow(
 # We'll need to store any cookies the server gives us (mainly the auth cookie)
 # and requests' sessions give us a nice way to do that.
 session = requests.session()
+
+import pickle
+def save_cookiejar(jar):
+    """
+    Save the cookies in the current session to the galah temp directory.
+
+    """
+
+    jar_path = os.path.join(config["galah_home"], "tmp", "cookiejar")
+
+    with open(jar_path, "w") as f:
+        pickle.dump(session.cookies, f)
+
+def load_cookiejar():
+    """
+    Load the cookies from an old session from the galah temp directory.
+
+    """
+
+    jar_path = os.path.join(config["galah_home"], "tmp", "cookiejar")
+
+    try:
+        with open(jar_path, "r") as f:
+            return pickle.load(f)
+    except IOError:
+        pass
+
+    return None
 
 def oauth2login(oauth):
     storage = Storage(".cache/galah_credentials")
@@ -129,7 +159,7 @@ def call(interactive, api_name, *args, **kwargs):
     # May throw a requests.ConnectionError here if galah.api is unavailable.
     request = session.post(
         config["galah_host"] + "/api/call",
-        data = _to_json(_form_call(api_name, *args, **kwargs)),
+        data = to_json(form_call(api_name, *args, **kwargs)),
         headers = {"Content-Type": "application/json"}
     )
     
@@ -327,6 +357,8 @@ if __name__ == "__main__":
         except (IOError, KeyError):
             pass
 
+    config["galah_home"] = os.path.expanduser(config["galah_home"])
+
     oauth = options.oauth
     user = options.user or config.get("user")
     password = os.environ.get("GALAH_PASSWORD") or config.get("password")
@@ -351,7 +383,11 @@ if __name__ == "__main__":
 
     if user and password:
         try:
-            login(user, password)
+            session.cookies = load_cookiejar()
+
+            whoami = call(False, "whoami")
+            if whoami != user:
+                login(user, password)
 
             print "--Logged in as %s--" % user
         except requests.exceptions.ConnectionError as e:
@@ -373,6 +409,8 @@ if __name__ == "__main__":
             # This function actually outputs the result of the call to the
             # console.
             call(True, *args)
+
+            save_cookiejar(session.cookies)
         except requests.exceptions.ConnectionError as e:
             print >> sys.stderr, "Could not connect with the given url '%s':" \
                     % config["galah_host"]
