@@ -558,6 +558,12 @@ def get_archive(current_user, assignment, email = ""):
 
     the_assignment = _get_assignment(assignment).id
 
+    if current_user.account_type != "admin" and \
+            the_assignment.for_class not in current_user.classes:
+        raise RuntimeError(
+            "You can only modify assignments for classes you teach."
+        )
+
     jobs_ahead = tar_tasks.queue_size()
 
     # We will not perform the work of archiving right now but will instead pass
