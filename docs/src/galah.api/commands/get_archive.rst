@@ -1,8 +1,10 @@
 get_archive
 ===========
 
-Downloads all the submissions for a given assignment as a tarball. The tarball
-is structures as follows:
+Download all the submissions for a given assignment as a tarball. The tarball
+is structured with directories corresponding to users as top-level directories,
+then each of their submissions are in timestamped directories. See the below
+example...
 
 .. code-block:: none
 
@@ -16,13 +18,8 @@ is structures as follows:
     |---- 2012-10-19-21-33-43
     +     +---- main.cpp
 
-So the top level directories of the tarball will all be names of users, and
-inside of each of the user directories there will be directories named by the
-timestamp of the submission (following the format
-``YEAR-MONTH-DAY-HOUR-MINUTE-SECOND``. Finally, inside of the timestamped
-directories are the actual user submissions.
-
-In the unlikely scenario that two submissions by the same user have the same
+The timestamps follow the format ``YEAR-MONTH-DAY-HOUR-MINUTE-SECOND``. Also, in
+the unlikely scenario that two submissions by the same user have the same
 timestamp, the timestamped directory will follow the format
 ``YEAR-MONTH-DAY-HOUR-MINUTE-SECOND-RANDOMNUMBER``.
 
@@ -33,7 +30,9 @@ Reference
     
     :param assignment: The exact id of the assignment.
     :param email: You can optionally specify a user's email to filter on, and
-                  only that user's submissions will be downloaded.
+                  only that user's submissions will be downloaded. The structure
+                  of the archive will remain the same however (so the only
+                  top-level directory will be named ``email``).
 
 Example Usage
 -------------
