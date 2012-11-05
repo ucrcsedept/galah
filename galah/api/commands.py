@@ -182,12 +182,14 @@ def get_api_info():
 from galah.db.crypto.passcrypt import serialize_seal, seal
 from mongoengine import OperationError
 @_api_call("admin")
-def create_user(email, password, account_type = "student"):
+def create_user(email, password = "", account_type = "student"):
     new_user = User(
         email = email, 
-        seal = serialize_seal(seal(password)), 
         account_type = account_type
     )
+
+    if password:
+        new_user.seal = serialize_seal(seal(password))
     
     try:
         new_user.save(force_insert = True)
@@ -197,10 +199,13 @@ def create_user(email, password, account_type = "student"):
     return "Success! %s created." % _user_to_str(new_user)
 
 @_api_call("admin")
-def reset_password(current_user, email, new_password):
+def reset_password(current_user, email, new_password = ""):
     the_user = _get_user(email, current_user)
 
-    the_user.seal = serialize_seal(seal(new_password))
+    if new_password:
+        the_user.seal = serialize_seal(seal(new_password))
+    else:
+        the_user.seal = None
 
     the_user.save()
 

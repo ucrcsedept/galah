@@ -6,11 +6,13 @@ Resets the password of a user to a given password.
 Reference
 ---------
 
-.. function:: reset_password(email, new_password):
+.. function:: reset_password(email[, new_password = '']):
     
     :param email: The email of the user to change the password of.
 
-    :param new_password: The new password for the user.
+    :param new_password: The new password for the user. You can reset the
+                         password to a blank password to require the user to
+                         log in through OAuth2.
 
 Example Usage
 -------------

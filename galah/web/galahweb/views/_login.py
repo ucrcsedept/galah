@@ -41,10 +41,11 @@ from oauth2client.client import OAuth2WebServerFlow
 
 # Google OAuth2 flow object to get user's email.
 flow = OAuth2WebServerFlow(
-  client_id=app.config['GOOGLE_CLIENT_ID'],
-  client_secret=app.config['GOOGLE_CLIENT_SECRET'],
-  scope='https://www.googleapis.com/auth/userinfo.email',
-  redirect_uri=app.config['HOST_URL'] + '/oauth2callback')
+    client_id=app.config['GOOGLE_CLIENT_ID'],
+    client_secret=app.config['GOOGLE_CLIENT_SECRET'],
+    scope='https://www.googleapis.com/auth/userinfo.email',
+    redirect_uri=app.config['HOST_URL'] + '/oauth2callback'
+)
 
 @app.route("/login/", methods = ["GET", "POST"])
 def login():
@@ -60,9 +61,13 @@ def login():
         except User.DoesNotExist:
             user = None
         
+        if not user.seal:
+          flash("You must use R'Mail to login.", category = "error")
+          return render_template("login.html", form = form)
+
         # Check if the entered password is correct
         if not user or \
-           not check_seal(form.password.data, deserialize_seal(str(user.seal))):
+                not check_seal(form.password.data, deserialize_seal(str(user.seal))):
             flash("Incorrect email or password.", category = "error")
         else:
             login_user(user)
@@ -77,38 +82,38 @@ def login():
 
 @app.route('/oauth2callback/')
 def authenticate_user():
-  """
-  Authenticate user as logged in after Google OAuth2 sends a callback.
-  """
-  error = request.args.get('error')
-  if error:
-    return redirect(url_for('login'))
+    """
+    Authenticate user as logged in after Google OAuth2 sends a callback.
+    """
+    error = request.args.get('error')
+    if error:
+        return redirect(url_for('login'))
 
-  # Get OAuth2 authentication code
-  code = request.args.get('code')
+    # Get OAuth2 authentication code
+    code = request.args.get('code')
 
-  # Exchange code for fresh credentials
-  credentials = flow.step2_exchange(code)
+    # Exchange code for fresh credentials
+    credentials = flow.step2_exchange(code)
 
-  # Extract email and email verification
-  id_token = credentials.id_token
-  email = id_token['email']
-  verified_email = id_token['verified_email']
+    # Extract email and email verification
+    id_token = credentials.id_token
+    email = id_token['email']
+    verified_email = id_token['verified_email']
 
-  if verified_email == 'true':
-      # Find the user with the given email
-      try:
-          user = FlaskUser(User.objects.get(email = email))
-      except User.DoesNotExist:
-          user = None
+    if verified_email == 'true':
+        # Find the user with the given email
+        try:
+            user = FlaskUser(User.objects.get(email = email))
+        except User.DoesNotExist:
+            user = None
 
-      if not user:
-          flash("A Galah account does not exist for this email.", "error")
-      else:
-          login_user(user)
-          return redirect(url_for("home"))
+        if not user:
+            flash("A Galah account does not exist for this email.", "error")
+        else:
+            login_user(user)
+            return redirect(url_for("home"))
 
-  else:
-      flash(u'Sorry, we couldn\'t verify your email', 'error')
+    else:
+        flash(u'Sorry, we couldn\'t verify your email', 'error')
       
-  return redirect(url_for('login'))
+    return redirect(url_for('login'))
