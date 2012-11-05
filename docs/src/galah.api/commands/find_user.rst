@@ -43,3 +43,8 @@ Now we will search for all students in the class **CS 9000**.
 2 user(s) found matching query {account type is 'student',enrolled in Class [id = 5090634855c448134f67b3e3, name = CS 9000]}.
     User [email = eadel002@ucr.edu, account_type = student]
     User [email = test@school.edu, account_type = student]
+
+Permissions
+-----------
+
+**admin** and **teacher** users can use this command.

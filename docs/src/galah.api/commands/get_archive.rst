@@ -49,3 +49,9 @@ Your archive is being created. You have 0 jobs ahead of you.
 The server is requesting that you download a file...
 Where would you like to save it (default: ./submissions.tar.gz)?:  
 File saved to ./submissions.tar.gz.
+
+Permissions
+-----------
+
+**admin** and **teacher** users can use this command. Teacher users can only
+download submissions for assignments in a class they're assigned to.

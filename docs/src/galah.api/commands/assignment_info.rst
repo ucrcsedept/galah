@@ -20,3 +20,8 @@ Properties of Assignment [id = 50907cca55c4481a5027103c, name = World Domination
 	due_cutoff = 2012-12-01 23:59:59
 	name = World Domination Domination
 	due = 2012-12-01 23:59:59
+
+Permissions
+-----------
+
+**admin** and **teacher** users can use this command.

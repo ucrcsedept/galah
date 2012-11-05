@@ -46,3 +46,8 @@ Finally, we can find all CS classes Galah knows about.
 Anyone is teaching 2 class(es) with 'CS' in their name.
 	Class [id = 5090634855c448134f67b3e3, name = CS 9000]
 	Class [id = 509066e855c448134f67b3e4, name = CS 10]
+
+Permissions
+-----------
+
+**admin** and **teacher** users can use this command.

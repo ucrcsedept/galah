@@ -40,3 +40,9 @@ woodshop as well. The command is pretty much the same.
 >>> drop_student student@ucr.edu Woodshop
 --Logged in as jsull003@ucr.edu--
 Success! Dropped User [email = student@ucr.edu, account_type = student] from Class [id = 5090671655c448134f67b3e5, name = Woodshop 101].
+
+Permissions
+-----------
+
+**admin** and **teacher** users can use this command. Teacher users can only
+drop students from classes they are assigned to.

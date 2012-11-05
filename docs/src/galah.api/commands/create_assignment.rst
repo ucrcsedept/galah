@@ -37,3 +37,9 @@ If we want students to not be able to submit at all after midnight of October
 >>> create_assignment "World Domination" "10/31/2012 10:09:00" CS\ 9000 "10/31/2012 23:59:00"
 --Logged in as jsull003@ucr.edu--
 Success! Assignment [id = 50907db055c4481a5027103d, name = World Domination] created.
+
+Permissions
+-----------
+
+**admin** and **teacher** users can use this command. Teacher users can only
+create assignments for classes they are assigned to.
