@@ -39,7 +39,7 @@ def form_call(api_name, *args, **kwargs):
         
         return kwargs
 
-def save_cookiejar(jar):
+def save_cookiejar(jar, user):
     """
     Save the cookies in the current session to the galah temp directory.
 
@@ -50,7 +50,7 @@ def save_cookiejar(jar):
     jar_path = os.path.join(config["galah_home"], "tmp", "cookiejar")
 
     with open(jar_path, "w") as f:
-        pickle.dump(session.cookies, f)
+        pickle.dump((session.cookies, user), f)
 
 def load_cookiejar():
     """
@@ -68,7 +68,7 @@ def load_cookiejar():
     except IOError:
         pass
 
-    return session.cookies
+    return (session.cookies, None)
 
 def login(email, password):
     """
@@ -200,8 +200,8 @@ def parse_arguments(args = sys.argv[1:]):
         ),
         make_option(
             "--config", "-c", metavar = "FILE",
-            help = "The configuration file to use. By default "
-                   "~/.galah/config/api_client.config is used if available."
+            help = "The configuration file to use. To show the default "
+                   "locations this script searches for, use --config-path."
         ),
         make_option(
             "--shell", "-s", action = "store_true",
@@ -213,6 +213,12 @@ def parse_arguments(args = sys.argv[1:]):
             "--oauth", "-o", metavar = "OAUTHMETHOD",
             help = "If specified, you will be able to login using your google "
                    "account as long as the email matches one stored in the db."
+        ),
+        make_option(
+            "--config-path", action = "store_true", dest = "show_config_path",
+            help = "If sepcified, all the locations this script would check "
+                   "for the config file at will be displayed, then the script "
+                   "will exit."
         )
     ]
 
@@ -289,23 +295,45 @@ def main():
     # Parse any and all command line arguments
     options, args = parse_arguments()
 
-    config_file_path = options.config or \
-        os.path.join(os.environ["HOME"], ".galah/config/api_client.config")
+    # Construct the ordered list of places to look for the galah config file.
+    possible_config_paths = [
+        "~/.galah/config/api_client.config",
+        "/etc/galah/api_client.config",
+        "./api_client.config"
+    ]
 
-    try:
-        with open(config_file_path) as config_file: 
-            config.update(parse_configuration(config_file))
-    except (IOError, KeyError):
-        # If the user specified a configuration file and we couldn't load it,
-        # error, otherwise, just use the default configuration.
-        if options.config:
+    if "GALAH_CONFIG_PATH" in os.environ:
+        possible_config_paths = os.environ["GALAH_CONFIG_PATH"].split(":") + \
+                possible_config_paths
+
+    if options.show_config_path:
+        print "Places to search for configuration (top first):"
+        for i in possible_config_paths:
+            print "\t%s" % i
+
+        exit(0)
+
+    if options.config:
+        config_file_path = options.config
+    else:
+        for i in possible_config_paths:
+            resolved_path = os.path.abspath(os.path.expanduser(i))
+
+            if os.path.isfile(resolved_path):
+                config_file_path = resolved_path
+
+    if config_file_path:
+        try:
+            with open(config_file_path) as config_file: 
+                config.update(parse_configuration(config_file))
+        except (IOError, KeyError):
             exit("File '%s' could not be opened for reading." % config_file)
+
+    # If the user used ~ in the galah_home path in the config, expand it.
+    config["galah_home"] = os.path.expanduser(config["galah_home"])
 
     if options.shell:
         exec_to_shell()
-
-    # If the user used ~ in the galah_home path, expand it.
-    config["galah_home"] = os.path.expanduser(config["galah_home"])
 
     # Figure out what credentials we want to use.
     user = options.user or config.get("user") or "Anonymous"
@@ -313,7 +341,10 @@ def main():
 
     # Before we do any network calls, load up any cookies left over from the
     # last time we ran the API client.
-    session.cookies = load_cookiejar()
+    old_jar = load_cookiejar()
+
+    if old_jar[1] == user:
+        session.cookies = old_jar[0]
 
     def do_api_call():
         try:
@@ -374,7 +405,7 @@ def main():
 
         # We logged in successfully, save whatever cookies the user gave us
         # to the disk.
-        save_cookiejar(session.cookies)
+        save_cookiejar(session.cookies, user)
     except requests.exceptions.ConnectionError as e:
         print >> sys.stderr, "Could not connect with the given url '%s':" \
                 % config["galah_host"]
