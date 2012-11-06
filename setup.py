@@ -16,7 +16,8 @@ setup(
     
     entry_points = {
         "console_scripts": [
-            "run-galah-web = galah.web.run_server:main"
+            "create_admin.py = utils.create_admin:main",
+            "api_client.py = galah.api.api_client:main"
         ]
     },
 

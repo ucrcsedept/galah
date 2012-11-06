@@ -342,7 +342,7 @@ def exec_to_shell():
     os.execlp("bash", "bash", "--rcfile", rcfile_path)
 
 import os
-if __name__ == "__main__":
+def main():
     options, args = parse_arguments()
 
     if options.config:
@@ -428,3 +428,6 @@ if __name__ == "__main__":
 
     except RuntimeError as e:
         print str(e)
+
+if __name__ == "__main__":
+    main()
