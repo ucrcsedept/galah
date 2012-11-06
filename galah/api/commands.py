@@ -501,7 +501,10 @@ def modify_assignment(current_user, id, name = "", due = "", for_class = "",
         assignment.due = due_date
 
     if due_cutoff:
-        cutoff_date = _to_datetime(due_cutoff)
+        if due_cutoff.lower() == "none":
+            cutoff_date = None
+        else:
+            cutoff_date = _to_datetime(due_cutoff)
 
         change_log.append(
             "Cutoff date changed from '%s' to '%s'."
