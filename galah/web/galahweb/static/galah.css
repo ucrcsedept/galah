@@ -95,14 +95,8 @@ a {
     width: 80%;
 }
 
-#upload_archive #submit_archive {
-    height: 27px;
-    width: 100px;
-}
-
-#upload_archive #add_field {
-    height: 27px;
-    width: 140px;
+#upload_archive input {
+    padding: 5px 15px;
 }
 
 #submissions .uploaded_filenames {
@@ -215,8 +209,8 @@ h3 {
 .login_button { text-align: center; }
 
 .login_button input {
-    width: 275px;
-    height: 33px;
+    width: 85%;
+    padding: 7px 0px;
 }
 
 /* Background Gradient */
