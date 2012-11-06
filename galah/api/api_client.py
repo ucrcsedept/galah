@@ -1,18 +1,25 @@
 #!/usr/bin/env python
 
+import requests
+
+# We'll need to store any cookies the server gives us (mainly the auth cookie)
+# and requests' sessions give us a nice way to do that.
+session = requests.session()
+
 # The default configuration settings
 config = {
     "galah_host": "http://localhost:5000",
     "galah_home": "~/.galah"
 }
 
-import json
 def to_json(obj):
     """
     Serializes an object into a JSON representation. The returned string will be
     compressed appropriately for network transfer.
     
     """
+
+    import json
     
     return json.dumps(obj, separators = (",", ":"))
 
@@ -32,35 +39,13 @@ def form_call(api_name, *args, **kwargs):
         
         return kwargs
 
-from warnings import warn
-import requests
-
-from oauth2client.tools import run
-from oauth2client.file import Storage
-
-# Google OAuth2
-from oauth2client.client import OAuth2WebServerFlow
-
-import os
-import httplib2
-
-# Google OAuth2 flow object to get user's email.
-flow = OAuth2WebServerFlow(
-  client_id='Galah Public Client ID',
-  client_secret='Galah Secret Client ID',
-  scope='https://www.googleapis.com/auth/userinfo.email',
-  user_agent='Galah')
-
-# We'll need to store any cookies the server gives us (mainly the auth cookie)
-# and requests' sessions give us a nice way to do that.
-session = requests.session()
-
-import pickle
 def save_cookiejar(jar):
     """
     Save the cookies in the current session to the galah temp directory.
 
     """
+
+    import pickle
 
     jar_path = os.path.join(config["galah_home"], "tmp", "cookiejar")
 
@@ -73,6 +58,8 @@ def load_cookiejar():
 
     """
 
+    import pickle
+
     jar_path = os.path.join(config["galah_home"], "tmp", "cookiejar")
 
     try:
@@ -81,47 +68,7 @@ def load_cookiejar():
     except IOError:
         pass
 
-    return None
-
-def oauth2login(oauth):
-    storage = Storage(".cache/galah_credentials")
-    credentials = storage.get()
-
-    email = ""
-
-    # Get new credentials if they don't exist or user does not want to use
-    # storage
-    if not credentials or oauth != "use_storage":
-        credentials = run(flow, storage)
-
-        # If the credentials are authorized, they've given permission.
-        http = httplib2.Http(cache=".cache")
-        http = credentials.authorize(http)
-
-        # Extract email and email verification
-        id_token = credentials.id_token
-        email = id_token["email"]
-        verified_email = id_token["verified_email"]
-
-        if verified_email != "true":
-            raise RuntimeError("Could not verify email")
-
-    request = session.post(
-        config["galah_host"] + "/api/login",
-        data = {"email": email, "oauth2": "True"}
-    )
-
-    request.raise_for_status()
-    
-    # Check if we successfully logged in.
-    if request.headers["X-CallSuccess"] != "True":
-        raise RuntimeError(request.text)
-    
-    # User was logged in properly, so we can store their credentials.
-    storage.put(credentials)
-
-    return email
- 
+    return session.cookies
 
 def login(email, password):
     """
@@ -143,8 +90,13 @@ def login(email, password):
     # Nothing bad happened, go ahead and return what the server sent back
     return request.text
 
-import time
-def call(interactive, api_name, *args, **kwargs):
+def call_backend(api_name, *args, **kwargs):
+    return _call(False, api_name, *args, **kwargs)
+
+def call(api_name, *args, **kwargs):
+    return _call(True, api_name, *args, **kwargs)
+
+def _call(interactive, api_name, *args, **kwargs):
     """
     Makes an API call to the server with the given arguments. This function will
     block until the server sends its response.
@@ -171,6 +123,8 @@ def call(interactive, api_name, *args, **kwargs):
     # be returned in the future. If this warning goes off that means that this
     # script needs to be updated to a new version.
     if not request.headers["Content-Type"].startswith("text/plain"):
+        from warnings import warn
+
         warn(
             "Expecting text/plain content, got %s. You may need to update this "
             "program." % request.headers["Content-Type"].split(";")[0]
@@ -195,6 +149,7 @@ def call(interactive, api_name, *args, **kwargs):
         )
 
         print "The server is requesting that you download a file..."
+
         save_to = raw_input(
             "Where would you like to save it (default: ./%s)?: " % default_name
         )
@@ -224,19 +179,18 @@ def call(interactive, api_name, *args, **kwargs):
             print "Download not ready yet, waiting for server... Retrying " \
                   "in 2 seconds..."
 
+            import time
             time.sleep(2)
 
         with open(save_to, "wb") as download_file:
             download_file.write(file_request.content)
 
         print "File saved to %s." % save_to
-    
-    # Nothing bad happened, go ahead and return what the server sent back
-    return None
 
 import sys
-from optparse import OptionParser, make_option
 def parse_arguments(args = sys.argv[1:]):
+    from optparse import OptionParser, make_option
+
     option_list = [
         make_option(
             "--user", "-u", metavar = "USERNAME",
@@ -290,9 +244,11 @@ def exec_to_shell():
     script_location, script_name = os.path.split(__file__)
     script_location = os.path.abspath(script_location)
 
+    import json
+
     # Retrieve all of the available commands from the server
     try:
-        api_info = json.loads(call(False, "get_api_info"))
+        api_info = json.loads(call_backend("get_api_info"))
     except requests.exceptions.ConnectionError as e:
         print >> sys.stderr, "Could not connect with the given url '%s':" \
                 % config["galah_host"]
@@ -302,25 +258,11 @@ def exec_to_shell():
 
     commands = [i["name"] for i in api_info]
 
-    rcfile_path = os.path.join(os.environ["HOME"], ".galah/tmp/shellrc")
+    import tempfile
+    rcfile, rcfile_path = tempfile.mkstemp("rc")
 
-    rcfile = None
-    if "HOME" in os.environ:
-        try:
-            os.makedirs(os.path.dirname(rcfile_path))
-        except OSError:
-            pass
-
-        try:
-            rcfile = open(rcfile_path, "w")
-        except IOError:
-            pass
-
-    if rcfile == None:
-        rcfile, rcfile_path = tempfile.mkstemp()
-
-        print rcfile_path
-        sys.stdout.flush()
+    # Wrap the file descripter we get back with a nice python file object
+    rcfile = os.fdopen(rcfile, "w")
 
     # Add the location of the api client to the PATH
     print >> rcfile, "PATH=%s:$PATH" % script_location
@@ -333,92 +275,51 @@ def exec_to_shell():
         print >> rcfile, 'alias %s="%s %s"' % (i, script_name, i)
 
     # Change the prompt a little bit so users know their in a modified shell
-    print >> rcfile, 'PS1="\\[\033[1;34m\\](Galah) $PS1\\[\033[0m\\]"'
+    print >> rcfile, 'PS1="\\[\033[1;34m\\](Galah API) $PS1\\[\033[0m\\]"'
 
     # Manually ensure that there's nothing buffered as no cleanup will occur
     # when we exec below.
     rcfile.flush()
+    rcfile.close()
 
     os.execlp("bash", "bash", "--rcfile", rcfile_path)
 
 import os
 def main():
+    # Parse any and all command line arguments
     options, args = parse_arguments()
 
-    if options.config:
-        try:
-            config_file = open(options.config)
+    config_file_path = options.config or \
+        os.path.join(os.environ["HOME"], ".galah/config/api_client.config")
 
+    try:
+        with open(config_file_path) as config_file: 
             config.update(parse_configuration(config_file))
-        except IOError:
+    except (IOError, KeyError):
+        # If the user specified a configuration file and we couldn't load it,
+        # error, otherwise, just use the default configuration.
+        if options.config:
             exit("File '%s' could not be opened for reading." % config_file)
-    else:
-        try:
-            config_file = open(os.path.join(
-                os.environ["HOME"], ".galah/config/api_client.config"
-            ))
-
-            config.update(parse_configuration(config_file))
-        except (IOError, KeyError):
-            pass
 
     if options.shell:
         exec_to_shell()
 
+    # If the user used ~ in the galah_home path, expand it.
     config["galah_home"] = os.path.expanduser(config["galah_home"])
 
-    oauth = options.oauth
-    user = options.user or config.get("user")
-    password = os.environ.get("GALAH_PASSWORD") or config.get("password")
+    # Figure out what credentials we want to use.
+    user = options.user or config.get("user") or "Anonymous"
+    print "--Acting as user %s--" % user
 
-    # If oauth flag is specified, login without user or password info.
-    if oauth:
-        try:
-            email = oauth2login(oauth)
+    # Before we do any network calls, load up any cookies left over from the
+    # last time we ran the API client.
+    session.cookies = load_cookiejar()
 
-            print "--Logged in as %s--" % email
-        except RuntimeError:
-            print >> sys.stderr, "Could not log in with provided email. " \
-                  "You must have an account before logging in."
-
-            exit(1)
-
-    if user and not password:
-        exit(
-            "Username specified but no password given (did you forget to set "
-            "GALAH_PASSWORD?)."
-        )
-
-    if user and password:
-        try:
-            session.cookies = load_cookiejar()
-
-            whoami = call(False, "whoami")
-            if whoami != user:
-                login(user, password)
-
-            print "--Logged in as %s--" % user
-        except requests.exceptions.ConnectionError as e:
-            print >> sys.stderr, "Could not connect with the given url '%s':" \
-                    % config["galah_host"]
-            print >> sys.stderr, "\t" + str(e)
-
-            exit(1)
-        except RuntimeError:
-            print >> sys.stderr, "Could not log in with provided user name " \
-                  "and password. (Did you remember to set GALAH_PASSWORD?)"
-
-            exit(1)
-    else:
-        print "--Not logged in--"
-    
-    try:
+    def do_api_call():
         try:
             # This function actually outputs the result of the call to the
             # console.
-            call(True, *args)
-
-            save_cookiejar(session.cookies)
+            call(*args)
         except requests.exceptions.ConnectionError as e:
             print >> sys.stderr, "Could not connect with the given url '%s':" \
                     % config["galah_host"]
@@ -426,8 +327,73 @@ def main():
 
             exit(1)
 
+    try:
+        # Try to execute the API call. We can fail here for two reasons: the API
+        # command throws some error, or we aren't logged in.
+        do_api_call()
+
+        # If the above call didn't error, we're all set.
+        exit(0)
     except RuntimeError as e:
-        print str(e)
+        # Check to see if we failed because we're not logged in.
+        import re
+        logged_in = not bool(re.match( 
+            "An error occurred processing your request: Only [A-Za-z ]+ users "
+            "are allowed to call [A-Za-z_]+",
+            str(e)
+        ))
+
+        # If we were already logged in or the user didn't give us any
+        # credentials, just print out the error message.
+        if logged_in or not user:
+            exit(str(e))
+
+    # If we got this far, we failed the above command because we're not logged
+    # in, so now we will try to login, and then we'll try the command again.
+
+    if "GALAH_PASSWORD" in os.environ and "password" in config:
+        print >> sys.stderr, (
+            "Warning: Password specified in both the GALAH_PASSWORD "
+            "environmental variable and the configuration file. Using "
+            "GALAH_PASSWORD."
+        )
+
+    password = os.environ.get("GALAH_PASSWORD") or config.get("password")
+
+    # If they didn't specify a password anywhere, go ahead and prompt
+    # them for one.
+    if not password:
+        import getpass
+        password = getpass.getpass("Please enter password for user %s: " % user)
+
+    if not password:
+        exit("Could not log in as %s. No password given." % user)
+
+    try:
+        login(user, password)
+
+        # We logged in successfully, save whatever cookies the user gave us
+        # to the disk.
+        save_cookiejar(session.cookies)
+    except requests.exceptions.ConnectionError as e:
+        print >> sys.stderr, "Could not connect with the given url '%s':" \
+                % config["galah_host"]
+        print >> sys.stderr, "\t" + str(e)
+
+        exit(1)
+    except RuntimeError:
+        print >> sys.stderr, "Could not log in with provided user name " \
+              "and password."
+
+        exit(1)
+
+    try:
+        # Do the API command again.
+        do_api_call()
+    except RuntimeError as e2:
+        # If we fail again, just print out the message, it's not a login
+        # issue.
+        print >> sys.stderr, str(e2)
 
 if __name__ == "__main__":
     main()
