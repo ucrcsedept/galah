@@ -22,7 +22,8 @@ Reference
 
     :param due_cutoff: The new cutoff date of the assignment. Same format as
                        the due date. May be left blank to leave the original
-                       value unchanged.
+                       value unchanged. If ``none`` is specified, the previous
+                       cutoff date is removed.
 
     :raises RuntimeError: If the assignment could not be found.
     
