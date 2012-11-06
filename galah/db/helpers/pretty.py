@@ -50,44 +50,46 @@ def pretty_list(the_list, conjunction = "and", none_string = "nothing"):
         return result
 
 def pretty_timedelta(zdelta):
-    if zdelta.days == 0 and zdelta.seconds == 0:
-        return "now"
-    
     # We will build our string part by part. All strings in this array will be
     # concatenated with a space as delimiter.
     stringParts = []
     
     if zdelta.days < 0:
         ago = True
-        days = -zdelta.days % 30
+        zdelta = -zdelta
     else:
         ago = False
-        days = zdelta.days % 30
         stringParts.append("in")
-    
+
     months = abs(zdelta.days) / 30
     hours = zdelta.seconds / (60 * 60)
     minutes = (zdelta.seconds % (60 * 60)) / 60
     seconds = (zdelta.seconds % 60)
+
+    if months == 0 and zdelta.days == 0 and hours == 0 and minutes == 0 and \
+            seconds < 10:
+        return "just now"
     
-    # Add the months part
+    # Add the months part. Because we only approximate the numbers of months,
+    # the rest of the numbers (days, hours, etc) won't be exact so we skip the
+    # rest of the if statements.
     if months != 0:
-        return "in more than " + str(months) + plural_if(" month", months)
+        stringParts += ["about", str(months), plural_if("month", months)]
     
     # Add the days part
-    if days != 0:
-        stringParts += [str(days), plural_if("day", days)]
+    if months == 0 and zdelta.days != 0:
+        stringParts += [str(zdelta.days), plural_if("day", zdelta.days)]
     
     # Add the hours part
-    if hours != 0:
+    if months == 0 and hours != 0:
         stringParts += [str(hours), plural_if("hour", hours)]
     
     # Add the minutes part if we're less than 4 hours away
-    if minutes != 0 and days == 0 and hours < 4:
+    if months == 0 and minutes != 0 and zdelta.days == 0 and hours < 4:
         stringParts += [str(minutes), plural_if("minute", minutes)]
         
     # Add the seconds part if we're less than 10 minutes away
-    if seconds != 0 and days == 0 and hours == 0 and minutes < 10:
+    if months == 0 and seconds != 0 and zdelta.days == 0 and hours == 0 and minutes < 10:
         stringParts += [str(seconds), plural_if("second", seconds)]
             
     if ago:
