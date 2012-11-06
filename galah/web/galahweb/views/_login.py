@@ -61,7 +61,7 @@ def login():
         except User.DoesNotExist:
             user = None
         
-        if not user.seal:
+        if user and not user.seal:
           flash("You must use R'Mail to login.", category = "error")
           return render_template("login.html", form = form)
 
