@@ -13,11 +13,6 @@ Task = namedtuple("Task", ("id", "requester", "assignment", "email"))
 
 task_queue = Queue.Queue()
 
-# Copied from web.views._upload_submission.SUBMISSION_DIRECTORY. Adding a new
-# submission should be transformed into an API call and _upload_submissions
-# should use that API call, but this will work for now.
-SUBMISSION_DIRECTORY = "/var/local/galah.web/submissions/"
-
 def _run():
     # The thread that executes this function should execute as a daemon,
     # therefore there is no reason to allow an explicit exit. It will be 
@@ -108,7 +103,7 @@ def _run():
                     # Create a symlink pointing to the actual submission
                     # directory with the name we gnerated
                     os.symlink(
-                        os.path.join(SUBMISSION_DIRECTORY, str(i.id)),
+                        os.path.join(app.config["SUBMISSION_DIRECTORY"], str(i.id)),
                         symlink_path
                     )
 
