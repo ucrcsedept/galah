@@ -10,8 +10,8 @@ session = requests.session()
 config = {
     "galah_host": "http://localhost:5000",
     "galah_home": "~/.galah",
-    "google_client_id": "401399822645-a1015kkb76m6evpn3mhk3hr4voqejt2f.apps.googleusercontent.com",
-    "google_client_secret": "TS6HarpynHCdSTesaRMlbaU_",
+    "google_client_id": "Galah Public Client ID",
+    "google_client_secret": "Galah Client Secret Key",
     "credentials_cache": ".cache/galah_credentials"
 }
 
