@@ -10,9 +10,6 @@ import subprocess
 import tempfile
 import datetime
 
-SUBMISSION_DIRECTORY = "/var/local/galah.web/submissions/"
-assert SUBMISSION_DIRECTORY[0] == "/" # Directory must be given as absolute path
-
 @app.route("/assignments/<assignment_id>/<submission_id>/download.tar.gz")
 @account_type_required(("student", "teacher"))
 def download_submission(assignment_id, submission_id):
@@ -64,7 +61,7 @@ def download_submission(assignment_id, submission_id):
         subprocess.check_call(
             [
                 "tar", "--dereference", "--create", "--gzip", "--directory",
-                os.path.join(SUBMISSION_DIRECTORY, str(submission_id)),
+                os.path.join(app.config["SUBMISSION_DIRECTORY"], str(submission_id)),
                 "--file", archive_file
             ] + submission.uploaded_filenames
         )

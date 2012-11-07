@@ -9,6 +9,7 @@
     </script>
 {% endblock %}
 {% block content %}
+    {% if oauth_enabled %}
     <div class="login_block">
         <div class="login_button">
             <div class="heading directions">
@@ -18,12 +19,15 @@
             <a href="/login/?type=rmail"><input type="button" value="Login with R'Mail"></a>
         </div>
     </div>
+    {% endif %}
     <div class="login_block">
         <form method="post">
+            {% if oauth_enabled %}
             <div class="heading directions">
                 You can also use your Galah username and password if you were
                 assigned one.
             </div>
+            {% endif %}
             <div class="fields">
                 {{ form.hidden_tag() }}
                 <div class="heading">
