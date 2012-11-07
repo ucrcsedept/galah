@@ -56,7 +56,7 @@ def api_call():
             api_args = list(request.json)
 
             api_kwargs = {}
-        elif type(i) is dict and "api_call" in request.json:
+        elif type(request.json) is dict and "api_name" in request.json:
             # Don't let the user insert their own current_user argument
             if "current_user" in request.json:
                 raise ValueError("You cannot fool the all-knowing Galah.")
