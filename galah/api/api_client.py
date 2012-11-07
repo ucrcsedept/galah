@@ -346,11 +346,31 @@ def main():
     if old_jar[1] == user:
         session.cookies = old_jar[0]
 
+    # I'm going to try and extract all the of the named arguments the user
+    # passed in.
+    named_args = {}
+
+    # Go through each argument and detect if it's a key value pair
+    import re
+    to_delete = []
+    for i in range(len(args)):
+        match = re.match(r"(?P<name>[a-z_]+)(?!\\)=(?P<value>.*)", args[i])
+
+        if match:
+            named_args[match.group("name")] = match.group("value")
+            to_delete.append(i)
+
+        args[i] = args[i].replace("\\=", "=")
+
+    # Delete all of the key value paris.
+    for i in to_delete:
+        del args[i]
+
     def do_api_call():
         try:
             # This function actually outputs the result of the call to the
             # console.
-            call(*args)
+            call(*args, **named_args)
         except requests.exceptions.ConnectionError as e:
             print >> sys.stderr, "Could not connect with the given url '%s':" \
                     % config["galah_host"]
