@@ -39,13 +39,19 @@ from flask import redirect, url_for, flash, request
 # Google OAuth2
 from oauth2client.client import OAuth2WebServerFlow
 
-# Google OAuth2 flow object to get user's email.
-flow = OAuth2WebServerFlow(
-    client_id=app.config['GOOGLE_CLIENT_ID'],
-    client_secret=app.config['GOOGLE_CLIENT_SECRET'],
-    scope='https://www.googleapis.com/auth/userinfo.email',
-    redirect_uri=app.config['HOST_URL'] + '/oauth2callback'
+oauth_enabled = (
+    "GOOGLE_CLIENT_ID" in app.config and app.config["GOOGLE_CLIENT_ID"] and \
+    "GOOGLE_CLIENT_SECRET" in app.config and app.config["GOOGLE_CLIENT_SECRET"]
 )
+
+# Google OAuth2 flow object to get user's email.
+if oauth_enabled:
+    flow = OAuth2WebServerFlow(
+        client_id=app.config['GOOGLE_CLIENT_ID'],
+        client_secret=app.config['GOOGLE_CLIENT_SECRET'],
+        scope='https://www.googleapis.com/auth/userinfo.email',
+        redirect_uri=app.config['HOST_URL'] + '/oauth2callback'
+    )
 
 @app.route("/login/", methods = ["GET", "POST"])
 def login():
@@ -61,9 +67,11 @@ def login():
         except User.DoesNotExist:
             user = None
         
-        if user and not user.seal:
-          flash("You must use R'Mail to login.", category = "error")
-          return render_template("login.html", form = form)
+        if oauth_enabled and user and not user.seal:
+            flash("You must use R'Mail to login.", category = "error")
+            return render_template(
+                "login.html", form = form, oauth_enabled = oauth_enabled
+            )
 
         # Check if the entered password is correct
         if not user or \
@@ -72,13 +80,15 @@ def login():
         else:
             login_user(user)
             return redirect(form.redirect_target or url_for("browse_assignments"))
-    elif request.args.get("type") == "rmail":
+    elif oauth_enabled and request.args.get("type") == "rmail":
         # Login using Google OAuth2
         # Step 1 of two-factor authentication: redirect to AUTH url
         auth_uri = flow.step1_get_authorize_url()
         return redirect(auth_uri)
     
-    return render_template("login.html", form = form)
+    return render_template(
+        "login.html", form = form, oauth_enabled = oauth_enabled
+    )
 
 @app.route('/oauth2callback/')
 def authenticate_user():
