@@ -17,7 +17,8 @@ def api_login():
 
     # Optional arguments for OAuth2 Login
     access_token = request.form.get("access_token", None)
-    def verify_token(access_token):
+    audience = request.form.get("audience", None)
+    def verify_token(email, audience, access_token):
         """
         Sends a request to the Google tokeninfo backend to verify access_token
 
@@ -33,6 +34,14 @@ def api_login():
         if req.status_code == 400:
             raise RuntimeError(req.text)
 
+        # Access token looks fine, now verify user's email matches.
+        if req.json["email"] != email:
+            raise RuntimeError("Attempting to login as different user")
+
+        # Validate client id is matching to avoid confused deputy attack
+        if req.json["audience"] != audience:
+            raise RuntimeError("Invalid Client ID")
+
         # Looks like the key is valid
         return True
 
@@ -45,8 +54,8 @@ def api_login():
     # Check if the entered password is correct or, if no password, that the
     # access token can be validated using the Google tokeninfo backend.
     if not user or \
-       (not(password) and not(verify_token(access_token))) and \
-       (not check_seal(password, deserialize_seal(str(user.seal)))):
+       not(password) and not(verify_token(email, audience, access_token)) and \
+       not check_seal(password, deserialize_seal(str(user.seal))):
         return Response(
             response = "Incorrect email or password.",
             headers = {"X-CallSuccess": "False"}
