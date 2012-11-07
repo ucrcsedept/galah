@@ -9,7 +9,10 @@ session = requests.session()
 # The default configuration settings
 config = {
     "galah_host": "http://localhost:5000",
-    "galah_home": "~/.galah"
+    "galah_home": "~/.galah",
+    "google_client_id": "401399822645-a1015kkb76m6evpn3mhk3hr4voqejt2f.apps.googleusercontent.com",
+    "google_client_secret": "TS6HarpynHCdSTesaRMlbaU_",
+    "credentials_cache": ".cache/galah_credentials"
 }
 
 def to_json(obj):
@@ -89,6 +92,62 @@ def login(email, password):
     
     # Nothing bad happened, go ahead and return what the server sent back
     return request.text
+
+def oauth2login(oauth):
+    """
+    Attempts to authenticate user for Galah using Google OAuth2.
+
+    """
+
+    # Google OAuth2
+    from oauth2client.tools import run
+    from oauth2client.file import Storage
+    from oauth2client.client import OAuth2WebServerFlow
+    import httplib2
+
+    # Google OAuth2 flow object to get user's email.
+    flow = OAuth2WebServerFlow(
+        client_id=config["google_client_id"],
+        client_secret=config["google_client_secret"],
+        scope='https://www.googleapis.com/auth/userinfo.email',
+        user_agent='Galah')
+
+    storage = Storage(config["credentials_cache"])
+    credentials = storage.get()
+
+    # Get new credentials if they don't exist or user does not want to use
+    # storage
+    if not credentials or oauth != "use_storage":
+        credentials = run(flow, storage)
+
+        # If the credentials are authorized, they've given permission.
+        http = httplib2.Http(cache=".cache")
+        http = credentials.authorize(http)
+
+    # Extract email and email verification
+    id_token = credentials.id_token
+    email = id_token["email"]
+    verified_email = id_token["verified_email"]
+    access_token = credentials.access_token
+
+    if verified_email != "true":
+        raise RuntimeError("Could not verify email")
+
+    request = session.post(
+        config["galah_host"] + "/api/login",
+        data = {"email":email, "access_token":access_token}
+    )
+
+    request.raise_for_status()
+    
+    # Check if we successfully logged in.
+    if request.headers["X-CallSuccess"] != "True":
+        raise RuntimeError(request.text)
+    
+    # User was logged in properly, so we can store their credentials.
+    storage.put(credentials)
+
+    return email
 
 def call_backend(api_name, *args, **kwargs):
     return _call(False, api_name, *args, **kwargs)
@@ -410,33 +469,48 @@ def main():
         )
 
     password = os.environ.get("GALAH_PASSWORD") or config.get("password")
+    oauth = options.oauth
 
-    # If they didn't specify a password anywhere, go ahead and prompt
-    # them for one.
-    if not password:
-        import getpass
-        password = getpass.getpass("Please enter password for user %s: " % user)
+    # If they specify to login via a Google Account, log them in by OAuth2
+    if bool(oauth):
+        try:
+            user = oauth2login(oauth)
 
-    if not password:
-        exit("Could not log in as %s. No password given." % user)
+            save_cookiejar(session.cookies, user)
+        except RuntimeError:
+            print >> sys.stderr, "Could not authenticate user with provided " \
+                  "email."
 
-    try:
-        login(user, password)
+            exit(1)
 
-        # We logged in successfully, save whatever cookies the user gave us
-        # to the disk.
-        save_cookiejar(session.cookies, user)
-    except requests.exceptions.ConnectionError as e:
-        print >> sys.stderr, "Could not connect with the given url '%s':" \
+    else:
+        # If they didn't specify a password anywhere, go ahead and prompt
+        # them for one.
+        if not password:
+            import getpass
+            password = getpass.getpass("Please enter password for user %s: " 
+                                       % user)
+
+        if not password:
+            exit("Could not log in as %s. No password given." % user)
+
+        try:
+            login(user, password)
+
+            # We logged in successfully, save whatever cookies the user gave us
+            # to the disk.
+            save_cookiejar(session.cookies, user)
+        except requests.exceptions.ConnectionError as e:
+            print >> sys.stderr, "Could not connect with the given url '%s':" \
                 % config["galah_host"]
-        print >> sys.stderr, "\t" + str(e)
+            print >> sys.stderr, "\t" + str(e)
 
-        exit(1)
-    except RuntimeError:
-        print >> sys.stderr, "Could not log in with provided user name " \
-              "and password."
+            exit(1)
+        except RuntimeError:
+            print >> sys.stderr, "Could not log in with provided user name " \
+                "and password."
 
-        exit(1)
+            exit(1)
 
     try:
         # Do the API command again.
