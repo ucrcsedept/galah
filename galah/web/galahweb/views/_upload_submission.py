@@ -19,9 +19,6 @@ import datetime
 
 from _view_assignment import SimpleArchiveForm
 
-SUBMISSION_DIRECTORY = "/var/local/galah.web/submissions/"
-assert SUBMISSION_DIRECTORY[0] == "/" # Directory must be given as absolute path
-
 @app.route("/assignments/<assignment_id>/upload", methods = ["POST"])
 @account_type_required(("student", "teacher"))
 def upload_submission(assignment_id):
@@ -74,7 +71,7 @@ def upload_submission(assignment_id):
     # we will have the proper permissions and that we will be able to make the
     # directory thus this could error because of that.
     new_submission.testables = os.path.join(
-        SUBMISSION_DIRECTORY, str(new_submission.id)
+        app.config["SUBMISSION_DIRECTORY"], str(new_submission.id)
     )
     os.makedirs(new_submission.testables)
 
