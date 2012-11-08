@@ -363,8 +363,7 @@ def main():
         args[i] = args[i].replace("\\=", "=")
 
     # Delete all of the key value paris.
-    to_delete.sort()
-    to_delete.reverse()
+    to_delete.sort(reverse = True)
     for i in to_delete:
         del args[i]
 
