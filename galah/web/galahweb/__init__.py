@@ -5,7 +5,7 @@ app.config.update({
     "DEBUG": True,
     "SECRET_KEY": "Very Secure Key",
     "MONGODB": "galah",
-    "SUBMISSION_DIRECTORY": "/var/local/galah/web/submissions/"
+    "SUBMISSION_DIRECTORY": "/var/local/galah/web/submissions/",
     "HOST_URL": "http://localhost:5000"
 })
 
