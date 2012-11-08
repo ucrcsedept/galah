@@ -233,7 +233,7 @@ def parse_arguments(args = sys.argv[1:]):
 
     options, args = parser.parse_args(args)
 
-    if not options.shell and len(args) == 0:
+    if not options.shell and not options.show_config_path and len(args) == 0:
         parser.error("At least one argument must be supplied.")
 
     return (options, args)
