@@ -9,7 +9,7 @@
                 <span class="class_name">{{ i.class_name}}</span> <a href="/assignments/{{ i.id }}">{{ i.name }}</a>
             </div>
             <div class="due">
-                due {{ i.due_pretty }} {% if i.due_cutoff_pretty %}(cutoff {{ i.due_cutoff_pretty }}){% endif %}
+                due <time datetime="{{ i.due.strftime("%Y-%m%dT%H:%M:%S") }}" title="{{ i.due.strftime("%B %d, %Y at %I:%M:%S %p") }}">{{ i.due_pretty }}</time> {% if i.due_cutoff_pretty %}(cutoff <time datetime="{{ i.due_cutoff.strftime("%Y-%m%dT%H:%M:%S") }}" title="{{ i.due_cutoff.strftime("%B %d, %Y at %I:%M:%S %p") }}">{{ i.due_cutoff_pretty }}</time>){% endif %}
             </div>
         </div>
     {% endfor %}
