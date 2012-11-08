@@ -271,7 +271,7 @@ def exec_to_shell():
     rcfile = os.fdopen(rcfile, "w")
 
     # Add the location of the api client to the PATH
-    print >> rcfile, "PATH=%s:$PATH" % script_location
+    print >> rcfile, 'PATH="%s:$PATH"' % script_location
 
     # Add the location of the man files to the MANPATH
     print >> rcfile, "export MANPATH=./man/:`manpath`"
