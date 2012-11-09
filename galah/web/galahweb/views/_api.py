@@ -1,5 +1,5 @@
 from flask import Response, request
-from galah.web.galahweb import app
+from galah.web.galahweb import app, oauth_enabled
 from flask.ext.login import current_user
 from galah.api.commands import api_calls
 from galah.db.crypto.passcrypt import check_seal, deserialize_seal
@@ -17,7 +17,7 @@ def api_login():
 
     # Optional arguments for OAuth2 Login
     access_token = request.form.get("access_token", None)
-    audience = request.form.get("audience", None)
+    audience = app.config["GOOGLE_CLIENT_ID"] if oauth_enabled else None
     def verify_token(email, audience, access_token):
         """
         Sends a request to the Google tokeninfo backend to verify access_token
@@ -40,7 +40,7 @@ def api_login():
 
         # Validate client id is matching to avoid confused deputy attack
         if req.json["audience"] != audience:
-            raise RuntimeError("Invalid Client ID")
+            raise RuntimeError("Invalid Client ID or OAuth2 not enabled")
 
         # Looks like the key is valid
         return True
