@@ -44,8 +44,6 @@ def browse_assignments():
         most_recent = True
     ))
 
-    print submissions
-
     # Add a property to all the assignments so the template can display their
     # respective class easier. Additionally, add a plain text version of the
     # due date
