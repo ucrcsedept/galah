@@ -12,7 +12,18 @@ from mongoengine import ValidationError
 #: An anonymous admin user useful when accessing this module from the local
 #: system.
 admin_user = namedtuple("User", "account_type")("admin")
-           
+
+class UserError(Exception):
+    def __init__(self, what):
+        self.what = str(what)
+
+    def __str__(self):
+        return self.what
+
+class PermissionError(UserError):
+    def __init__(self, *args, **kwargs):
+        UserError.__init__(self, *args, **kwargs)
+
 class APICall(object):
     """Wraps an API call and handles basic permissions along with providing a
     simple interface to get meta data on the API call.
@@ -20,10 +31,6 @@ class APICall(object):
     """
     
     __slots__ = ("wrapped_function", "allowed", "argspec", "name")
-            
-    class PermissionError(RuntimeError):
-        def __init__(self, *args, **kwargs):
-            RuntimeError.__init__(self, *args, **kwargs)
     
     def __init__(self, wrapped_function, allowed = None):
         #: The raw function we are wrapping that performs the actual logic.
@@ -52,7 +59,7 @@ class APICall(object):
         
         # Check if the current user has permisson to perform this operation
         if self.allowed and current_user.account_type not in self.allowed:
-            raise APICall.PermissionError(
+            raise PermissionError(
                 "Only %s users are allowed to call %s" %
                     (
                         " or ".join(self.allowed),
@@ -87,7 +94,7 @@ def _get_user(email, current_user):
     try:
         return User.objects.get(email = email)
     except User.DoesNotExist:
-        raise RuntimeError("User %s does not exist." % email)
+        raise UserError("User %s does not exist." % email)
 
 def _user_to_str(user):
     return "User [email = %s, account_type = %s]" % \
@@ -97,9 +104,9 @@ def _get_assignment(id):
     try:
         return Assignment.objects.get(id = ObjectId(id))
     except Assignment.DoesNotExist:
-        raise RuntimeError("Assignment with ID %s does not exist." % id)
+        raise UserError("Assignment with ID %s does not exist." % id)
     except InvalidId:
-        raise RuntimeError("Assignment ID %s is not a valid ID." % id)
+        raise UserError("Assignment ID %s is not a valid ID." % id)
 
 def _assignment_to_str(assignment):
     return "Assignment [id = %s, name = %s]" % (assignment.id, assignment.name)
@@ -122,11 +129,11 @@ def _get_class(query, instructor = None):
     matches = list(Class.objects(**query_dict))
     
     if not matches:
-        raise RuntimeError("No classes matched your query of '%s'." % query)    
+        raise UserError("No classes matched your query of '%s'." % query)    
     elif len(matches) == 1:
         return matches[0]
     else:
-        raise RuntimeError(
+        raise UserError(
             "%d classes match your query of '%s', however, this API expects 1 "
             "class. Refine your query and try again.\n\t%s" % (
                 len(matches),
@@ -217,7 +224,7 @@ def create_user(email, password = "", account_type = "student"):
     try:
         new_user.save(force_insert = True)
     except OperationError:
-        raise RuntimeError("A user with that email already exists.")
+        raise UserError("A user with that email already exists.")
     
     return "Success! %s created." % _user_to_str(new_user)
 
@@ -246,7 +253,7 @@ def modify_user(current_user, email, account_type):
     try:
         the_user.save()
     except ValidationError:
-        raise RuntimeError("%s is not a valid account type." % account_type)
+        raise UserError("%s is not a valid account type." % account_type)
 
     return "Success! %s has been retyped as a %s" \
                 % (old_user_string, account_type)
@@ -341,12 +348,12 @@ def enroll_student(current_user, email, enroll_in):
 
     if current_user.account_type != "admin" and \
             user.account_type == "teacher":
-        raise RuntimeError("Only admins can assign teachers to classes.")
+        raise PermissionError("Only admins can assign teachers to classes.")
     
     the_class = _get_class(enroll_in)
 
     if the_class.id in user.classes:
-        raise RuntimeError("%s is already enrolled in %s." %
+        raise UserError("%s is already enrolled in %s." %
             (_user_to_str(user), _class_to_str(the_class))
         )
             
@@ -371,7 +378,7 @@ def drop_student(current_user, email, drop_from):
     user = _get_user(email, current_user)
         
     if the_class.id not in user.classes:
-        raise RuntimeError("%s is not enrolled in %s." %
+        raise UserError("%s is not enrolled in %s." %
             (_user_to_str(user), _class_to_str(the_class))
         )
     
@@ -411,7 +418,7 @@ def create_class(name):
 @_api_call("admin")
 def modify_class(the_class, name):
     if not name:
-        raise RuntimeError("name cannot be empty.")
+        raise UserError("name cannot be empty.")
 
     the_class = _get_class(the_class)
 
@@ -468,7 +475,7 @@ def create_assignment(current_user, name, due, for_class, due_cutoff = "",
 
     if current_user.account_type != "admin" and \
             the_class.id not in current_user.classes:
-        raise RuntimeError(
+        raise PermissionError(
             "You cannot create an assignment for a class you are not teaching."
         )
 
@@ -508,7 +515,7 @@ def modify_assignment(current_user, id, name = "", due = "", for_class = "",
 
     if current_user.account_type != "admin" and \
             assignment.for_class not in current_user.classes:
-        raise RuntimeError(
+        raise PermissionError(
             "You can only modify assignments for classes you teach."
         )
 
@@ -573,7 +580,7 @@ def modify_assignment(current_user, id, name = "", due = "", for_class = "",
 
         if current_user.account_type != "admin" and \
                 assignment.for_class not in current_user.classes:
-            raise RuntimeError(
+            raise PermissionError(
                 "You cannot reassign an assignment to a class you're not "
                 "teaching."
             )
@@ -590,21 +597,11 @@ def modify_assignment(current_user, id, name = "", due = "", for_class = "",
 
 @_api_call(("admin", "teacher"))
 def delete_assignment(current_user, id):
-    """Deletes an assignment.
-
-    :param id: The ID of the assignment to delete.
-
-    :returns: None
-
-    :raises RuntimeError: If the assignment could not be deleted.
-
-    """
-
     to_delete = _get_assignment(id)
 
     if current_user.account_type != "admin" and \
             to_delete.for_class not in current_user.classes:
-        raise RuntimeError(
+        raise PermissionError(
             "You cannot delete an assignment for a class you're not teaching."
         )
 
@@ -622,7 +619,7 @@ def get_archive(current_user, assignment, email = ""):
 
     if current_user.account_type != "admin" and \
             the_assignment.for_class not in current_user.classes:
-        raise RuntimeError(
+        raise PermissionError(
             "You can only modify assignments for classes you teach."
         )
 
