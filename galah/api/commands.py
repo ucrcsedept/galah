@@ -150,6 +150,9 @@ def _to_datetime(time):
         raise ValueError(
             "Could not convert %s into a time object." % repr(time)
         )
+
+def _datetime_to_str(time):
+    return datetime.datetime.strftime(time, "%m/%d/%Y %H:%M:%S")
         
 ## Below are the actual API calls ##
 @_api_call()
@@ -471,6 +474,9 @@ def assignment_info(id):
     attribute_strings = []
     for k, v in assignment._data.items():
         if k and v:
+            if type(v) is datetime.datetime:
+                v = _datetime_to_str(v)
+
             attribute_strings.append("%s = %s" % (k, v))
 
     attributes = "\n\t".join(attribute_strings)
@@ -507,7 +513,7 @@ def modify_assignment(current_user, id, name = "", due = "", for_class = "",
 
         change_log.append(
             "Due date changed from '%s' to '%s'."
-                % (str(assignment.due), str(due_date))
+                % (_datetime_to_str(assignment.due), _datetime_to_str(due_date))
         )
 
         assignment.due = due_date
@@ -520,7 +526,10 @@ def modify_assignment(current_user, id, name = "", due = "", for_class = "",
 
         change_log.append(
             "Cutoff date changed from '%s' to '%s'."
-                % (str(assignment.due_cutoff), str(cutoff_date))
+                % (
+                    _datetime_to_str(assignment.due_cutoff),
+                    _datetime_to_str(cutoff_date)
+                )
         )
 
         assignment.due_cutoff = cutoff_date
