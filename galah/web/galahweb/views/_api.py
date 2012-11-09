@@ -1,7 +1,7 @@
 from flask import Response, request
 from galah.web.galahweb import app, oauth_enabled
 from flask.ext.login import current_user
-from galah.api.commands import api_calls
+from galah.api.commands import api_calls, UserError
 from galah.db.crypto.passcrypt import check_seal, deserialize_seal
 from galah.db.models import User
 from flask.ext.login import login_user
@@ -130,11 +130,24 @@ def api_call():
             headers = response_headers,
             mimetype = "text/plain"
         )
+    except UserError as e:
+        return Response(
+            response = "Your command cannot be completed as entered: %s" %
+                str(e),
+            headers = {
+                "X-CallSuccess": "False",
+                "X-ErrorType": e.__class__.__name__
+            },
+            mimetype = "text/plain"
+        )
     except Exception as e:
         app.logger.exception("Exception occured while processing API request.")
         
         return Response(
             response = "An error occurred processing your request: %s" % str(e),
-            headers = {"X-CallSuccess": "False"},
+            headers = {
+                "X-CallSuccess": "False",
+                "X-ErrorType": e.__class__.__name__
+            },
             mimetype = "text/plain"
         )
