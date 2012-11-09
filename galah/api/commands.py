@@ -196,8 +196,8 @@ def get_oauth2_keys():
     import json
 
     google_api_keys = {
-        "CLIENT_ID": app.config["GOOGLE_CLIENT_ID"],
-        "CLIENT_SECRET": app.config["GOOGLE_CLIENT_SECRET"]
+        "CLIENT_ID": app.config["GOOGLE_APICLIENT_ID"],
+        "CLIENT_SECRET": app.config["GOOGLE_APICLIENT_SECRET"]
     }
 
     return json.dumps(google_api_keys, separators = (",", ":"))
