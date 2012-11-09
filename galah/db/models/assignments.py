@@ -33,3 +33,9 @@ class Assignment(Document):
     meta = {
         "allow_inheritance": False
     }
+
+    def validate(self):
+        if self.due_cutoff and self.due > self.due_cutoff:
+            raise ValidationError("due cannot be later than due_cutoff")
+
+        return Document.validate(self)
