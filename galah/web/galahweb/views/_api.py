@@ -17,7 +17,7 @@ def api_login():
 
     # Optional arguments for OAuth2 Login
     access_token = request.form.get("access_token", None)
-    audience = app.config["GOOGLE_CLIENT_ID"] if oauth_enabled else None
+    audience = app.config["GOOGLE_APICLIENT_ID"] if oauth_enabled else None
     def verify_token(email, audience, access_token):
         """
         Sends a request to the Google tokeninfo backend to verify access_token
