@@ -36,8 +36,6 @@ oauth_enabled = bool(
     app.config.get("GOOGLE_APICLIENT_SECRET")
 )
 
-print app.config, oauth_enabled
-
 import mongoengine
 mongoengine.connect(app.config["MONGODB"])
 
