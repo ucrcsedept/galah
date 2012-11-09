@@ -6,7 +6,7 @@ Finds users matching the given credentials
 Reference
 ---------
 
-.. function:: find_user([email_contains = '', account_type = '', enrolled_in = '']):
+.. function:: find_user([email_contains = '', account_type = '', enrolled_in = '', max_results = '20']):
     
     :param email_contains: Part of the email to match
     
@@ -14,6 +14,10 @@ Reference
 
     :param enrolled_in: A class the user is enrolled in. You can specify the
                         name of the class or the ID of the class.
+
+    :param max_results: The maximum number of results to return. If there are
+                        more results than what is being displayed, a + will be
+                        added next to the number of users found.
 
 Example Usage
 -------------
@@ -28,9 +32,17 @@ recognizes.
     User [email = eadel002@ucr.edu, account_type = student]
     User [email = test@school.edu, account_type = student]
 
+We can limit the number of users returned by setting max_results.
+
+>>> find_user max_results=2
+--Logged in as jsull003@ucr.edu--
+2+ user(s) found matching query {any}.
+    User [email = jsull003@ucr.edu, account_type = admin]
+    User [email = eadel002@ucr.edu, account_type = student]
+
 We will search for all student users that Galah recognizes.
 
->>> find_user "" student
+>>> find_user account_type=student
 --Logged in as jsull003@ucr.edu--
 2 user(s) found matching query {account type is 'student'}.
     User [email = eadel002@ucr.edu, account_type = student]

@@ -293,7 +293,7 @@ def parse_arguments(args = sys.argv[1:]):
 
     options, args = parser.parse_args(args)
 
-    if not options.shell and len(args) == 0:
+    if not options.shell and not options.show_config_path and len(args) == 0:
         parser.error("At least one argument must be supplied.")
 
     return (options, args)
@@ -331,7 +331,7 @@ def exec_to_shell():
     rcfile = os.fdopen(rcfile, "w")
 
     # Add the location of the api client to the PATH
-    print >> rcfile, "PATH=%s:$PATH" % script_location
+    print >> rcfile, 'PATH="%s:$PATH"' % script_location
 
     # Add the location of the man files to the MANPATH
     print >> rcfile, "export MANPATH=./man/:`manpath`"
