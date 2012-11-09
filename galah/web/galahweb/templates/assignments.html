@@ -28,9 +28,14 @@
             You do not have any assignments due.
         </div>
     {% endif %}
-    {% if hidden_assignments %}
+    {% if hidden_assignments > 0 %}
         <a class="show_hidden heading" href="?show_all">
             Show All Assignments ({{ hidden_assignments }} hidden)
+        </a>
+    {% endif %}
+    {% if hidden_assignments < 0 %}
+        <a class="show_hidden heading" href="?">
+            Showing All Assignments (Show Less)
         </a>
     {% endif %}
     </div>

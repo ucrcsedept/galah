@@ -1,4 +1,5 @@
 from mongoengine import *
+import datetime
 
 class TestDescription(EmbeddedDocument):
     title = StringField(required = True)
@@ -22,6 +23,7 @@ class Assignment(Document):
     name = StringField(required = True)
     due = DateTimeField(required = True)
     due_cutoff = DateTimeField()
+    hide_until = DateTimeField(default = datetime.datetime.min, required = True)
     for_class = ObjectIdField(required = True)
     
     # English description of each of the tests
