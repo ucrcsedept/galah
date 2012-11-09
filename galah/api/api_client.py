@@ -90,7 +90,7 @@ def login(email, password):
     # Nothing bad happened, go ahead and return what the server sent back
     return request.text
 
-def oauth2login(oauth):
+def oauth2login(user):
     """
     Attempts to authenticate user for Galah using Google OAuth2.
 
@@ -116,10 +116,11 @@ def oauth2login(oauth):
     flow = OAuth2WebServerFlow(
         client_id=google_api_keys["CLIENT_ID"],
         client_secret=google_api_keys["CLIENT_SECRET"],
-        scope='https://www.googleapis.com/auth/userinfo.email',
-        user_agent='Galah')
+        scope="https://www.googleapis.com/auth/userinfo.email",
+        user_agent="Galah"
+    )
 
-    storage = Storage(".credentials")
+    storage = Storage(config["galah_home"] + "/tmp/oauth_credentials")
 
     # Get new credentials from user
     credentials = run(flow, storage)
@@ -130,16 +131,25 @@ def oauth2login(oauth):
 
     # Extract email and email verification
     id_token = credentials.id_token
-    email = id_token["email"]
     verified_email = id_token["verified_email"]
     access_token = credentials.access_token
+
+    if id_token["email"] != user:
+        print >> sys.stderr, (
+            "You are trying to act as %s however google authenticated you as "
+            "%s. Change your configuration to match your google account or use "
+            "the -u option." % (user, id_token["email"])
+        )
+
+        exit(1)
+
 
     if verified_email != "true":
         raise RuntimeError("Could not verify email")
 
     request = session.post(
         config["galah_host"] + "/api/login",
-        data = {"email":email, "access_token":access_token}
+        data = { "access_token": access_token }
     )
 
     request.raise_for_status()
@@ -147,9 +157,6 @@ def oauth2login(oauth):
     # Check if we successfully logged in.
     if request.headers["X-CallSuccess"] != "True":
         raise RuntimeError(request.text)
-
-    # User logged in successfully so return email they authenticated as.
-    return email
 
 def call_backend(api_name, *args, **kwargs):
     return _call(False, api_name, *args, **kwargs)
@@ -472,12 +479,11 @@ def main():
         )
 
     password = os.environ.get("GALAH_PASSWORD") or config.get("password")
-    oauth = options.oauth
 
     # If they specify to login via a Google Account, log them in by OAuth2
-    if bool(oauth):
+    if bool(options.oauth):
         try:
-            user = oauth2login(oauth)
+            oauth2login(user)
 
             save_cookiejar(session.cookies, user)
         except RuntimeError:
