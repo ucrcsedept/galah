@@ -18,19 +18,25 @@ def browse_assignments():
 
     if "show_all" in request.args:
         assignments = list(Assignment.objects(
-            for_class__in = current_user.classes
+            Q(for_class__in = current_user.classes) &
+            (Q(hide_until = None) | Q(hide_until__lt = now))
         ).only("name", "due", "due_cutoff", "for_class"))
     else:
         assignments = list(Assignment.objects(
             Q(for_class__in = current_user.classes) &
             (Q(due__gt = now - datetime.timedelta(weeks = 1)) |
-            Q(due_cutoff__gt = now - datetime.timedelta(weeks = 1)))
+            Q(due_cutoff__gt = now - datetime.timedelta(weeks = 1))) &
+            (Q(hide_until = None) | Q(hide_until__lt = now))
         ).only("name", "due", "due_cutoff", "for_class"))
+
+    assignments = [i for i in assignments if
+            not i.hide_until or i.hide_until < now]
 
     # Get the number of assignments that we could have gotten if we didn't
     # limit based on due date.
     all_assignments_count = Assignment.objects(
-        for_class__in = current_user.classes
+        Q(for_class__in = current_user.classes) &
+        (Q(hide_until = None) | Q(hide_until__lt = now))
     ).count()
 
     submissions = list(Submission.objects(
@@ -95,5 +101,6 @@ def browse_assignments():
     return render_template(
         "assignments.html",
         assignments = assignments,
-        hidden_assignments = all_assignments_count - len(assignments)
+        hidden_assignments = -1 if "show_all" in request.args
+                else all_assignments_count - len(assignments)
     )
