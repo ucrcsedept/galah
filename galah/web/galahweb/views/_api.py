@@ -123,8 +123,6 @@ def api_call():
         else:
             response_text = call_result
 
-        print "Headers:", response_headers
-
         return Response(
             response = response_text,
             headers = response_headers,
