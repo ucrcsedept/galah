@@ -237,7 +237,9 @@ def modify_user(current_user, email, account_type):
 
 @_api_call(("admin", "teacher"))
 def find_user(current_user, email_contains = "", account_type = "",
-              enrolled_in = ""):
+              enrolled_in = "", max_results = "20"):
+    max_results = int(max_results)
+
     query = {}
     query_description = []
 
@@ -255,7 +257,13 @@ def find_user(current_user, email_contains = "", account_type = "",
         query_description.append("enrolled in %s" %
                 _class_to_str(the_class))
 
-    matches = list(User.objects(**query))
+    matches = list(User.objects(**query)[:max_results + 1])
+
+    # Check if there are more than max_results results
+    plus = ""
+    if len(matches) > max_results:
+        matches.pop()
+        plus = "+"
 
     if query_description:
         query_description = ",".join(query_description)
@@ -264,8 +272,8 @@ def find_user(current_user, email_contains = "", account_type = "",
 
     result_string = "\n\t".join(_user_to_str(i) for i in matches)
 
-    return "%d user(s) found matching query {%s}.\n\t%s" % \
-            (len(matches), query_description, result_string)
+    return "%d%s user(s) found matching query {%s}.\n\t%s" % \
+            (len(matches), plus, query_description, result_string)
 
 @_api_call(("admin", "teacher"))
 def user_info(current_user, email):
