@@ -9,7 +9,8 @@ session = requests.session()
 # The default configuration settings
 config = {
     "galah_host": "http://localhost:5000",
-    "galah_home": "~/.galah"
+    "galah_home": "~/.galah",
+    "use_oauth": False
 }
 
 def to_json(obj):
@@ -481,7 +482,7 @@ def main():
     password = os.environ.get("GALAH_PASSWORD") or config.get("password")
 
     # If they specify to login via a Google Account, log them in by OAuth2
-    if bool(options.oauth):
+    if bool(options.oauth) or config["use_oauth"]:
         try:
             oauth2login(user)
 
