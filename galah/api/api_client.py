@@ -9,10 +9,7 @@ session = requests.session()
 # The default configuration settings
 config = {
     "galah_host": "http://localhost:5000",
-    "galah_home": "~/.galah",
-    "google_client_id": "Galah Public Client ID",
-    "google_client_secret": "Galah Secret Client Key",
-    "credentials_cache": ".cache/galah_credentials"
+    "galah_home": "~/.galah"
 }
 
 def to_json(obj):
@@ -103,26 +100,33 @@ def oauth2login(oauth):
     from oauth2client.tools import run
     from oauth2client.file import Storage
     from oauth2client.client import OAuth2WebServerFlow
-    import httplib2
+    import httplib2, json
+
+    # Get client_id and client_secret from server
+    try:
+        google_api_keys = json.loads(call_backend("get_oauth2_keys"))
+    except requests.exceptions.ConnectionError as e:
+        print >> sys.stderr, "Could not connect with the given url '%s':" \
+                % config["galah_host"]
+        print >> sys.stderr, "\t" + str(e)
+
+        exit(1)
 
     # Google OAuth2 flow object to get user's email.
     flow = OAuth2WebServerFlow(
-        client_id=config["google_client_id"],
-        client_secret=config["google_client_secret"],
+        client_id=google_api_keys["CLIENT_ID"],
+        client_secret=google_api_keys["CLIENT_SECRET"],
         scope='https://www.googleapis.com/auth/userinfo.email',
         user_agent='Galah')
 
-    storage = Storage(config["credentials_cache"])
-    credentials = storage.get()
+    storage = Storage(".credentials")
 
-    # Get new credentials if they don't exist or user does not want to use
-    # storage
-    if not credentials or oauth != "use_storage":
-        credentials = run(flow, storage)
+    # Get new credentials from user
+    credentials = run(flow, storage)
 
-        # If the credentials are authorized, they've given permission.
-        http = httplib2.Http(cache=".cache")
-        http = credentials.authorize(http)
+    # If the credentials are authorized, they've given permission.
+    http = httplib2.Http()
+    http = credentials.authorize(http)
 
     # Extract email and email verification
     id_token = credentials.id_token
@@ -135,8 +139,7 @@ def oauth2login(oauth):
 
     request = session.post(
         config["galah_host"] + "/api/login",
-        data = {"email":email, "access_token":access_token,
-                "audience":config["google_client_id"]}
+        data = {"email":email, "access_token":access_token}
     )
 
     request.raise_for_status()
@@ -144,10 +147,8 @@ def oauth2login(oauth):
     # Check if we successfully logged in.
     if request.headers["X-CallSuccess"] != "True":
         raise RuntimeError(request.text)
-    
-    # User was logged in properly, so we can store their credentials.
-    storage.put(credentials)
 
+    # User logged in successfully so return email they authenticated as.
     return email
 
 def call_backend(api_name, *args, **kwargs):
@@ -270,7 +271,7 @@ def parse_arguments(args = sys.argv[1:]):
                    "if they were regular system commands."
         ),
         make_option(
-            "--oauth", "-o", metavar = "OAUTHMETHOD",
+            "--oauth", "-o", action = "store_true",
             help = "If specified, you will be able to login using your google "
                    "account as long as the email matches one stored in the db."
         ),
