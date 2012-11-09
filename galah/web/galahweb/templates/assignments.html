@@ -15,7 +15,7 @@
             {% endif %}
             </div>
             <div class="due">
-                due <time datetime="{{ i.due.strftime("%Y-%m%dT%H:%M:%S") }}" title="{{ i.due.strftime("%B %d, %Y at %I:%M:%S %p") }}">{{ i.due_pretty }}</time> {% if i.due_cutoff_pretty %}(cutoff <time datetime="{{ i.due_cutoff.strftime("%Y-%m%dT%H:%M:%S") }}" title="{{ i.due_cutoff.strftime("%B %d, %Y at %I:%M:%S %p") }}">{{ i.due_cutoff_pretty }}</time>){% endif %}
+                {% autoescape false %}due {{ create_time_element(i.due) }} {% if i.due_cutoff %}(cutoff {{ create_time_element(i.due_cutoff) }}){% endif %}{% endautoescape %}
             </div>
         </div>
     {% endfor %}

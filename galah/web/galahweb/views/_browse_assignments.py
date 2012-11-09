@@ -2,10 +2,10 @@ from galah.web.galahweb import app
 from flask.ext.login import current_user
 from galah.web.galahweb.auth import account_type_required
 from galah.db.models import Class, Assignment, Submission
-from galah.db.helpers.pretty import pretty_time_distance
 from flask import render_template, request
 import datetime
 from mongoengine import Q
+from galah.web.galahweb.util import create_time_element
 
 @app.route("/assignments")
 @account_type_required(("student", "teacher"))
@@ -58,23 +58,13 @@ def browse_assignments():
             
             i.class_name = "DNE"
 
-        i.due_pretty = pretty_time_distance(now, i.due)
-
-        if i.due_cutoff:
-            i.due_cutoff_pretty = pretty_time_distance(now, i.due_cutoff)
-        else:
-            i.due_cutoff_pretty = None
-
         # Figure out the status messages that we want to display to the user.
         submitted = next((j for j in submissions if j.assignment == i.id), None)
         i.status = i.status_color = None
         if submitted:
             i.status = (
-                'You made a submission <time datetime="%s" title="%s">%s</time>' % (
-                    submitted.timestamp.strftime("%Y-%m%dT%H:%M:%S"),
-                    submitted.timestamp.strftime("%B %d, %Y at %I:%M:%S %p"),
-                    pretty_time_distance(now, submitted.timestamp)
-                )
+                "You made a submission " +
+                create_time_element(submitted.timestamp, now)
             )
 
             i.status_color = "#84B354"
@@ -102,5 +92,6 @@ def browse_assignments():
         "assignments.html",
         assignments = assignments,
         hidden_assignments = -1 if "show_all" in request.args
-                else all_assignments_count - len(assignments)
+                else all_assignments_count - len(assignments),
+        create_time_element = create_time_element
     )
