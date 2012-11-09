@@ -11,9 +11,11 @@
 #container {
     color: #333;
     font-size: 12pt;
-    padding: 0px 100px;
+    padding: 0px 30px;
     font-family: Palatino, Georgia, serif;
     min-width: 400px;
+    max-width: 1080px;
+    margin: 0px auto;
 }
 
 a { 
