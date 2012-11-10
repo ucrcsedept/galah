@@ -12,7 +12,7 @@ from bson.objectid import ObjectId
 from bson.errors import InvalidId
 from flask import abort, render_template, get_flashed_messages
 from galah.db.models import Assignment, Submission
-from galah.db.helpers.pretty import pretty_time
+from galah.base.pretty import pretty_time
 from galah.web.util import create_time_element
 import datetime
 

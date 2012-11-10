@@ -7,7 +7,7 @@ from bson.errors import InvalidId
 from flask import abort, render_template, request, flash, redirect, jsonify, \
                   url_for
 from galah.db.models import Submission, Assignment
-from galah.db.helpers.pretty import pretty_list, plural_if
+from galah.base.pretty import pretty_list, plural_if
 from galah.web.util import is_url_on_site
 from werkzeug import secure_filename
 import os.path
