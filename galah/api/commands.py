@@ -100,7 +100,36 @@ def _user_to_str(user):
     return "User [email = %s, account_type = %s]" % \
             (user.email, user.account_type)
 
-def _get_assignment(id):
+def _get_assignment(query):
+    # Check if class/assignment syntax was used.
+    if "/" in query:
+        parts = query.split("/", 1)
+        the_class = _get_class(parts[0])
+
+        matches = list(Assignment.objects(
+            for_class = the_class.id,
+            name__icontains = parts[1]
+        ))
+
+        if not matches:
+            raise UserError(
+                "No assignments in %s matched your query of {name "
+                "contains '%s'}." % (_class_to_str(the_class), parts[1])
+            )
+        elif len(matches) == 1:
+            return matches[0]
+        else:
+            raise UserError(
+                "%d assignments in %s matched your query of {name "
+                "contains '%s'}, however this API expects 1 assignment. Refine "
+                "your query and try again.\n\t%s" % (
+                    len(matches),
+                    _class_to_str(the_class),
+                    parts[1],
+                    "\n\t".join(_assignment_to_str(i) for i in matches)
+                )
+            )
+
     try:
         return Assignment.objects.get(id = ObjectId(id))
     except Assignment.DoesNotExist:
