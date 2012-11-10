@@ -100,21 +100,32 @@ def _user_to_str(user):
     return "User [email = %s, account_type = %s]" % \
             (user.email, user.account_type)
 
-def _get_assignment(query):
+def _get_assignment(query, current_user):
     # Check if class/assignment syntax was used.
     if "/" in query:
         parts = query.split("/", 1)
-        the_class = _get_class(parts[0])
 
-        matches = list(Assignment.objects(
-            for_class = the_class.id,
-            name__icontains = parts[1]
-        ))
+        if parts[0] == "mine":
+            class_string = "classes you are enrolled in or assigned to"
+
+            matches = list(Assignment.objects(
+                for_class__in = current_user.classes,
+                name__icontains = parts[1]
+            ))
+        else:
+            the_class = _get_class(parts[0])
+
+            class_string = _class_to_str(the_class)
+
+            matches = list(Assignment.objects(
+                for_class = the_class.id,
+                name__icontains = parts[1]
+            ))
 
         if not matches:
             raise UserError(
                 "No assignments in %s matched your query of {name "
-                "contains '%s'}." % (_class_to_str(the_class), parts[1])
+                "contains '%s'}." % (class_string, parts[1])
             )
         elif len(matches) == 1:
             return matches[0]
@@ -124,7 +135,7 @@ def _get_assignment(query):
                 "contains '%s'}, however this API expects 1 assignment. Refine "
                 "your query and try again.\n\t%s" % (
                     len(matches),
-                    _class_to_str(the_class),
+                    class_string,
                     parts[1],
                     "\n\t".join(_assignment_to_str(i) for i in matches)
                 )
@@ -517,8 +528,8 @@ def create_assignment(current_user, name, due, for_class, due_cutoff = "",
     return "Success! %s created." % _assignment_to_str(new_assignment)
 
 @_api_call(("admin", "teacher"))
-def assignment_info(id):
-    assignment = _get_assignment(id)
+def assignment_info(current_user, id):
+    assignment = _get_assignment(id, current_user)
 
     attribute_strings = []
     for k, v in assignment._data.items():
@@ -536,7 +547,7 @@ def assignment_info(id):
 @_api_call(("admin", "teacher"))
 def modify_assignment(current_user, id, name = "", due = "", for_class = "",
                       due_cutoff = "", hide_until = ""):
-    assignment = _get_assignment(id)
+    assignment = _get_assignment(id, current_user)
 
     # Save the string representation of the original assignment show we can show
     # it to the user later.
@@ -626,7 +637,7 @@ def modify_assignment(current_user, id, name = "", due = "", for_class = "",
 
 @_api_call(("admin", "teacher"))
 def delete_assignment(current_user, id):
-    to_delete = _get_assignment(id)
+    to_delete = _get_assignment(id, current_user)
 
     if current_user.account_type != "admin" and \
             to_delete.for_class not in current_user.classes:
@@ -644,7 +655,7 @@ def get_archive(current_user, assignment, email = ""):
     # prevent a circular dependency we won't load the module until we need it.
     import tar_tasks
 
-    the_assignment = _get_assignment(assignment).id
+    the_assignment = _get_assignment(assignment, current_user).id
 
     if current_user.account_type != "admin" and \
             the_assignment.for_class not in current_user.classes:
