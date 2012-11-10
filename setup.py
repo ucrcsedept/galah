@@ -34,7 +34,7 @@ setup(
 
     package_data = {
         # If any package contains *.txt or *.rst files, include them:
-        "web.galahweb": ["*.html", "*.css"],
+        "web": ["*.html", "*.css"],
     },
 
     # metadata for upload to PyPI
