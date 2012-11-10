@@ -249,7 +249,7 @@ def get_oauth2_keys():
 
     return json.dumps(google_api_keys, separators = (",", ":"))
 
-from galah.db.crypto.passcrypt import serialize_seal, seal
+from galah.base.crypto.passcrypt import serialize_seal, seal
 from mongoengine import OperationError
 @_api_call("admin")
 def create_user(email, password = "", account_type = "student"):
