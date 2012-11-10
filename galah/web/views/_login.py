@@ -30,7 +30,7 @@ class LoginForm(RedirectForm):
 
 # The actual view
 from galah.web import app, oauth_enabled
-from galah.db.crypto.passcrypt import check_seal, deserialize_seal
+from galah.base.crypto.passcrypt import check_seal, deserialize_seal
 from galah.db.models import User
 from flask.ext.login import login_user
 from galah.web.auth import FlaskUser
