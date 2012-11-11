@@ -9,13 +9,12 @@ app.config.update({
     "HOST_URL": "http://localhost:5000"
 })
 
-if not app.config.from_envvar("GALAH_WEB_CONFIG", silent = True) and \
-        not app.config.from_pyfile("/etc/galah/web.config", silent = True):
+from galah.base.config import load_config
+try:
+    app.config.update(load_config("/etc/galah/galah.codnfig", "web"))
+except IOError as e:
     exit(
-        "Environmental variable GALAH_WEB_CONFIG not set to valid file "
-        "path and /etc/galah/web.config could not be loaded. Either point "
-        "GALAH_WEB_CONFIG at a valid config file or place your config "
-        "file at /etc/galah/web.config."
+        "Could not load config file at /etc/galah/web.config.\n\t" + str(e)
     )
 
 if "LOG_HANDLERS" in app.config:
