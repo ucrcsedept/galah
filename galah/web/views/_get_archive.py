@@ -7,26 +7,34 @@ from bson.objectid import ObjectId, InvalidId
 
 @app.route("/archives/<archive_id>")
 def get_archive(archive_id):
-	try:
-		archive = Archive.objects.get(
-			id = ObjectId(archive_id),
-			archive_type = "assignment_package"
-		)
-	except InvalidId, Archive.DoesNotExist:
-		app.logger.debug("Invalid ID: Malformed")
+    archive = None
+    try:
+        archive = Archive.objects.get(
+            id = ObjectId(archive_id),
+            archive_type = "assignment_package"
+        )
+    except InvalidId:
+        abort(500)
+    except Archive.DoesNotExist:
+        pass
 
-		abort(404)
+    # If we can't find the archive return a 404 error.
+    if archive is None:
+        abort(404)
 
-	# If we can't find the archive return a 404 error.
-	if archive is None:
-		abort(404)
+    # Ensure that the requesting user has permission to view this archive
+    if not current_user.is_authenticated() or \
+            archive.requester != current_user.email:
+        return current_app.login_manager.unauthorized()
 
-	# Ensure that the requesting user has permission to view this archive
-	if not current_user.is_authenticated() or \
-			archive.requester != current_user.email:
-		return current_app.login_manager.unauthorized()
-
-	if archive.error_string:
-		raise RuntimeError(archive.error_string)
-	else:
-		return send_file(archive.file_location)
+    if archive.error_string:
+        return Response(
+            response = str(archive.error_string),
+            headers = {
+                "X-CallSuccess": "False",
+                "X-ErrorType": e.__class__.__name__
+            },
+            mimtype = "text/plain"
+        )
+    else:
+        return send_file(archive.file_location)

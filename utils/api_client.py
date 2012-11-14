@@ -251,7 +251,10 @@ def _call(interactive, api_name, *args, **kwargs):
             file_request = session.get(
                 config["galah_host"] + "/" + request.headers["X-Download"]
             )
-            
+
+            if request.headers["X-CallSuccess"] != "True":
+                raise RuntimeError(request.text)
+
             if file_request.status_code == requests.codes.ok:
                 break
 
