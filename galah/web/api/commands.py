@@ -1,4 +1,3 @@
-
 from inspect import getargspec
 from warnings import warn
 from copy import deepcopy
@@ -8,6 +7,9 @@ from galah.db.models import *
 import json
 from collections import namedtuple
 from mongoengine import ValidationError
+
+from galah.base.config import load_config
+config = load_config("web")
 
 #: An anonymous admin user useful when accessing this module from the local
 #: system.
@@ -649,12 +651,11 @@ def delete_assignment(current_user, id):
     
     return "Success! %s deleted." % _assignment_to_str(to_delete)      
 
+from galah.heavylifter.api import send_task
 @_api_call(("admin", "teacher"))
 def get_archive(current_user, assignment, email = ""):
     # tar_tasks imports galahweb because it wants access to the logger, to
     # prevent a circular dependency we won't load the module until we need it.
-    import tar_tasks
-
     the_assignment = _get_assignment(assignment, current_user).id
 
     if current_user.account_type != "admin" and \
@@ -663,24 +664,27 @@ def get_archive(current_user, assignment, email = ""):
             "You can only modify assignments for classes you teach."
         )
 
-    jobs_ahead = tar_tasks.queue_size()
+    # Create the task ID here rather than inside heavylifter so that we can tell
+    # the user how to find the archive once its done.
+    task_id = ObjectId()
 
     # We will not perform the work of archiving right now but will instead pass
-    # if off to another thread to take care of it.
-    new_task = tar_tasks.Task(
-        id = ObjectId(),
-        requester = current_user.email,
-        assignment = the_assignment,
-        email = email
+    # if off to the heavy lifter to do it for us.
+    send_task(
+        config["HEAVYLIFTER_ADDRESS"],
+        "tar_bulk_submissions",
+        str(task_id),
+        current_user.email,
+        str(the_assignment),
+        email
     )
-    tar_tasks.add_task(new_task)
-
+    
     return (
-        "Your archive is being created. You have %d jobs ahead of you." %
-            jobs_ahead,
+        "Your archive is being created.",
         {
-            "X-Download": "archives/" + str(new_task.id),
-            "X-Download-DefaultName": "submissions.tar.gz"}
+            "X-Download": "archives/" + str(task_id),
+            "X-Download-DefaultName": "submissions.tar.gz"
+        }
     )
 
 from types import FunctionType
