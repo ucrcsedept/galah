@@ -252,8 +252,11 @@ def _call(interactive, api_name, *args, **kwargs):
                 config["galah_host"] + "/" + request.headers["X-Download"]
             )
 
-            if request.headers["X-CallSuccess"] != "True":
-                raise RuntimeError(request.text)
+            if "X-CallSuccess" in file_request.headers and \
+                    file_request.headers["X-CallSuccess"] == "False":
+                print "Server could not create archive:", file_request.text
+
+                return
 
             if file_request.status_code == requests.codes.ok:
                 break
