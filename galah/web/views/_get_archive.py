@@ -1,7 +1,9 @@
 from galah.web import app
 from flask.ext.login import current_user
 from galah.web.auth import FlaskUser
-from flask import redirect, url_for, request, abort, current_app, send_file
+from flask import (
+    redirect, url_for, request, abort, current_app, send_file, Response
+)
 from galah.db.models import Archive
 from bson.objectid import ObjectId, InvalidId
 
@@ -32,9 +34,8 @@ def get_archive(archive_id):
             response = str(archive.error_string),
             headers = {
                 "X-CallSuccess": "False",
-                "X-ErrorType": e.__class__.__name__
             },
-            mimtype = "text/plain"
+            mimetype = "text/plain"
         )
     else:
         return send_file(archive.file_location)
