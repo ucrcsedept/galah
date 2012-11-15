@@ -145,11 +145,11 @@ def _get_assignment(query, current_user):
             )
 
     try:
-        return Assignment.objects.get(id = ObjectId(id))
+        return Assignment.objects.get(id = ObjectId(query))
     except Assignment.DoesNotExist:
-        raise UserError("Assignment with ID %s does not exist." % id)
+        raise UserError("Assignment with ID %s does not exist." % query)
     except InvalidId:
-        raise UserError("Assignment ID %s is not a valid ID." % id)
+        raise UserError("Assignment ID %s is not a valid ID." % query)
 
 def _assignment_to_str(assignment):
     return "Assignment [id = %s, name = %s]" % (assignment.id, assignment.name)
