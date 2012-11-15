@@ -7,6 +7,7 @@ from galah.db.models import *
 import json
 from collections import namedtuple
 from mongoengine import ValidationError
+from galah.heavylifter.api import send_task
 
 from galah.base.config import load_config
 config = load_config("web")
@@ -477,27 +478,17 @@ def delete_class(to_delete):
     the_class = _get_class(to_delete)
         
     # Get all of the assignments for the class
-    assignments = list(Assignment.objects(for_class = the_class.id))
-
-    if assignments:
-        assignments_string = \
-            "\n\t".join(_assignment_to_str(i) for i in assignments)
-    else:
-        assignments_string = "(No assignments found)"
-
-    # Then delete them
-    Assignment.objects(for_class = the_class.id).delete()
-
-    # Then un-enroll all users who are enrolled in the class (note this is
-    # pretty expensive).
-    for i in User.objects(classes = the_class.id):
-        i.classes.remove(the_class.id)
-        i.save()
-        
-    the_class.delete()
+    assignments = \
+        [str(i.id) for i in Assignment.objects(for_class = the_class.id)]
     
-    return ("Success! %s deleted, and all of its assignments:\n\t%s"
-                % (_class_to_str(the_class), assignments_string))
+    send_task(
+        config["HEAVYLIFTER_ADDRESS"],
+        "delete_assignments",
+        assignments,
+        str(the_class.id)
+    )
+
+    return "Deletion task has been sent to the heavylifter."
 
 @_api_call(("admin", "teacher"))
 def create_assignment(current_user, name, due, for_class, due_cutoff = "",
@@ -647,11 +638,15 @@ def delete_assignment(current_user, id):
             "You cannot delete an assignment for a class you're not teaching."
         )
 
-    to_delete.delete()
+    send_task(
+        config["HEAVYLIFTER_ADDRESS"],
+        "delete_assignments",
+        [str(to_delete.id)],
+        ""
+    )
     
-    return "Success! %s deleted." % _assignment_to_str(to_delete)      
+    return "Deletion task has been sent to the heavylifter."
 
-from galah.heavylifter.api import send_task
 @_api_call(("admin", "teacher"))
 def get_archive(current_user, assignment, email = ""):
     # tar_tasks imports galahweb because it wants access to the logger, to
