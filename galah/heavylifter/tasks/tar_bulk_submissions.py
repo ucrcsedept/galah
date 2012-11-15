@@ -96,12 +96,18 @@ def _tar_bulk_submissions(archive_id, requester, assignment, email = ""):
                 if marker > 0:
                     symlink_path += "-%d" % marker
 
-                # Create a symlink pointing to the actual submission
-                # directory with the name we gnerated
-                os.symlink(
-                    os.path.join(config["SUBMISSION_DIRECTORY"], str(i.id)),
-                    symlink_path
-                )
+                original_path = \
+                    os.path.join(config["SUBMISSION_DIRECTORY"], str(i.id))
+
+                # Detect if the submission's files are still on the filesystem
+                if os.path.isdir(original_path):
+                    # Create a symlink pointing to the actual submission
+                    # directory with the name we gnerated
+                    os.symlink(original_path, symlink_path)
+                else:
+                    # Create an empty text file marking the fact that a
+                    # submissions existed but is no longer available.
+                    open(symlink_path, "w").close()
 
         # Create the actual archive file.
         # TODO: Create it in galah's /var/ directory
