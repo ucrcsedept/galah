@@ -9,10 +9,10 @@ from galah.db.models import Submission, Archive
 
 # Set up configuration and logging
 from galah.base.config import load_config
-config = load_config("heavylifter")
+config = load_config("sisyphus")
 
 import logging
-logger = logging.getLogger("galah.heavylifter.tar_bulk_submissions")
+logger = logging.getLogger("galah.sisyphus.tar_bulk_submissions")
 
 def _tar_bulk_submissions(archive_id, requester, assignment, email = ""):
     archive_id = ObjectId(archive_id)

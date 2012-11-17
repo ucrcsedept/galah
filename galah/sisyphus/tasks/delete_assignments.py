@@ -5,10 +5,10 @@ import shutil
 
 # Set up configuration and logging
 from galah.base.config import load_config
-config = load_config("heavylifter")
+config = load_config("sisyphus")
 
 import logging
-logger = logging.getLogger("galah.heavylifter.delete_assignments")
+logger = logging.getLogger("galah.sisyphus.delete_assignments")
 
 def _delete_assignments(ids, delete_class):
     if delete_class:
