@@ -26,14 +26,14 @@ enrolled in/teaching are listed (unless you are an admin).
 
 >>> find_class
 find_class
---Logged in as teacher@ucr.edu--
+--Acting as user teacher@ucr.edu--
 You are teaching 1 class(es) with '' in their name.
 	Class [id = 5090634855c448134f67b3e3, name = CS 9000]
 
 If we would like to find all classes, you can specify **any** for enrollee.
 
 >>> find_class "" any
---Logged in as teacher@ucr.edu--
+--Acting as user teacher@ucr.edu--
 Anyone is teaching 3 class(es) with '' in their name.
 	Class [id = 5090634855c448134f67b3e3, name = CS 9000]
 	Class [id = 509066e855c448134f67b3e4, name = CS 10]
@@ -42,7 +42,7 @@ Anyone is teaching 3 class(es) with '' in their name.
 Finally, we can find all CS classes Galah knows about.
 
 >>> find_class CS any
---Logged in as teacher@ucr.edu--
+--Acting as user teacher@ucr.edu--
 Anyone is teaching 2 class(es) with 'CS' in their name.
 	Class [id = 5090634855c448134f67b3e3, name = CS 9000]
 	Class [id = 509066e855c448134f67b3e4, name = CS 10]

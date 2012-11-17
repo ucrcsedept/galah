@@ -16,7 +16,7 @@ Example Usage
 Here we delete the assignment **World Domination Domination**.
 
 >>> delete_assignment 50907cca55c4481a5027103c
---Logged in as jsull003@ucr.edu--
+--Acting as user jsull003@ucr.edu--
 Success! Assignment [id = 50907cca55c4481a5027103c, name = World Domination Domination] deleted.
 
 Permissions

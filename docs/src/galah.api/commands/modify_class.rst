@@ -18,7 +18,7 @@ Example Usage
 Here we will change the name of the class **CS 9000** to **CS 9001**.
 
 >>> modify_class "CS 9000" "CS 9001"
---Logged in as jsull003@ucr.edu--
+--Acting as user jsull003@ucr.edu--
 Success! Class [id = 5090634855c448134f67b3e3, name = CS 9000] has been renamed to 'CS 9001'
 
 Permissions

@@ -20,7 +20,7 @@ Here we will elevate the student **test@school.edu** to the status of
 **teacher**.
 
 >>> modify_user test@school.edu teacher
---Logged in as jsull003@ucr.edu--
+--Acting as user jsull003@ucr.edu--
 Success! User [email = test@school.edu, account_type = student] has been retyped as a teacher
 
 Permissions

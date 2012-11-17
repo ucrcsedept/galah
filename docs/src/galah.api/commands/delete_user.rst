@@ -17,7 +17,7 @@ Here we delete the user **test@test.edu**. Notice that there is no prompt or
 verification step! **So be careful!**
 
 >>> delete_user test@test.edu
---Logged in as jsull003@ucr.edu--
+--Acting as user jsull003@ucr.edu--
 Success! User [email = test@test.edu, account_type = student] deleted.
 
 Permissions
