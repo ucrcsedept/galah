@@ -7,7 +7,7 @@ from galah.db.models import *
 import json
 from collections import namedtuple
 from mongoengine import ValidationError
-from galah.heavylifter.api import send_task
+from galah.sisyphus.api import send_task
 
 from galah.base.config import load_config
 config = load_config("web")
@@ -482,13 +482,13 @@ def delete_class(to_delete):
         [str(i.id) for i in Assignment.objects(for_class = the_class.id)]
     
     send_task(
-        config["HEAVYLIFTER_ADDRESS"],
+        config["SISYPHUS_ADDRESS"],
         "delete_assignments",
         assignments,
         str(the_class.id)
     )
 
-    return "Deletion task has been sent to the heavylifter."
+    return "Deletion task has been sent to the sisyphus."
 
 @_api_call(("admin", "teacher"))
 def create_assignment(current_user, name, due, for_class, due_cutoff = "",
@@ -639,13 +639,13 @@ def delete_assignment(current_user, id):
         )
 
     send_task(
-        config["HEAVYLIFTER_ADDRESS"],
+        config["SISYPHUS_ADDRESS"],
         "delete_assignments",
         [str(to_delete.id)],
         ""
     )
     
-    return "Deletion task has been sent to the heavylifter."
+    return "Deletion task has been sent to the sisyphus."
 
 @_api_call(("admin", "teacher"))
 def get_archive(current_user, assignment, email = ""):
@@ -659,14 +659,14 @@ def get_archive(current_user, assignment, email = ""):
             "You can only modify assignments for classes you teach."
         )
 
-    # Create the task ID here rather than inside heavylifter so that we can tell
+    # Create the task ID here rather than inside sisyphus so that we can tell
     # the user how to find the archive once its done.
     task_id = ObjectId()
 
     # We will not perform the work of archiving right now but will instead pass
     # if off to the heavy lifter to do it for us.
     send_task(
-        config["HEAVYLIFTER_ADDRESS"],
+        config["SISYPHUS_ADDRESS"],
         "tar_bulk_submissions",
         str(task_id),
         current_user.email,

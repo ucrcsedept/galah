@@ -1,10 +1,10 @@
 # Load Galah's configuration.
 from galah.base.config import load_config
-config = load_config("heavylifter")
+config = load_config("sisyphus")
 
 # Set up logging
 import logging
-logger = logging.getLogger("galah.heavylifter")
+logger = logging.getLogger("galah.sisyphus")
 
 # Connect to the mongo database
 import mongoengine
@@ -25,12 +25,12 @@ context = zmq.Context()
 
 # Open up a socket we will listen on.
 socket = context.socket(zmq.REP)
-socket.bind(config["HEAVYLIFTER_ADDRESS"])
+socket.bind(config["SISYPHUS_ADDRESS"])
 
 def consumer():
     # Create a new logger for this consumer
     from threading import current_thread
-    logger = logging.getLogger("galah.heavylifter." + current_thread().name)
+    logger = logging.getLogger("galah.sisyphus." + current_thread().name)
     
     while True:
         task = task_queue.get()
@@ -76,7 +76,7 @@ def main():
         try:
             task = to_task(task)
         except RuntimeError as e:
-            # heavylifter is only exposed to internal components within Galah.
+            # sisyphus is only exposed to internal components within Galah.
             # This is a very serious error signifying a problem with Galah's
             # logic.
             logger.exception("Error converting request to Task object.")
