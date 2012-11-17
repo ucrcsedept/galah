@@ -31,14 +31,14 @@ because :func:`unassign_teacher` just calls :func:`drop_student` behind the
 scenes.
 
 >>> unassign_teacher teacher@ucr.edu Woodshop
---Logged in as jsull003@ucr.edu--
+--Acting as user jsull003@ucr.edu--
 Success! Dropped User [email = teacher@ucr.edu, account_type = teacher] from Class [id = 5090671655c448134f67b3e5, name = Woodshop 101].
 
 For completeness, we will also drop the student **student@ucr.edu** from
 woodshop as well. The command is pretty much the same.
 
 >>> drop_student student@ucr.edu Woodshop
---Logged in as jsull003@ucr.edu--
+--Acting as user jsull003@ucr.edu--
 Success! Dropped User [email = student@ucr.edu, account_type = student] from Class [id = 5090671655c448134f67b3e5, name = Woodshop 101].
 
 Permissions

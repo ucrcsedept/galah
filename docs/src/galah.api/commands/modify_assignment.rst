@@ -41,7 +41,7 @@ Here we will rename an assignment named **World Domination** to
 **Local Domination**.
 
 >>> modify_assignment 50907cca55c4481a5027103c "Local Domination"
---Logged in as jsull003@ucr.edu--
+--Acting as user jsull003@ucr.edu--
 Success! The following changes were applied to Assignment [id = 50907cca55c4481a5027103c, name = World Domination].
 	Name changed from 'World Domination' to 'Local Domination'.
 
@@ -49,7 +49,7 @@ Now we will change that same assignment back to **World Domination**, change its
 due date, change what class it's for, and add a cutoff date.
 
 >>> modify_assignment 50907cca55c4481a5027103c "World Domination Domination" "12/01/2012 23:59:59" "CS 10" "12/02/2012 23:59:59"
---Logged in as jsull003@ucr.edu--
+--Acting as user jsull003@ucr.edu--
 Success! The following changes were applied to Assignment [id = 50907cca55c4481a5027103c, name = Local Domination].
 	Name changed from 'Local Domination' to 'World Domination Domination'.
 	Due date changed from '2012-10-20 10:12:00' to '2012-12-01 23:59:59'.

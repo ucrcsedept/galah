@@ -38,13 +38,13 @@ Example Usage
 -------------
 
 >>>  get_archive 5091654355c448096df90687
---Logged in as jsull003@ucr.edu--
+--Acting as user jsull003@ucr.edu--
 Your archive is being created. You have 0 jobs ahead of you.
 The server is requesting that you download a file...
 Where would you like to save it (default: ./submissions.tar.gz)?: submissions-all.tar.gz
 File saved to submissions-all.tar.gz.
 >>> get_archive 5091654355c448096df90687 student@ucr.edu
---Logged in as jsull003@ucr.edu--
+--Acting as user jsull003@ucr.edu--
 Your archive is being created. You have 0 jobs ahead of you.
 The server is requesting that you download a file...
 Where would you like to save it (default: ./submissions.tar.gz)?:  

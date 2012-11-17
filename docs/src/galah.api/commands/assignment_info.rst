@@ -14,7 +14,7 @@ Example Usage
 -------------
 
 >>> assignment_info 50907cca55c4481a5027103c
---Logged in as jsull003@ucr.edu--
+--Acting as user jsull003@ucr.edu--
 Properties of Assignment [id = 50907cca55c4481a5027103c, name = World Domination Domination]:
 	for_class = 509066e855c448134f67b3e4
 	due_cutoff = 2012-12-01 23:59:59

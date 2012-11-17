@@ -33,14 +33,14 @@ because :func:`assign_teacher` just calls :func:`enroll_student` behind the
 scenes.
 
 >>> assign_teacher teacher@ucr.edu Woodshop
---Logged in as jsull003@ucr.edu--
+--Acting as user jsull003@ucr.edu--
 Success! User [email = teacher@ucr.edu, account_type = teacher] enrolled in Class [id = 5090671655c448134f67b3e5, name = Woodshop 101].
 
 For completeness, we will also enroll the student **student@ucr.edu** in
 woodshop as well. The command is pretty much the same.
 
 >>> enroll_student student@ucr.edu Woodshop
---Logged in as jsull003@ucr.edu--
+--Acting as user jsull003@ucr.edu--
 Success! User [email = student@ucr.edu, account_type = student] enrolled in Class [id = 5090671655c448134f67b3e5, name = Woodshop 101].
 
 Permissions

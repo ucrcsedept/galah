@@ -20,7 +20,7 @@ Example Usage
 Here we will reset **test@school.edu**'s password to **cool_password**.
 
 >>> reset_password test@school.edu cool_password
---Logged in as jsull003@ucr.edu--
+--Acting as user jsull003@ucr.edu--
 Success! Password for User [email = test@school.edu, account_type = teacher] succesfully reset.
 
 Permissions

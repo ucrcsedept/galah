@@ -16,7 +16,7 @@ Example Usage
 Here we will create a class **CS 9001**.
 
 >>> create_class CS\ 9001
---Logged in as jsull003@ucr.edu--
+--Acting as user jsull003@ucr.edu--
 Success! Class [id = 5090729955c448184a8ffabd, name = CS 9001] created.
 
 Permissions
