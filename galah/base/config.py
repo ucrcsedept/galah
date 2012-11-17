@@ -2,7 +2,7 @@
 defaults = {
     "global/SUBMISSION_DIRECTORY": "/var/local/galah/web/submissions/",
     "global/MONGODB": "galah",
-    "global/HEAVYLIFTER_ADDRESS": "ipc:///tmp/heavylifter.sock",
+    "global/SISYPHUS_ADDRESS": "ipc:///tmp/sisyphus.sock",
     "web/DEBUG": True,
     "web/SECRET_KEY": "Very Secure Key",
     "web/HOST_URL": "http://localhost:5000"
