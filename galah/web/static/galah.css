@@ -253,5 +253,5 @@ body
 
 /* Datetime Highlighting */
 time[title] {
-    border-bottom: 1px dotted #666;
+    opacity: 0.85;
 }
