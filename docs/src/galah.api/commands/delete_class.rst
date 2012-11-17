@@ -3,6 +3,11 @@ delete_class
 
 Deletes a given class and all of its assignments.
 
+Because deletion of assignments is a very expensive process (because all of the
+submissions made to that assignment need to be deleted from the database AND the
+filesystem), this call will pass off the task to Galah's errand boy,
+galah.sisyphus, and return immediately.
+
 Reference
 ---------
 
@@ -15,23 +20,9 @@ Example Usage
 
 Here we will delete the class **CS 9001**.
 
->>> delete_class "CS 9001"
+>>> delete_class 9001
 --Acting as user jsull003@ucr.edu--
-Success! Class [id = 5090734255c448184a8ffabe, name = CS 9001] deleted, and all of its assignments:
-	Assignment [id = 509073bf55c448184a8ffabf, name = World Domination]
-
-If we want to delete a class that shares its name with another, you have to
-reference the class by the ID.
-
->>> delete_class Boring\ Class
---Acting as user jsull003@ucr.edu--
-An error occurred processing your request: 2 classes match your query of 'Boring Class', however, this API expects 1 class. Refine your query and try again.
-	Class [id = 5090754855c4481920ca9325, name = Boring Class]
-	Class [id = 5090769855c448196874a4ed, name = Boring Class]
->>> delete_class 5090754855c4481920ca9325
---Acting as user jsull003@ucr.edu--
-Success! Class [id = 5090754855c4481920ca9325, name = Boring Class] deleted, and all of its assignments:
-	(No assignments found)
+Class [id = 5090734255c448184a8ffabe, name = CS 9001] has been queued for deletion. Please allow a few minutes for the task to complete.
 
 Permissions
 -----------
