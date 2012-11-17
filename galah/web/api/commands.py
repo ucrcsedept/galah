@@ -488,7 +488,10 @@ def delete_class(to_delete):
         str(the_class.id)
     )
 
-    return "Deletion task has been sent to the sisyphus."
+    return (
+        "%s has been queued for deletion. Please allow a few minutes for the "
+        "task to complete." % _class_to_str(the_class)
+    )
 
 @_api_call(("admin", "teacher"))
 def create_assignment(current_user, name, due, for_class, due_cutoff = "",
@@ -645,7 +648,10 @@ def delete_assignment(current_user, id):
         ""
     )
     
-    return "Deletion task has been sent to the sisyphus."
+    return (
+        "%s has been queued for deletion. Please allow a few minutes for the "
+        "task to complete." % _assignment_to_str(to_delete)
+    )
 
 @_api_call(("admin", "teacher"))
 def get_archive(current_user, assignment, email = ""):
