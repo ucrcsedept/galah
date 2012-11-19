@@ -26,6 +26,7 @@ from flask.ext.login import current_user
 from flask import current_app, flash
 from types import StringType
 from galah.base.pretty import pretty_list
+from galah.web import app
 def account_type_required(account_type):
     """
     A decorator that can be applied to views to only allow access to users with
@@ -55,6 +56,7 @@ def account_type_required(account_type):
                     current_user.account_type not in account_type:
                 flash("Only %s users are permitted to access this page."
                           % allowed, category = "error")
+
                 return current_app.login_manager.unauthorized()
                 
             return func(*args, **kwargs)
