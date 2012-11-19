@@ -51,7 +51,7 @@ if oauth_enabled:
 @app.route("/login/", methods = ["GET", "POST"])
 def login():
     form = LoginForm()
-    
+
     # If the user's input isn't immediately incorrect (validate_on_submit() will
     # not check if the email and password combo is valid, only that it could be
     # valid)
@@ -64,6 +64,12 @@ def login():
         
         if oauth_enabled and user and not user.seal:
             flash("You must use R'Mail to login.", category = "error")
+
+            app.logger.debug(
+                "User %s has tried to log in via internal auth but their "
+                "account does not have a seal.", user.email
+            )
+
             return render_template(
                 "login.html", form = form, oauth_enabled = oauth_enabled
             )
@@ -72,15 +78,26 @@ def login():
         if not user or \
                 not check_seal(form.password.data, deserialize_seal(str(user.seal))):
             flash("Incorrect email or password.", category = "error")
+
+            app.logger.debug(
+                "User %s has entered an incorrect email/password pair during "
+                "internal auth.", form.email.data
+            )
         else:
             login_user(user)
+
+            app.logger.debug(
+                "User %s has succesfully logged in via internal auth.",
+                user.email
+            )
+
             return redirect(form.redirect_target or url_for("browse_assignments"))
     elif oauth_enabled and request.args.get("type") == "rmail":
         # Login using Google OAuth2
         # Step 1 of two-factor authentication: redirect to AUTH url
         auth_uri = flow.step1_get_authorize_url()
         return redirect(auth_uri)
-    
+
     return render_template(
         "login.html", form = form, oauth_enabled = oauth_enabled
     )
@@ -92,6 +109,8 @@ def authenticate_user():
     """
     error = request.args.get('error')
     if error:
+        app.logger.warn("Google sent us an error via OAuth2: %s", error)
+
         return redirect(url_for('login'))
 
     # Get OAuth2 authentication code
@@ -114,11 +133,23 @@ def authenticate_user():
 
         if not user:
             flash("A Galah account does not exist for this email.", "error")
+
+            app.logger.debug(
+                "User %s has attempted to log in via OAuth2 but an account "
+                "does not exist for them.", email
+            )
         else:
             login_user(user)
+
+            app.logger.debug(
+                "User %s has succesfully logged in via OAuth2.", email
+            )
+
             return redirect(url_for("home"))
 
     else:
         flash(u'Sorry, we couldn\'t verify your email', 'error')
+
+        app.logger.debug("User %s failed to authenticate with OAuth2.", email)
       
     return redirect(url_for('login'))

@@ -86,14 +86,19 @@ def upload_submission(assignment_id):
             new_submission.testables, secure_filename(i.data.filename)
         )
 
-        app.logger.debug("Saving user's file to %s." % file_path)
-
         # Do the actual saving
         i.data.save(file_path)
     
     new_submission.uploaded_filenames.extend(
         secure_filename(i.data.filename) for i in form.archive.entries
             if i.data.filename
+    )
+
+    app.logger.debug(
+        "%s succesfully uploaded a new submission (id = %s) with files %s.",
+        current_user.email,
+        str(new_submission.id),
+        str(new_submission.uploaded_filenames)
     )
 
     # The old "most_recent" submission is no longer the most recent.
