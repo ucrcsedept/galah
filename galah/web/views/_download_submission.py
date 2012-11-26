@@ -51,36 +51,40 @@ def download_submission(assignment_id, submission_id):
         archive_type = "single_submission"
     )
 
-    archive_file = ""
+    archive_file_name = ""
     try:
         # Create the actual archive file.
         # TODO: Create it in galah's /var/ directory
-        archive_file = tempfile.mkstemp(suffix = ".tar.gz")[1]
+        archive_fd, archive_file_name = tempfile.mkstemp(suffix = ".tar.gz")
+
+        # Close the file because we won't actually do any writing to it,
+        # rather tar will.
+        os.close(archive_fd)
 
         # Run tar and do the actual archiving. Will block until it's finished.
         subprocess.check_call(
             [
                 "tar", "--dereference", "--create", "--gzip", "--directory",
                 os.path.join(app.config["SUBMISSION_DIRECTORY"], str(submission_id)),
-                "--file", archive_file
+                "--file", archive_file_name
             ] + submission.uploaded_filenames
         )
 
-        new_archive.file_location = archive_file
+        new_archive.file_location = archive_file_name
 
         new_archive.expires = \
                 datetime.datetime.today() + datetime.timedelta(minutes = 10)
 
         new_archive.save(force_insert = True)
 
-        return send_file(archive_file)
+        return send_file(archive_file_name)
     except Exception as e:
         app.logger.exception("An error occured while creating an archive.")
 
         # If we created a temporary archive file we need to delete it.
         new_archive.file_location = None
-        if archive_file:
-            os.remove(archive_file)
+        if archive_file_name:
+            os.remove(archive_file_name)
 
         new_archive.error_string = str(e)
         new_archive.save(force_insert = True)
