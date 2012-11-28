@@ -55,7 +55,7 @@ def download_submission(assignment_id, submission_id):
     try:
         # Create the actual archive file.
         # TODO: Create it in galah's /var/ directory
-        archive_fd, archive_file_name = tempfile.mkstemp(suffix = ".tar.gz")
+        archive_fd, archive_file_name = tempfile.mkstemp(suffix = ".tgz")
 
         # Close the file because we won't actually do any writing to it,
         # rather tar will.
