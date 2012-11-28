@@ -102,9 +102,13 @@ def upload_submission(assignment_id):
     )
 
     # The old "most_recent" submission is no longer the most recent.
-    Submission.objects(assignment = id, most_recent = True).update(
+    Submission.objects(
+        user = current_user.email, 
+        assignment = id, 
+        most_recent = True
+    ).update(
         multi = False,
-        set__most_recent = False
+        unset__most_recent = 1
     )
 
     new_submission.save()

@@ -40,6 +40,7 @@ def browse_assignments():
     ).count()
 
     submissions = list(Submission.objects(
+        user = current_user.email,
         assignment__in = [i.id for i in assignments],
         most_recent = True
     ))
