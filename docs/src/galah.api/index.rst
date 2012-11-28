@@ -115,7 +115,8 @@ For example, the :doc:`commands/modify_assignment` command has a lot of
 parameters, but it is likely that you will only want to specify a value for one
 or two of them.
 
->>> modify_assignment mine/domination due="10/20/2012 10:09:00"--Acting as user jsull003@ucr.edu--
+>>> modify_assignment mine/domination due="10/20/2012 10:09:00"
+--Acting as user jsull003@ucr.edu--
 Success! The following changes were applied to Assignment [id = 50907db055c4481a5027103d, name = World Domination].
     Due date changed from '11/01/2012 00:00:00' to '10/20/2012 10:09:00'.
 
