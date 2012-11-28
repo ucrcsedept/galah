@@ -32,7 +32,7 @@ def download_submission(assignment_id, submission_id):
         abort(404)
 
     # Find any expired archives and remove them
-    for i in Archive.objects(expires__lt = datetime.datetime.today()):
+    for i in Archive.objects(expires__lt = datetime.datetime.today()).limit(5):
         if i.file_location:
             app.logger.debug("Erasing old archive at '%s'." % i.file_location)
 
