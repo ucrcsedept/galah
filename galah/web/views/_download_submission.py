@@ -73,7 +73,7 @@ def download_submission(assignment_id, submission_id):
         new_archive.file_location = archive_file_name
 
         new_archive.expires = \
-                datetime.datetime.today() + datetime.timedelta(minutes = 10)
+                datetime.datetime.today() + app.config["ARCHIVE_LIFETIME"]
 
         new_archive.save(force_insert = True)
 
