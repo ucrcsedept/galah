@@ -28,7 +28,8 @@ setup(
         "mongoengine>=0.6.9",
         "decorator>=3.4.0",
         "requests>=0.14.1",
-        "google-api-python-client>=1.0"
+        "google-api-python-client>=1.0",
+        "simple-pbkdf2>=1.0"
     ],
 
     package_data = {
