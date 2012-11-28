@@ -38,7 +38,7 @@ def view_assignment(assignment_id):
         abort(404)
     
     # Get all of the submissions for this assignmnet
-    submissions = list(Submission.objects(user = current_user.id, assignment = id))
+    submissions = list(Submission.objects(user = current_user.id, assignment = id).order_by("most_recent", "-timestamp"))
     
     # Add the pretty version of each submissions timestamp
     for i in submissions:
