@@ -7,6 +7,9 @@ from galah.db.models import User
 from flask.ext.login import login_user
 from galah.web.auth import FlaskUser
 import requests
+import logging
+
+logger = logging.getLogger("galah.web.views.api")
 
 def get_many(dictionary, *args):
     return dict((i, dictionary.get(i)) for i in args)
@@ -139,7 +142,7 @@ def api_call():
             mimetype = "text/plain"
         )
     except Exception as e:
-        app.logger.exception("Exception occured while processing API request.")
+        logger.exception("Exception occured while processing API request.")
         
         return Response(
             response = "An error occurred processing your request: %s" % str(e),

@@ -15,6 +15,9 @@ from galah.db.models import Assignment, Submission
 from galah.base.pretty import pretty_time
 from galah.web.util import create_time_element
 import datetime
+import logging
+
+logger = logging.getLogger("galah.web.views.view_assignment")
 
 @app.route("/assignments/<assignment_id>/")
 @account_type_required(("student", "teacher"))
@@ -25,7 +28,7 @@ def view_assignment(assignment_id):
     try:
         id = ObjectId(assignment_id)
     except InvalidId:
-        app.logger.debug("Invalid ID (%s)" % str(id))
+        logger.debug("Invalid ID (%s)" % str(id))
         
         abort(404)
     
@@ -33,7 +36,7 @@ def view_assignment(assignment_id):
     try:
         assignment = Assignment.objects.get(id = id)
     except Assignment.DoesNotExist:
-        app.logger.debug("Non-extant ID (%s)" % str(id))
+        logger.debug("Non-extant ID (%s)" % str(id))
         
         abort(404)
     

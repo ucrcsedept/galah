@@ -16,8 +16,11 @@ import datetime
 import shutil
 import tempfile
 import datetime
+import logging
 
 from _view_assignment import SimpleArchiveForm
+
+logger = logging.getLogger("galah.web.views.upload_submissions")
 
 @app.route("/assignments/<assignment_id>/upload", methods = ["POST"])
 @account_type_required(("student", "teacher"))
@@ -27,7 +30,7 @@ def upload_submission(assignment_id):
         id = ObjectId(assignment_id)
         assignment = Assignment.objects.get(id = id)
     except InvalidId, Assignment.DoesNotExist:
-        app.logger.exception("Could not retrieve assignment.")
+        logger.exception("Could not retrieve assignment.")
         
         abort(404)
     
@@ -94,7 +97,7 @@ def upload_submission(assignment_id):
             if i.data.filename
     )
 
-    app.logger.debug(
+    logger.debug(
         "%s succesfully uploaded a new submission (id = %s) with files %s.",
         current_user.email,
         str(new_submission.id),

@@ -6,6 +6,9 @@ from flask import render_template, request
 import datetime
 from mongoengine import Q
 from galah.web.util import create_time_element
+import logging
+
+logger = logging.getLogger("galah.web.views.browse_assignments")
 
 @app.route("/assignments")
 @account_type_required(("student", "teacher"))
@@ -52,7 +55,7 @@ def browse_assignments():
         try:
             i.class_name = next((j.name for j in classes if j.id == i.for_class))
         except StopIteration:
-            app.logger.error("Assignment with id %s references non-existant "
+            logger.error("Assignment with id %s references non-existant "
                              "class with id %s." % (str(i.id, i.for_class)))
             
             i.class_name = "DNE"

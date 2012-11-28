@@ -9,6 +9,9 @@ import os.path
 import subprocess
 import tempfile
 import datetime
+import logging
+
+logger = logging.getLogger("galah.web.views.api")
 
 @app.route("/assignments/<assignment_id>/<submission_id>/download.tar.gz")
 @account_type_required(("student", "teacher"))
@@ -18,7 +21,7 @@ def download_submission(assignment_id, submission_id):
         assignment_id = ObjectId(assignment_id)
         assignment = Assignment.objects.get(id = assignment_id)
     except InvalidId, Assignment.DoesNotExist:
-        app.logger.exception("Could not retrieve assignment.")
+        logger.exception("Could not retrieve assignment.")
         
         abort(404)
 
@@ -27,19 +30,19 @@ def download_submission(assignment_id, submission_id):
         submission_id = ObjectId(submission_id)
         submission = Submission.objects.get(id = submission_id)
     except InvalidId, Submission.DoesNotExist:
-        app.logger.exception("Could not retrieve submission.")
+        logger.exception("Could not retrieve submission.")
 
         abort(404)
 
     # Find any expired archives and remove them
     for i in Archive.objects(expires__lt = datetime.datetime.today()).limit(5):
         if i.file_location:
-            app.logger.debug("Erasing old archive at '%s'." % i.file_location)
+            logger.debug("Erasing old archive at '%s'." % i.file_location)
 
             try:
                 os.remove(i.file_location)
             except OSError:
-                app.logger.exception(
+                logger.exception(
                     "Could not remove expired archive at %s." %
                         i.file_location
                 )
@@ -79,7 +82,7 @@ def download_submission(assignment_id, submission_id):
 
         return send_file(archive_file_name)
     except Exception as e:
-        app.logger.exception("An error occured while creating an archive.")
+        logger.exception("An error occured while creating an archive.")
 
         # If we created a temporary archive file we need to delete it.
         new_archive.file_location = None

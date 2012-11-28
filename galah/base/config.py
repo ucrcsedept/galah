@@ -13,11 +13,10 @@ defaults = {
 
 import imp
 import logging
+import os
 from galah.base.utility import tuplify
-from galah.base.magic import memoize
 
 loaded = None
-@memoize
 def load_config(domain):
     """
     Parses and loads up the Galah configuration file and extracts the
@@ -66,26 +65,9 @@ def load_config(domain):
             local_key = k[len(prefix):]
 
             local_config[local_key] = v
-
-            # If the user specified domain specific handlers, attach them to the
-            # coorect logger. We know this will never be done multiple times
-            # because this function is memoized.
-            if local_key == "LOG_HANDLERS":
-                handlers = tuplify(v)
-
-                for i in handlers:
-                    logging.getLogger("galah." + domain).addHandler(i)
         elif k.startswith(global_prefix) and k != len(global_prefix):
             global_key = k[len(global_prefix):]
 
             local_config[global_key] = v
-
-            # If the user specified global log handlers, attach them to the
-            # root logger.
-            if first_load and global_key == "LOG_HANDLERS":
-                handlers = tuplify(v)
-
-                for i in handlers:
-                    logging.getLogger("galah").addHandler(i)
 
     return local_config
