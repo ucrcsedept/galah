@@ -119,8 +119,7 @@ or two of them.
 Success! The following changes were applied to Assignment [id = 50907db055c4481a5027103d, name = World Domination].
     Due date changed from '11/01/2012 00:00:00' to '10/20/2012 10:09:00'.
 
-*I used the shorthand notation for referencing assignments which is introduced
-in :ref:`referencing_objects`*
+*I used the shorthand notation for referencing assignments which is introduced in* :ref:`referencing_objects`.
 
 .. _referencing_objects:
 
