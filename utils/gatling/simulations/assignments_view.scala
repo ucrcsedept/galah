@@ -7,9 +7,13 @@ import com.excilys.ebi.gatling.http.Headers.Names._
 import akka.util.duration._
 import bootstrap._
 
-class AverageGalahStudent extends Simulation {
+class AssignmentsView extends Simulation {
 
     def apply = {
+
+        val nusers = Integer.getInteger("users", 150)
+        val ramp_time = Integer.getInteger("ramp", 30).toLong
+        val nqueries = Integer.getInteger("queries", 2)
 
         val httpConf = httpConfig
                 .baseURL("http://localhost:5000")
@@ -28,7 +32,6 @@ class AverageGalahStudent extends Simulation {
                 http("initial_contact")
                     .get("/")
             )
-            .pause(2, 10)
             .exec(
                 http("login")
                     .post("/login/")
@@ -40,19 +43,18 @@ class AverageGalahStudent extends Simulation {
                         .saveAs("first_assignment")
                     )
             )
-            .pause(2, 4)
+            .repeat(nqueries) {
+                exec(
+                    http("assignment")
+                        .get("/assignments/${first_assignment}")
+                )
+                .pause(2, 4)
+            }
             .exec(
-                http("assignment")
-                    .get("/assignments/${first_assignment}")
-            )
-            .pause(9, 20)
-            .exec(
-                http("submit")
-                    .post("/assignments/${first_assignment}/upload")
-                    .headers(upload_header)
-                        .fileBody("GalahRecorded_request_4.txt")
+                http("logout")
+                    .get("/logout")
             )
 
-        List(scn.configure.users(500).ramp(60).protocolConfig(httpConf))
+        List(scn.configure.users(nusers).ramp(ramp_time).protocolConfig(httpConf))
     }
 }

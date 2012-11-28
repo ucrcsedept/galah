@@ -1,0 +1,26 @@
+-----------------------------153842976519518901021827575179
+Content-Disposition: form-data; name="csrf_token"
+
+None
+-----------------------------153842976519518901021827575179
+Content-Disposition: form-data; name="archive-0"; filename="main.cpp"
+Content-Type: text/x-c++src
+
+#include <iostream>
+
+int main() {
+    std::cout << "DIE!";
+    return 0;
+}
+
+-----------------------------153842976519518901021827575179
+Content-Disposition: form-data; name="archive-1"; filename=""
+Content-Type: application/octet-stream
+
+
+-----------------------------153842976519518901021827575179
+Content-Disposition: form-data; name="archive-2"; filename=""
+Content-Type: application/octet-stream
+
+
+-----------------------------153842976519518901021827575179--
