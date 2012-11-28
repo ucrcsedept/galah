@@ -35,7 +35,7 @@ Copyright 2012 John Sullivan
 Copyright 2012 Other contributers as noted in the CONTRIBUTERS file
 
 This documentation is a part of Galah, which is licensed under the
-`AGPLv3 <http://www.gnu.org/licenses/agpl-3.0.html>`.
+`AGPLv3 <http://www.gnu.org/licenses/agpl-3.0.html>`_.
 
 Using the API
 -------------
