@@ -1,3 +1,5 @@
+import datetime
+
 # Default configuration values for Galah.
 defaults = {
     "global/SUBMISSION_DIRECTORY": "/var/local/galah/web/submissions/",
@@ -5,7 +7,8 @@ defaults = {
     "global/SISYPHUS_ADDRESS": "ipc:///tmp/sisyphus.sock",
     "web/DEBUG": True,
     "web/SECRET_KEY": "Very Secure Key",
-    "web/HOST_URL": "http://localhost:5000"
+    "web/HOST_URL": "http://localhost:5000",
+    "web/ARCHIVE_LIFETIME": datetime.timedelta(minutes = 2)
 }
 
 import imp
