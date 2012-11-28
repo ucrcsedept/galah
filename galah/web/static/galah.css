@@ -26,6 +26,18 @@ a {
 /* Global Classes */
 .heading, label { font-family: Helvetica, "Helvetica Neue", Arial, sans-serif; }
 
+#source_download {
+    border: 1px solid #ccc;
+    width: 90%;
+    margin: 0px auto;
+    padding: 4px;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 10pt;
+    margin-top: 20px;
+    text-align: center;
+    background-color: white;
+}
+
 /* Top Login Bar */
 #topbar > #login_status, #topbar > #flashes > div {
     display: block;

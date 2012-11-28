@@ -1,14 +1,34 @@
+# Copyright 2012 John Sullivan
+# Copyright 2012 Other contributers as noted in the CONTRIBUTERS file
+#
+# This file is part of Galah.
+#
+# Galah is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Galah is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with Galah.  If not, see <http://www.gnu.org/licenses/>.
+
 import datetime
 
 # Default configuration values for Galah.
 defaults = {
+    "global/CURRENT_VERSION": "v0.1rc4",
     "global/SUBMISSION_DIRECTORY": "/var/local/galah/web/submissions/",
     "global/MONGODB": "galah",
     "global/SISYPHUS_ADDRESS": "ipc:///tmp/sisyphus.sock",
     "web/DEBUG": True,
     "web/SECRET_KEY": "Very Secure Key",
     "web/HOST_URL": "http://localhost:5000",
-    "web/ARCHIVE_LIFETIME": datetime.timedelta(minutes = 2)
+    "web/ARCHIVE_LIFETIME": datetime.timedelta(minutes = 2),
+    "web/SOURCE_HOST": "https://github.com/brownhead/galah"
 }
 
 import imp
