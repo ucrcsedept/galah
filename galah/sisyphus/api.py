@@ -9,23 +9,27 @@ def send_task(heavylifter_host, task_name, *args, **kwargs):
     socket = context.socket(zmq.REQ)
     socket.connect(heavylifter_host)
 
-    socket.send_json({
-        "task_name": task_name,
-        "args": args,
-        "kwargs": kwargs
-    })
+    try:
+        socket.send_json({
+            "task_name": task_name,
+            "args": args,
+            "kwargs": kwargs
+        })
 
-    # Wait for a reply from the heavylifter.
-    poller = zmq.Poller()
-    poller.register(socket, zmq.POLLIN)
-    if poller.poll(2 * 1000):
-        reply = socket.recv_json()
-    else:
-        raise RuntimeError("heavylifter did not respond.")
+        # Wait for a reply from the heavylifter.
+        poller = zmq.Poller()
+        poller.register(socket, zmq.POLLIN)
+        if poller.poll(2 * 1000):
+            reply = socket.recv_json()
+        else:
+            raise RuntimeError("heavylifter did not respond.")
 
-    if not reply["success"]:
-        raise RuntimeError(
-            "heavylifter did not accept task.\n\t" + reply["error_string"]
-        )
+        if not reply["success"]:
+            raise RuntimeError(
+                "heavylifter did not accept task.\n\t" + reply["error_string"]
+            )
+    finally:
+        # Forcibly close the socket.
+        socket.close(0)
 
 #print send_task("ipc:///tmp/heavylifter.sock", "test_task", "hi")
