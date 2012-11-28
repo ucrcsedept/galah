@@ -6,7 +6,7 @@
 
 Galah is a teaching utility that automatically analyzes students' code as
 they create it and provides feedback to both the students and the instructors.
-It does this by continually running tests on students' code aand providing the
+It does this by continually running tests on students' code and providing the
 results to both the instructors and the students.
 
 Professors are responsible for creating test harnesses for their assignments,
@@ -14,16 +14,53 @@ aside from that Galah does the rest of the work: running those tests inside of
 a secure VM; consolodating results into a database; and providing an interface
 for the students and teachers to see the results of the testing.
 
+### Current Status
+
+The latest version of Galah only works as a submission system. Testing is not
+performed.
+
 ## License
 
-Licensed under the GPLv3. When I get around to it I will stick licensing
-notices all over the place.i
+Galah's source code AND documentation are licensed under the GNU AGPLv3. A
+textual copy of the AGPLv3 is included in the file LICENSE.
 
-## Credit and Contributors
+### Considerations
 
-For now this will contain all the contributors and credits due as it is a small
-list. It may move to a proper COLLABORATORS.txt file or some other device
-later.
+The AGPLv3 is basically the GPLv3 with an added restriction aimed towards
+server software like Galah. To best know your rights, you should read and
+understand the entirety of the AGPLv3, however, below is a basic run through of
+what you should keep in mind when using Galah. Note that it is not legally
+binding text and does not supersede the AGPLv3.
+
+Because Galah's source code and documentation are licensed under the GNU AGPLv3,
+you must always provide a link to a freely available copy of the currently
+running source code to anybody who interacts with your deployed version of
+Galah. In fewer words, leave the footer that's included in every page intact,
+and if you make changes to the source code, make sure to host your changes on
+GitHub and configure Galah to link the "Get the code!" link to your public repo.
+
+Test harnesses you create, code your students submit, and configuration files
+you create are not owned by Galah's contributers therefore the AGPLv3 does not
+apply to them. So you do not have to make your test harnesses freely available
+to your students (don't worry!). 
+
+The documentation's "source code" is the reStructuredText included in this repo,
+the documentation's "object code" is the HTML, MAN, or other formatted output
+that sphinx (or whatever program your using) generates. So if you make
+modifications to the documentation and distribute or host a "compiled" version
+of the documentation (so an HTML, MAN, or other version), you must provide a
+link to the reStructuredText version of the source code **in the documentation**
+(note that modifying galah's configuration file will not modify the output of
+the documentation, you must do that manually in the `index.rst` file). It is
+reccomended that you just do the same thing as if you had made modifications to
+Galah's core source code (legally you basically did) and put up a GitHub repo
+with your changes.
+
+## Informal Credits and Contributors
+
+This is an informal list of contributers and those who gave me assistance during
+Galah's development. For the list of contributers who have copyright claims to
+Galah or pieces of Galah please refer to the CONTRIBUTERS file.
 
 Thank you all of you!
 
@@ -52,7 +89,6 @@ ASCII bird every time you go them. Now error pages are fun too!
 ### Chris Manghane
 
 Implemented Galah's support for Google OAuth2.
-
 
 ## News
 

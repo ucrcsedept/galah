@@ -57,6 +57,14 @@
     </div>
             
     {%- block content %}{% endblock -%}
+
+    <div id="source_download">
+        <b>Galah</b> Copyright John Sullivan and its other contributers,
+        some rights reserved under the 
+        <a href="http://www.gnu.org/licenses/agpl-3.0.html">AGPLv3</a>.
+        Running {{ config['CURRENT_VERSION'] }}.
+        (<a href="{{ config['SOURCE_HOST'] }}">Get the code!</a>)
+    </div>
 </div>
 </body>
 </html>
