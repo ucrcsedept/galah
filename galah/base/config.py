@@ -38,12 +38,10 @@ def load_config(domain):
     # that the configuration is only loaded once per instance of the
     # interpreter
     if not loaded:
-        try:
+        if os.path.isfile("/etc/galah/galah.config"):
             loaded = imp.load_source(
                 "user_config_file", "/etc/galah/galah.config"
             )
-        except IOError:
-            pass
 
     local_config = {}
 
