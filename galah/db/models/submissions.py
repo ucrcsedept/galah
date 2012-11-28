@@ -50,5 +50,10 @@ class Submission(Document):
     
     meta = {
         "allow_inheritance": False,
-        "ordering": ["-timestamp"]
+        "indexes": [
+            {
+                "fields": ("user", "assignment", "most_recent", "-timestamp"),
+                "types": False
+            }
+        ]
     }
