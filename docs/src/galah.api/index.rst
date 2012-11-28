@@ -31,22 +31,11 @@ License
 -------
 
 Copyright 2012 John Sullivan
+
 Copyright 2012 Other contributers as noted in the CONTRIBUTERS file
 
-This file is part of Galah.
-
-Galah is free software: you can redistribute it and/or modify
-it under the terms of the GNU Affero General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-Galah is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU Affero General Public License for more details.
-
-See <http://www.gnu.org/licenses/> for more information on the GNU Affero
-General Public License.
+This documentation is a part of Galah, which is licensed under the
+`AGPLv3 <http://www.gnu.org/licenses/agpl-3.0.html>`.
 
 Using the API
 -------------
