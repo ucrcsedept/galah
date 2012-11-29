@@ -111,7 +111,7 @@ def _tar_bulk_submissions(archive_id, requester, assignment, email = ""):
                 # submissions have the same exact time stamp, we'll need to
                 # add a marker to the end of the timestamp.
                 marker = 0
-                while os.path.isfile(symlink_path +
+                while os.path.exists(symlink_path +
                         ("-%d" % marker if marker > 0 else "")):
                     marker += 1
 
