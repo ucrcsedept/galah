@@ -19,10 +19,10 @@
 ## Create the base form ##
 from flask import request, url_for, render_template
 from flask.ext.wtf import Form, HiddenField
-from galah.web.util import is_url_on_site
+from galah.web.util import is_url_on_site, GalahWebAdapter
 import logging
 
-logger = logging.getLogger("galah.web.views.login")
+logger = GalahWebAdapter(logging.getLogger("galah.web.views.login"))
 
 class RedirectForm(Form):
     next = HiddenField()

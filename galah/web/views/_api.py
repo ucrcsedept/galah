@@ -24,10 +24,11 @@ from galah.base.crypto.passcrypt import check_seal, deserialize_seal
 from galah.db.models import User
 from flask.ext.login import login_user
 from galah.web.auth import FlaskUser
+from galah.web.util import GalahWebAdapter
 import requests
 import logging
 
-logger = logging.getLogger("galah.web.views.api")
+logger = GalahWebAdapter(logging.getLogger("galah.web.views.api"))
 
 def get_many(dictionary, *args):
     return dict((i, dictionary.get(i)) for i in args)

@@ -56,6 +56,10 @@ messages = {
     404: """You seem to have landed in the wrong place... <a href="%s">Try Here</a>."""
 }
 
+from galah.web.util import GalahWebAdapter
+import logging
+logger = GalahWebAdapter(logging.getLogger("galah.web.views.error"))
+
 @app.errorhandler(404)
 @app.errorhandler(500)
 def error(e):

@@ -26,7 +26,7 @@ from flask import abort, render_template, request, flash, redirect, jsonify, \
                   url_for
 from galah.db.models import Submission, Assignment
 from galah.base.pretty import pretty_list, plural_if
-from galah.web.util import is_url_on_site
+from galah.web.util import is_url_on_site, GalahWebAdapter
 from werkzeug import secure_filename
 import os.path
 import subprocess
@@ -38,7 +38,8 @@ import logging
 
 from _view_assignment import SimpleArchiveForm
 
-logger = logging.getLogger("galah.web.views.upload_submissions")
+logger = \
+    GalahWebAdapter(logging.getLogger("galah.web.views.upload_submissions"))
 
 @app.route("/assignments/<assignment_id>/upload", methods = ["POST"])
 @account_type_required(("student", "teacher"))

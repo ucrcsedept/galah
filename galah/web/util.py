@@ -51,3 +51,19 @@ def create_time_element(timestamp, now = None):
         timestamp.strftime("%B %d, %Y at %I:%M:%S %p"),
         pretty_time_distance(now, timestamp)
     )
+
+import logging
+from flask.ext.login import current_user
+from flask import request
+class GalahWebAdapter(logging.LoggerAdapter):
+    def __init__(self, logger):
+        logging.LoggerAdapter.__init__(self, logger, {})
+
+    def process(self, msg, kwargs):
+        prefix = "(user=%s;ip=%s;path=%s) " % (
+            current_user.email,
+            request.remote_addr,
+            request.path
+        )
+
+        return (prefix + msg, kwargs)
