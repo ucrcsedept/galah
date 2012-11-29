@@ -86,7 +86,7 @@ def api_login():
 
             return failure()
 
-        logger.info("User %s successfully signed in with OAuth2.", )
+        logger.info("User %s successfully signed in with OAuth2.", email)
 
         return success(user)
     elif access_token and not oauth_enabled:
