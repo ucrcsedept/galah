@@ -86,7 +86,7 @@ def login():
         if oauth_enabled and user and not user.seal:
             flash("You must use R'Mail to login.", category = "error")
 
-            logger.debug(
+            logger.info(
                 "User %s has tried to log in via internal auth but their "
                 "account does not have a seal.", user.email
             )
@@ -100,14 +100,14 @@ def login():
                 not check_seal(form.password.data, deserialize_seal(str(user.seal))):
             flash("Incorrect email or password.", category = "error")
 
-            logger.debug(
+            logger.info(
                 "User %s has entered an incorrect email/password pair during "
                 "internal auth.", form.email.data
             )
         else:
             login_user(user)
 
-            logger.debug(
+            logger.info(
                 "User %s has succesfully logged in via internal auth.",
                 user.email
             )
@@ -155,14 +155,14 @@ def authenticate_user():
         if not user:
             flash("A Galah account does not exist for this email.", "error")
 
-            logger.debug(
+            logger.info(
                 "User %s has attempted to log in via OAuth2 but an account "
                 "does not exist for them.", email
             )
         else:
             login_user(user)
 
-            logger.debug(
+            logger.info(
                 "User %s has succesfully logged in via OAuth2.", email
             )
 
@@ -171,6 +171,6 @@ def authenticate_user():
     else:
         flash(u'Sorry, we couldn\'t verify your email', 'error')
 
-        logger.debug("User %s failed to authenticate with OAuth2.", email)
+        logger.info("User %s failed to authenticate with OAuth2.", email)
       
     return redirect(url_for('login'))

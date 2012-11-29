@@ -20,7 +20,7 @@ from galah.web import app
 from flask.ext.login import current_user
 from galah.web.auth import account_type_required
 from galah.db.models import Class, Assignment, Submission
-from flask import render_template, request
+from flask import render_template, request, abort
 import datetime
 from mongoengine import Q
 from galah.web.util import create_time_element, GalahWebAdapter
@@ -74,8 +74,10 @@ def browse_assignments():
         try:
             i.class_name = next((j.name for j in classes if j.id == i.for_class))
         except StopIteration:
-            logger.error("Assignment with id %s references non-existant "
-                             "class with id %s." % (str(i.id, i.for_class)))
+            logger.error(
+                "Assignment with id %s references non-existant class with id "
+                "%s." % (str(i.id, i.for_class))
+            )
             
             i.class_name = "DNE"
 

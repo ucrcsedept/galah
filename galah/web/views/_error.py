@@ -20,6 +20,7 @@
 from galah.web import app
 from flask import render_template, url_for
 from collections import namedtuple
+from werkzeug.exceptions import InternalServerError, NotFound
 
 AsciiPiece = namedtuple("AsciiPiece", ["author", "art"])
 ascii_art = {
@@ -63,6 +64,10 @@ logger = GalahWebAdapter(logging.getLogger("galah.web.views.error"))
 @app.errorhandler(404)
 @app.errorhandler(500)
 def error(e):
+    # Log the error if it's not a 404 or purposeful abort(500).
+    if type(e) is not InternalServerError and type(e) is not NotFound:
+        logger.exception("An error occurred while rendering a view.")
+
     code = e.code if hasattr(e, "code") else 500
     
     if code == 500:

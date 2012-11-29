@@ -45,6 +45,7 @@ context = zmq.Context()
 socket = context.socket(zmq.REP)
 socket.bind(config["SISYPHUS_ADDRESS"])
 
+import sys
 def consumer():
     # Create a new logger for this consumer
     from threading import current_thread
@@ -59,7 +60,10 @@ def consumer():
             if type(e) is TypeError and str(e).startswith("%s()" % task.name):
                 logger.error("Task with bad parameters: %s", str(task))
             else:
-                logger.warn("Exception in task %s: %s", task.name, str(e))
+                logger.warn(
+                    "Exception in task %s.", task.name,
+                    exc_info = sys.exc_info()
+                )
 
 def to_task(request):
     # Do very explicit validation on the request so we can give better error
@@ -106,7 +110,7 @@ def main():
 
             continue
 
-        logger.debug("Recieved request for task " + task.name)
+        logger.info("Recieved request for task %s.", task.name)
 
         # Check if this is a recognized command.
         if task.name not in task_list.keys():

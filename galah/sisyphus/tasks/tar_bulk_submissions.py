@@ -38,19 +38,22 @@ def _tar_bulk_submissions(archive_id, requester, assignment, email = ""):
     archive_file = temp_directory = ""
 
     # Find any expired archives and remove them
+    deleted_files = []
     for i in Archive.objects(expires__lt = datetime.datetime.today()):
-        if i.file_location:
-            logger.debug("Erasing old archive at '%s'." % i.file_location)
+        deleted_files.append(i.file_location)
 
+        if i.file_location:
             try:
                 os.remove(i.file_location)
-            except OSError:
+            except OSError as e:
                 logger.warn(
-                    "Could not remove expired archive at %s.",
-                    i.file_location
+                    "Could not remove expired archive at %s: %s.",
+                    i.file_location, str(e)
                 )
 
         i.delete()
+
+    logger.info("Deleted archives %s.", str(deleted_files))
 
     # This is the archive object we will eventually add to the database
     new_archive = Archive(
@@ -75,7 +78,8 @@ def _tar_bulk_submissions(archive_id, requester, assignment, email = ""):
         submissions = list(Submission.objects(**query))
 
         if not submissions:
-            raise RuntimeError("No submissions found matching query.")
+            logger.info("No submissions found matching query.")
+            return
 
         # Organize all the submissions by user name, as this will closely
         # match the structure of the archive we will build.
@@ -147,8 +151,6 @@ def _tar_bulk_submissions(archive_id, requester, assignment, email = ""):
 
         new_archive.save(force_insert = True)
     except Exception as e:
-        logger.exception("An error occured while creating an archive.")
-
         # If we created a temporary archive file we need to delete it.
         new_archive.file_location = None
         if archive_file:
@@ -156,6 +158,8 @@ def _tar_bulk_submissions(archive_id, requester, assignment, email = ""):
 
         new_archive.error_string = str(e)
         new_archive.save(force_insert = True)
+
+        raise
     finally:
         if temp_directory:
             shutil.rmtree(temp_directory)

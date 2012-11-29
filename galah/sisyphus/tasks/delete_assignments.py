@@ -35,7 +35,7 @@ def _delete_assignments(ids, delete_class):
     # Convert all of the IDs we were given to ObjectIDs in one go
     ids = [ObjectId(i) for i in ids]
 
-    logger.debug("Deleting assignments %s.", ids)
+    logger.info("Deleting assignments %s.", str(ids))
 
     # Query the database for all the assignments we are supposed to delete
     assignments = list(Assignment.objects(id__in = ids))
@@ -56,7 +56,7 @@ def _delete_assignments(ids, delete_class):
                 os.path.join(config["SUBMISSION_DIRECTORY"], str(i.id))
             )
         except OSError as e:
-            logger.warn(
+            logger.error(
                 "Failed to delete submission with id %s: %s", str(i.id), str(e)
             )
 

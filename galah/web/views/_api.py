@@ -35,9 +35,6 @@ def get_many(dictionary, *args):
 
 @app.route("/api/login", methods = ["POST"])
 def api_login():
-    password = request.form.get("password", None)
-    email = request.form.get("email", None)
-
     def success(the_user):
         login_user(the_user)
         
@@ -62,44 +59,79 @@ def api_login():
             data = { "access_token": access_token }
         )
 
+        email = req.json.get("email", "unknown")
+
         if req.status_code != requests.codes.ok:
+            logging.info("Invalid OAuth2 login by %s.", email)
+
             return failure()
 
         # Validate client id is matching to avoid confused deputy attack
         if req.json["audience"] != app.config["GOOGLE_APICLIENT_ID"]:
-            raise RuntimeError("Invalid Client ID")
+            logging.error(
+                "Non-matching audience field detected for user %s.", email
+            )
+
+            return failure()
 
         # Grab the user from the database (here we also check to make sure that
         # this user actually has account on Galah).
         try:
             user = FlaskUser(User.objects.get(email = req.json["email"]))
         except User.DoesNotExist:
+            logging.info(
+                "User %s signed in via OAuth2 but a Galah account does not "
+                "exist for that user.", email
+            )
+
             return failure()
+
+        logging.info("User %s successfully signed in with OAuth2.", )
 
         return success(user)
     elif access_token and not oauth_enabled:
-        raise RuntimeError("Login via OAuth2 is not configured.")
-    
+        logging.warn("Attempted login via OAuth2 but OAuth2 is not configured.")
+        
+        return failure()
+
     # If the user is trying to authenticate through Galah...
+    password = request.form.get("password", None)
+    email = request.form.get("email", None)
     if email and password:
         try:
             user = FlaskUser(User.objects.get(email = email))
         except User.DoesNotExist:
+            logging.info(
+                "User %s tried to sign in via internal auth but a Galah "
+                "account does not exist for that user.", email
+            )
+
             return failure()
 
         if check_seal(password, deserialize_seal(str(user.seal))):
+            logging.info(
+                "User %s succesfully authenticated with internal auth.", email
+            )
+
             return success(user)
         else:
+            logging.info(
+                "User %s tried to sign in via internal auth but an invalid "
+                "password was given.", email
+            )
+
             return failure()
     
-    raise RuntimeError("Malformed Request")
+    logging.warn("Malformed request.")
+
+    return failure()
 
 @app.route("/api/call", methods = ["POST"])
 def api_call():
     try:
         # Make sure we got some data we can work with
         if request.json is None:
-            raise RuntimeError("No request data sent.")
+            raise UserError("No request data sent.")
 
         # The top level object must be either a non-empty list or a dictionary
         # with an api_call key. They will have similar information either way
@@ -115,7 +147,7 @@ def api_call():
         elif type(request.json) is dict and "api_name" in request.json:
             # Don't let the user insert their own current_user argument
             if "current_user" in request.json:
-                raise ValueError("You cannot fool the all-knowing Galah.")
+                raise UserError("You cannot fool the all-knowing Galah.")
                 
             # Resolve the name of the API call and retrieve the actual
             # APICall object we need.
@@ -127,12 +159,19 @@ def api_call():
 
             api_kwargs = dict(**request.json)
         else:
-            raise ValueError("Request data not formed correctly.")
+            logger.warn("Could not parse request.")
+
+            raise UserError("Request data not formed correctly.")
 
         if api_name in api_calls:
             api_call = api_calls[api_name]
         else:
-            raise RuntimeError("%s is not a recognized API call." % api_name)
+            raise UserError("%s is not a recognized API call." % api_name)
+
+        logger.info(
+            "API call %s with args=%s and kwargs=%s",
+            api_name, str(api_args), str(api_kwargs)
+        )
 
         call_result = api_call(current_user, *api_args, **api_kwargs)
 
@@ -151,6 +190,8 @@ def api_call():
             mimetype = "text/plain"
         )
     except UserError as e:
+        logger.info("UserError raised during API call: %s.", str(e))
+
         return Response(
             response = "Your command cannot be completed as entered: %s" %
                 str(e),

@@ -29,6 +29,7 @@ import subprocess
 import tempfile
 import datetime
 import logging
+import sys
 
 logger = \
     GalahWebAdapter(logging.getLogger("galah.web.views.download_submission"))
@@ -40,8 +41,8 @@ def download_submission(assignment_id, submission_id):
     try:
         assignment_id = ObjectId(assignment_id)
         assignment = Assignment.objects.get(id = assignment_id)
-    except InvalidId, Assignment.DoesNotExist:
-        logger.exception("Could not retrieve assignment.")
+    except (InvalidId, Assignment.DoesNotExist) as e:
+        logger.info("Could not retrieve assignment: %s.", str(e))
         
         abort(404)
 
@@ -50,29 +51,36 @@ def download_submission(assignment_id, submission_id):
         submission_id = ObjectId(submission_id)
         submission = Submission.objects.get(id = submission_id)
     except InvalidId, Submission.DoesNotExist:
-        logger.exception("Could not retrieve submission.")
+        logger.info("Could not retrieve submission: %s.", str(e))
 
         abort(404)
 
     # Find any expired archives and remove them
+    deleted_files = []
     for i in Archive.objects(expires__lt = datetime.datetime.today()).limit(5):
         if i.file_location:
-            logger.debug("Erasing old archive at '%s'." % i.file_location)
+            deleted_files.append(i.file_location)
 
             try:
                 os.remove(i.file_location)
             except OSError:
-                logger.exception(
-                    "Could not remove expired archive at %s." %
-                        i.file_location
+                logger.warn(
+                    "Could not remove expired archive at %s: %s.",
+                    i.file_location, str(e)
                 )
 
         i.delete()
+
+    if deleted_files:
+        logger.info("Deleted archives %s.", str(deleted_files))
 
     new_archive = Archive(
         requester = current_user.id,
         archive_type = "single_submission"
     )
+
+    new_archive.expires = \
+        datetime.datetime.today() + app.config["ARCHIVE_LIFETIME"]
 
     archive_file_name = ""
     try:
@@ -94,9 +102,6 @@ def download_submission(assignment_id, submission_id):
         )
 
         new_archive.file_location = archive_file_name
-
-        new_archive.expires = \
-                datetime.datetime.today() + app.config["ARCHIVE_LIFETIME"]
 
         new_archive.save(force_insert = True)
 
