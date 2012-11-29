@@ -53,7 +53,8 @@ def _tar_bulk_submissions(archive_id, requester, assignment, email = ""):
 
         i.delete()
 
-    logger.info("Deleted archives %s.", str(deleted_files))
+    if deleted_files:
+        logger.info("Deleted archives %s.", str(deleted_files))
 
     # This is the archive object we will eventually add to the database
     new_archive = Archive(
