@@ -205,7 +205,8 @@ def api_call():
         logger.exception("Exception occured while processing API request.")
         
         return Response(
-            response = "An error occurred processing your request: %s" % str(e),
+            response =
+                "An internal server error occurred processing your request.",
             headers = {
                 "X-CallSuccess": "False",
                 "X-ErrorType": e.__class__.__name__
