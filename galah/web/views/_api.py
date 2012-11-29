@@ -62,13 +62,13 @@ def api_login():
         email = req.json.get("email", "unknown")
 
         if req.status_code != requests.codes.ok:
-            logging.info("Invalid OAuth2 login by %s.", email)
+            logger.info("Invalid OAuth2 login by %s.", email)
 
             return failure()
 
         # Validate client id is matching to avoid confused deputy attack
         if req.json["audience"] != app.config["GOOGLE_APICLIENT_ID"]:
-            logging.error(
+            logger.error(
                 "Non-matching audience field detected for user %s.", email
             )
 
@@ -79,18 +79,18 @@ def api_login():
         try:
             user = FlaskUser(User.objects.get(email = req.json["email"]))
         except User.DoesNotExist:
-            logging.info(
+            logger.info(
                 "User %s signed in via OAuth2 but a Galah account does not "
                 "exist for that user.", email
             )
 
             return failure()
 
-        logging.info("User %s successfully signed in with OAuth2.", )
+        logger.info("User %s successfully signed in with OAuth2.", )
 
         return success(user)
     elif access_token and not oauth_enabled:
-        logging.warn("Attempted login via OAuth2 but OAuth2 is not configured.")
+        logger.warn("Attempted login via OAuth2 but OAuth2 is not configured.")
         
         return failure()
 
@@ -101,7 +101,7 @@ def api_login():
         try:
             user = FlaskUser(User.objects.get(email = email))
         except User.DoesNotExist:
-            logging.info(
+            logger.info(
                 "User %s tried to sign in via internal auth but a Galah "
                 "account does not exist for that user.", email
             )
@@ -109,20 +109,20 @@ def api_login():
             return failure()
 
         if check_seal(password, deserialize_seal(str(user.seal))):
-            logging.info(
+            logger.info(
                 "User %s succesfully authenticated with internal auth.", email
             )
 
             return success(user)
         else:
-            logging.info(
+            logger.info(
                 "User %s tried to sign in via internal auth but an invalid "
                 "password was given.", email
             )
 
             return failure()
     
-    logging.warn("Malformed request.")
+    logger.warn("Malformed request.")
 
     return failure()
 
