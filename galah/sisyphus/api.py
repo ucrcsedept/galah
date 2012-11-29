@@ -21,7 +21,7 @@ import zmq
 context = zmq.Context()
 
 def send_task(heavylifter_host, task_name, *args, **kwargs):
-    # We create a new socket and connect each time because heavylifter tasks
+    # We create a new socket and connect each time because sisyphus tasks
     # should not be sent very often, therefore it's not useful to hold an open
     # socket for large lengths of time without sending much of anything.
     socket = context.socket(zmq.REQ)
@@ -34,20 +34,20 @@ def send_task(heavylifter_host, task_name, *args, **kwargs):
             "kwargs": kwargs
         })
 
-        # Wait for a reply from the heavylifter.
+        # Wait for a reply from the sisyphus.
         poller = zmq.Poller()
         poller.register(socket, zmq.POLLIN)
         if poller.poll(2 * 1000):
             reply = socket.recv_json()
         else:
-            raise RuntimeError("heavylifter did not respond.")
+            raise RuntimeError("sisyphus did not respond.")
 
         if not reply["success"]:
             raise RuntimeError(
-                "heavylifter did not accept task.\n\t" + reply["error_string"]
+                "sisyphus did not accept task.\n\t" + reply["error_string"]
             )
     finally:
         # Forcibly close the socket.
         socket.close(0)
 
-#print send_task("ipc:///tmp/heavylifter.sock", "test_task", "hi")
+#print send_task("ipc:///tmp/sisyphus.sock", "test_task", "hi")
