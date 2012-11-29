@@ -18,6 +18,7 @@
 
 from flask import Flask
 app = Flask("galah.web")
+app.logger.debug("Flask Starting Up")
 
 from galah.base.config import load_config
 app.config.update(load_config("web"))
