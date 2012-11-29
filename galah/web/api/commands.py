@@ -675,7 +675,7 @@ def delete_assignment(current_user, id):
 def get_archive(current_user, assignment, email = ""):
     # tar_tasks imports galahweb because it wants access to the logger, to
     # prevent a circular dependency we won't load the module until we need it.
-    the_assignment = _get_assignment(assignment, current_user).id
+    the_assignment = _get_assignment(assignment, current_user)
 
     if current_user.account_type != "admin" and \
             the_assignment.for_class not in current_user.classes:
@@ -694,7 +694,7 @@ def get_archive(current_user, assignment, email = ""):
         "tar_bulk_submissions",
         str(task_id),
         current_user.email,
-        str(the_assignment),
+        str(the_assignment.id),
         email
     )
     
