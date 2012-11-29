@@ -23,10 +23,11 @@ from galah.db.models import Class, Assignment, Submission
 from flask import render_template, request
 import datetime
 from mongoengine import Q
-from galah.web.util import create_time_element
+from galah.web.util import create_time_element, GalahWebAdapter
 import logging
 
-logger = logging.getLogger("galah.web.views.browse_assignments")
+logger = \
+    GalahWebAdapter(logging.getLogger("galah.web.views.browse_assignments"))
 
 @app.route("/assignments")
 @account_type_required(("student", "teacher"))

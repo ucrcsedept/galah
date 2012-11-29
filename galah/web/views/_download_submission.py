@@ -23,13 +23,15 @@ from bson.objectid import ObjectId
 from bson.errors import InvalidId
 from flask import send_file, abort
 from flask.ext.login import current_user
+from galah.web.util import GalahWebAdapter
 import os.path
 import subprocess
 import tempfile
 import datetime
 import logging
 
-logger = logging.getLogger("galah.web.views.api")
+logger = \
+    GalahWebAdapter(logging.getLogger("galah.web.views.download_submission"))
 
 @app.route("/assignments/<assignment_id>/<submission_id>/download.tar.gz")
 @account_type_required(("student", "teacher"))
