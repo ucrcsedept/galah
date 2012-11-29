@@ -66,7 +66,7 @@ def get_archive(archive_id):
         )
 
         return Response(
-            response = str(archive.error_string),
+            response = "Internal server error.",
             headers = {
                 "X-CallSuccess": "False",
             },
