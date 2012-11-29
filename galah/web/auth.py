@@ -27,7 +27,7 @@ def FlaskUser(user):
     # remade the methods here.
     user.is_active = methodize(lambda self: True)
     user.is_authenticated = methodize(lambda self: True)
-    user.is_anonymous = methodize(lambda self: True)
+    user.is_anonymous = methodize(lambda self: False)
     user.get_id = methodize(lambda self: self.id)
     
     return user
