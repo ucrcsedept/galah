@@ -18,7 +18,11 @@
 
 from flask import Flask
 app = Flask("galah.web")
-app.logger.debug("Flask Starting Up")
+
+# Hack to work around the destruction of error handlers by Flask's deferred
+# processing.
+app.logger_name = "nowhere"
+app.logger
 
 from galah.base.config import load_config
 app.config.update(load_config("web"))
