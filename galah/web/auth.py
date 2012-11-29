@@ -37,6 +37,7 @@ def FlaskUser(user):
 from flask.ext.login import AnonymousUser
 class Anonymous(AnonymousUser):
     account_type = None
+    email = "unknown"
 
 ## Decorator that enforces account_type based permissions ##
 from functools import wraps
