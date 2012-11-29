@@ -46,7 +46,7 @@ def view_assignment(assignment_id):
     try:
         id = ObjectId(assignment_id)
     except InvalidId:
-        logger.debug("Invalid ID (%s)" % str(id))
+        logger.info("Invalid Assignment ID requested.")
         
         abort(404)
     
@@ -54,12 +54,20 @@ def view_assignment(assignment_id):
     try:
         assignment = Assignment.objects.get(id = id)
     except Assignment.DoesNotExist:
-        logger.debug("Non-extant ID (%s)" % str(id))
+        logger.info("Non-extant ID requested.")
         
         abort(404)
     
     # Get all of the submissions for this assignmnet
-    submissions = list(Submission.objects(user = current_user.id, assignment = id).order_by("most_recent", "-timestamp"))
+    submissions = list(
+        Submission.objects(
+            user = current_user.id,
+            assignment = id
+        ).order_by(
+            "most_recent",
+            "-timestamp"
+        )
+    )
     
     # Add the pretty version of each submissions timestamp
     for i in submissions:

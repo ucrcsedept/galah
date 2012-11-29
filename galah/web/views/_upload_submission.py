@@ -48,8 +48,8 @@ def upload_submission(assignment_id):
     try:
         id = ObjectId(assignment_id)
         assignment = Assignment.objects.get(id = id)
-    except InvalidId, Assignment.DoesNotExist:
-        logger.exception("Could not retrieve assignment.")
+    except (InvalidId, Assignment.DoesNotExist) as e:
+        logger.info("Could not retrieve assignment: %s", str(e))
         
         abort(404)
     
@@ -66,6 +66,8 @@ def upload_submission(assignment_id):
     # Check if the assignment's cutoff date has passed
     if assignment.due_cutoff and \
             assignment.due_cutoff < datetime.datetime.today():
+        logger.info("Submission rejected, cutoff date has already passed.")
+
         return craft_response(
             error = "The cutoff date has already passed, your submission was "
                     "not accepted."
@@ -73,11 +75,17 @@ def upload_submission(assignment_id):
 
     form = SimpleArchiveForm()
     if not form.validate_on_submit():
+        logger.info("Submission rejected. Validation failure.")
+
         flash("The files you passed in were invalid.", category = "error")
+
         return redirect(redirect_to)
 
     if not [i for i in form.archive.entries if i.data.filename]:
+        logger.info("Submission rejected. User did not submit any files.")
+
         flash("You did not submit any files.", category = "error")
+
         return redirect(redirect_to)
 
     new_submission = Submission(
@@ -116,9 +124,8 @@ def upload_submission(assignment_id):
             if i.data.filename
     )
 
-    logger.debug(
-        "%s succesfully uploaded a new submission (id = %s) with files %s.",
-        current_user.email,
+    logger.info(
+        "Succesfully uploaded a new submission (id = %s) with files %s.",
         str(new_submission.id),
         str(new_submission.uploaded_filenames)
     )
