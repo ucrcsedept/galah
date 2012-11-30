@@ -17,7 +17,6 @@
 # along with Galah.  If not, see <http://www.gnu.org/licenses/>.
 
 from inspect import getargspec
-from warnings import warn
 from copy import deepcopy
 from bson import ObjectId
 from bson.errors import InvalidId
@@ -74,9 +73,7 @@ class APICall(object):
         # If no validation is required this won't actually be a problem, however
         # it's certainly not something that you should be doing.
         if not hasattr(current_user, "account_type"):
-            # !! Purposely exceeds 80 character cap for formatting reason. Do
-            #    not "fix."
-            warn("current_user (%s) is not a valid user object." % repr(current_user))
+            raise ValueError("current_user is not a valid user object.")
         
         # Check if the current user has permisson to perform this operation
         if self.allowed and current_user.account_type not in self.allowed:

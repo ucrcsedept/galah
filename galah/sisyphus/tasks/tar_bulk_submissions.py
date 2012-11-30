@@ -46,7 +46,7 @@ def _tar_bulk_submissions(archive_id, requester, assignment, email = ""):
             try:
                 os.remove(i.file_location)
             except OSError as e:
-                logger.warn(
+                logger.warning(
                     "Could not remove expired archive at %s: %s.",
                     i.file_location, str(e)
                 )

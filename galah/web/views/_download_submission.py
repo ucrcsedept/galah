@@ -63,8 +63,8 @@ def download_submission(assignment_id, submission_id):
 
             try:
                 os.remove(i.file_location)
-            except OSError:
-                logger.warn(
+            except OSError as e:
+                logger.warning(
                     "Could not remove expired archive at %s: %s.",
                     i.file_location, str(e)
                 )

@@ -130,7 +130,7 @@ def authenticate_user():
     """
     error = request.args.get('error')
     if error:
-        logger.warn("Google sent us an error via OAuth2: %s", error)
+        logger.warning("Google sent us an error via OAuth2: %s", error)
 
         return redirect(url_for('login'))
 

@@ -90,7 +90,7 @@ def api_login():
 
         return success(user)
     elif access_token and not oauth_enabled:
-        logger.warn("Attempted login via OAuth2 but OAuth2 is not configured.")
+        logger.warning("Attempted login via OAuth2 but OAuth2 is not configured.")
         
         return failure()
 
@@ -122,7 +122,7 @@ def api_login():
 
             return failure()
     
-    logger.warn("Malformed request.")
+    logger.warning("Malformed request.")
 
     return failure()
 
@@ -159,7 +159,7 @@ def api_call():
 
             api_kwargs = dict(**request.json)
         else:
-            logger.warn("Could not parse request.")
+            logger.warning("Could not parse request.")
 
             raise UserError("Request data not formed correctly.")
 
