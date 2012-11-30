@@ -163,7 +163,7 @@ while True:
                 
                 log.debug("Test result is valid.")
             except ValidationError as e:
-                log.warn("Test result is invalid.", exc_info = True)
+                log.warning("Test result is invalid.", exc_info = True)
                 log.debug(str(e.errors))
 
     # Will match as many requests to sheep as possible

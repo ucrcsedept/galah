@@ -53,7 +53,7 @@ def run(znconsumers):
         # Remove any dead consumers from the list
         for c in consumers[:]:
             if not c.isAlive():
-                log.warn("Dead consumer detected, restarting")
+                log.warning("Dead consumer detected, restarting")
                 
                 consumers.remove(c)
         
@@ -63,7 +63,7 @@ def run(znconsumers):
         
         # If the producer died, start it again
         if not producer.isAlive():
-            log.warn("Dead producer detected, restarting")
+            log.warning("Dead producer detected, restarting")
             
             producer = startProducer()
             

@@ -60,7 +60,7 @@ def consumer():
             if type(e) is TypeError and str(e).startswith("%s()" % task.name):
                 logger.error("Task with bad parameters: %s", str(task))
             else:
-                logger.warn(
+                logger.warning(
                     "Exception in task %s.", task.name,
                     exc_info = sys.exc_info()
                 )
