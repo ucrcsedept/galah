@@ -148,7 +148,7 @@ def _tar_bulk_submissions(archive_id, requester, assignment, email = ""):
         new_archive.file_location = archive_file
 
         new_archive.expires = \
-            datetime.datetime.today() + datetime.timedelta(hours = 2)
+            datetime.datetime.today() + config["TEACHER_ARCHIVE_LIFETIME"]
 
         new_archive.save(force_insert = True)
     except Exception as e:
