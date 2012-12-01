@@ -27,7 +27,7 @@ defaults = {
     "web/DEBUG": True,
     "web/SECRET_KEY": "Very Secure Key",
     "web/HOST_URL": "http://localhost:5000",
-    "web/ARCHIVE_LIFETIME": datetime.timedelta(minutes = 2),
+    "web/STUDENT_ARCHIVE_LIFETIME": datetime.timedelta(minutes = 2),
     "web/SOURCE_HOST": "https://github.com/brownhead/galah"
 }
 
