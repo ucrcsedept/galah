@@ -80,7 +80,7 @@ def download_submission(assignment_id, submission_id):
     )
 
     new_archive.expires = \
-        datetime.datetime.today() + app.config["ARCHIVE_LIFETIME"]
+        datetime.datetime.today() + app.config["STUDENT_ARCHIVE_LIFETIME"]
 
     archive_file_name = ""
     try:
