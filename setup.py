@@ -29,7 +29,8 @@ setup(
         "decorator>=3.4.0",
         "requests>=0.14.1",
         "google-api-python-client>=1.0",
-        "simple-pbkdf2>=1.0"
+        "simple-pbkdf2>=1.0",
+        "pyzmq>=2.2.0"
     ],
 
     package_data = {
