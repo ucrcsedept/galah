@@ -12,6 +12,11 @@ aside from that Galah does the rest of the work: running those tests inside of
 a secure VM; consolodating results into a database; and providing an interface
 for the students and teachers to see the results of the testing.
 
+### Documentation
+
+Documentation for Galah is maintained on the
+[GitHub project's wiki](https://github.com/brownhead/galah/wiki).
+
 ### Current Status
 
 The latest version of Galah only works as a submission system. Testing is not
