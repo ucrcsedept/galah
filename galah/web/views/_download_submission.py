@@ -96,7 +96,7 @@ def download_submission(assignment_id, submission_id):
         subprocess.check_call(
             [
                 "tar", "--dereference", "--create", "--gzip", "--directory",
-                os.path.join(app.config["SUBMISSION_DIRECTORY"], str(submission_id)),
+                submission.getFilePath(),
                 "--file", archive_file_name
             ] + submission.uploaded_filenames
         )

@@ -119,8 +119,7 @@ def _tar_bulk_submissions(archive_id, requester, assignment, email = ""):
                 if marker > 0:
                     symlink_path += "-%d" % marker
 
-                original_path = \
-                    os.path.join(config["SUBMISSION_DIRECTORY"], str(i.id))
+                original_path = i.getFilePath()
 
                 # Detect if the submission's files are still on the filesystem
                 if os.path.isdir(original_path):

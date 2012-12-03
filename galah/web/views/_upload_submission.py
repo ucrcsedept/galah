@@ -101,9 +101,7 @@ def upload_submission(assignment_id):
     # are guarenteed an ObjectId is unique. However we are not guarenteed that
     # we will have the proper permissions and that we will be able to make the
     # directory thus this could error because of that.
-    new_submission.testables = os.path.join(
-        app.config["SUBMISSION_DIRECTORY"], str(new_submission.id)
-    )
+    new_submission.testables = new_submission.getFilePath()
     os.makedirs(new_submission.testables)
 
     # Save each file the user uploaded into the submissions directory
