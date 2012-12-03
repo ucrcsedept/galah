@@ -46,19 +46,16 @@ def _delete_assignments(ids, delete_class):
     # assignments.
     submissions = Submission.objects(assignment__in = ids)
 
-    # Go through all of the submissions and delete the files from the
-    # filesystem. We will tell the database to delete all of the submissions
-    # in one go afterwards.
-    for i in submissions:
-        # Delete the submission on the filesystem.
+    # Delete assignments directory on the filesystem
+    for i in assignments:
         try:
             shutil.rmtree(
                 os.path.join(config["SUBMISSION_DIRECTORY"], str(i.id))
             )
-        except OSError as e:
-            logger.error(
-                "Failed to delete submission with id %s: %s", str(i.id), str(e)
-            )
+        except:
+            logger.error("Failed to delete assignment with ID %s", str(i.id))
+
+            raise
 
     # Actually delete the submissions from the database
     Submission.objects(assignment__in = ids).delete()

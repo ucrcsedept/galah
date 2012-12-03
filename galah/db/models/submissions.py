@@ -54,6 +54,12 @@ from mongoengine import *
         #"allow_inheritance": False
     #}
 
+import os.path
+
+# Load up the configuration so we know where the submission directory is
+from galah.base.config import load_config
+config = load_config("global")
+
 class Submission(Document):
     assignment = ObjectIdField(required = True)
     user = StringField(required = True)
@@ -75,3 +81,11 @@ class Submission(Document):
             }
         ]
     }
+
+    def getFilePath(self):
+        return os.path.join(
+            config["SUBMISSION_DIRECTORY"],
+            str(self.assignment),
+            self.user,
+            str(self.id)
+        )
