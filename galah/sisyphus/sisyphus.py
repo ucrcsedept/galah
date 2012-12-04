@@ -72,7 +72,7 @@ def to_task(request):
     is_valid = (
         type(request) is dict and
         all(k in request.keys() for k in ("task_name", "args", "kwargs")) and
-        type(request["task_name"]) is str and
+        isinstance(request["task_name"], basestring) and
         type(request["args"]) is list and
         type(request["kwargs"]) is dict
     )
