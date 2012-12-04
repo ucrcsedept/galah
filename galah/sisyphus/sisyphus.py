@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # Copyright 2012 John Sullivan
 # Copyright 2012 Other contributers as noted in the CONTRIBUTERS file
 #
