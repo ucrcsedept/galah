@@ -21,12 +21,22 @@
 # This will ensure that the script exits if a failure occurs
 set -e
 
+if [[ $# != 2 ]]
+then
+    echo "Usage: $0 NUM_USERS NUM_ASSIGNMENTS"
+    echo
+    echo "Creates NUM_USERS dummy users on Galah and NUM_ASSIGNMENTS dummy"
+    echo "assignments. All test users and passwords will be appended to "
+    echo "./user-files/data/test_users.csv."
+    exit 1
+fi
+
 # This will ensure the user is visually prompted upon failure
 trap "echo FAILURE: An error has occured! >&2" EXIT
 
 STARTING_DIR=`pwd`
 
-API_CLIENT=./api_client.py
+: ${API_CLIENT?"Need to set API_CLIENT environmental variable."}
 
 mkdir -p ./user-files/data/
 
