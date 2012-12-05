@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name = "galah",
-    version = "0.1rc3",
+    version = "0.1",
     packages = find_packages( 
         exclude = [
             "galah.sheep*", 
@@ -42,5 +42,5 @@ setup(
     author = "John Sullivan",
     author_email = "jsull003@ucr.edu",
     description = "Galah is a utility to allow better professer student communication",
-    license = "GPLv3",
+    license = "AGPLv3",
 )
