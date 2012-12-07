@@ -209,7 +209,7 @@ def api_call():
                 "An internal server error occurred processing your request.",
             headers = {
                 "X-CallSuccess": "False",
-                "X-ErrorType": e.__class__.__name__
+                "X-ErrorType": "Exception"
             },
             mimetype = "text/plain"
         )
