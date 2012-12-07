@@ -1,5 +1,11 @@
 # Galah
 
+## Current Status
+
+Version 0.1 is stable and ready to be used within a production environment.
+It is only a submissions system however, the automatic testing functionality
+of Galah will be added in version 0.2.
+
 ## What is Galah?
 
 Galah is a teaching utility that automatically analyzes students' code as
@@ -12,17 +18,25 @@ aside from that Galah does the rest of the work: running those tests inside of
 a secure VM; consolodating results into a database; and providing an interface
 for the students and teachers to see the results of the testing.
 
-### Documentation
+## Documentation and Getting Started
 
 Documentation for Galah is maintained on the
 [GitHub project's wiki](https://github.com/brownhead/galah/wiki).
 
-### Current Status
-
-The latest version of Galah only works as a submission system. Testing is not
-performed.
-
 ## News
+
+### Wednesday, December 5, 2012
+
+Version 0.1 has been released and is going into deployment at UCR :D. Any bug
+fixes to the current code will be committed to master and releases will be made
+following the pattern 0.1.RELEASE#, so the first bug fix release will be 0.1.1,
+and the thirteenth would be 0.1.13.
+
+A new branch will be created named v0.2dev and development towards the 0.2
+release will proceed there. Bug fixes made in master will be merged into that
+branch.
+
+Release date for version 0.2 is unknown, not even a hunch at this point.
 
 ### Monday, June 25, 2012
 
