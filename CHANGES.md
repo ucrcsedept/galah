@@ -1,8 +1,8 @@
 # Changelog
 
 Please consult this file before updating to a new version of Galah in case there
-are pertinent *Migration Concerns* that you should be aware of. Also, make sure
-to look over the guide for
+are pertinent *Upgrading Considerations* that you should be aware of. Also, make
+sure to look over the guide for
 [updating Galah](https://github.com/brownhead/galah/wiki/Updating-Galah).
 
 ## Version 0.1.1
@@ -17,4 +17,4 @@ Small patch for an update to one of Galah's dependencies.
 ### Upgrading Considerations
 
 The dependency [requests](http://pypi.python.org/pypi/requests) will be updated.
-This may affect other programs in your system.
+This may affect other programs on your system.
