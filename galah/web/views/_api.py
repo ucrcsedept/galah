@@ -59,7 +59,9 @@ def api_login():
             data = { "access_token": access_token }
         )
 
-        email = req.json.get("email", "unknown")
+        req_json = req.json()
+
+        email = req_json.get("email", "unknown")
 
         if req.status_code != requests.codes.ok:
             logger.info("Invalid OAuth2 login by %s.", email)
@@ -67,7 +69,7 @@ def api_login():
             return failure()
 
         # Validate client id is matching to avoid confused deputy attack
-        if req.json["audience"] != app.config["GOOGLE_APICLIENT_ID"]:
+        if req_json["audience"] != app.config["GOOGLE_APICLIENT_ID"]:
             logger.error(
                 "Non-matching audience field detected for user %s.", email
             )
@@ -77,7 +79,7 @@ def api_login():
         # Grab the user from the database (here we also check to make sure that
         # this user actually has account on Galah).
         try:
-            user = FlaskUser(User.objects.get(email = req.json["email"]))
+            user = FlaskUser(User.objects.get(email = req_json["email"]))
         except User.DoesNotExist:
             logger.info(
                 "User %s signed in via OAuth2 but a Galah account does not "
