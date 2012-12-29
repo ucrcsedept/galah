@@ -57,14 +57,14 @@ def view_assignment(assignment_id):
         logger.info("Non-extant ID requested.")
         
         abort(404)
-    
+
     # Get all of the submissions for this assignmnet
     submissions = list(
         Submission.objects(
             user = current_user.id,
             assignment = id
         ).order_by(
-            "most_recent",
+            "-most_recent",
             "-timestamp"
         )
     )

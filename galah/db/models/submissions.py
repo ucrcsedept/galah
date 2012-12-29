@@ -76,7 +76,7 @@ class Submission(Document):
         "allow_inheritance": False,
         "indexes": [
             {
-                "fields": ("user", "assignment", "most_recent", "-timestamp"),
+                "fields": ("user", "assignment", "-most_recent", "-timestamp"),
                 "types": False
             }
         ]
