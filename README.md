@@ -1,27 +1,35 @@
 # Galah
 
-## Current Status
-
-Version 0.1 is stable and ready to be used within a production environment.
-It is only a submissions system however, the automatic testing functionality
-of Galah will be added in version 0.2.
-
 ## What is Galah?
 
-Galah is a teaching utility that automatically analyzes students' code as
-they create it and provides feedback to both the students and the instructors.
-It does this by continually running tests on students' code and providing the
-results to both the instructors and the students.
+Galah is an automated grading system geared towards processing computer
+programming assignments.
 
-Professors are responsible for creating test harnesses for their assignments,
-aside from that Galah does the rest of the work: running those tests inside of
-a secure VM; consolodating results into a database; and providing an interface
-for the students and teachers to see the results of the testing.
+Professors are responsible for creating test harnesses for their assignments.
+Aside from that Galah does the rest of the work: running those tests inside of
+secure Virtual Machines, consolodating results into a database, and providing an
+interface for the students and teachers to see the results of the testing.
+
+Galah aims to set itself apart from similar software suites by being
+language agnostic, scalable, secure, easy to use, and simple
+([more on Galah's goals](https://github.com/brownhead/galah/wiki/Goals-and-Ideals)). Check
+out this
+[comparison to similar software](https://github.com/brownhead/galah/wiki/Comparison-to-Similar-Software).
 
 ## Documentation and Getting Started
 
 Documentation for Galah is maintained on the
-[GitHub project's wiki](https://github.com/brownhead/galah/wiki).
+[GitHub project's wiki](https://github.com/brownhead/galah/wiki). This
+documentation is meant to be useful to users of Galah, interested parties
+looking to see if Galah would be useful to them, and developers.
+
+## Current Status
+
+Version 0.1 is stable and ready to be used within a production environment. This
+first version is only a submission system and does not perform any testing on
+student's code.
+
+Full support for automatic testing will be made available in version 0.2.
 
 ## News
 
@@ -35,8 +43,6 @@ and the thirteenth would be 0.1.13.
 A new branch will be created named v0.2dev and development towards the 0.2
 release will proceed there. Bug fixes made in master will be merged into that
 branch.
-
-Release date for version 0.2 is unknown, not even a hunch at this point.
 
 ### Monday, June 25, 2012
 
