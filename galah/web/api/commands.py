@@ -218,7 +218,10 @@ def _to_datetime(time):
         )
 
 def _datetime_to_str(time):
-    return datetime.datetime.strftime(time, "%m/%d/%Y %H:%M:%S")
+    try:
+        return datetime.datetime.strftime(time, "%m/%d/%Y %H:%M:%S")
+    except TypeError:
+        return "None"
         
 ## Below are the actual API calls ##
 @_api_call()
@@ -546,6 +549,9 @@ def assignment_info(current_user, id):
     for k, v in assignment._data.items():
         if k and v:
             if type(v) is datetime.datetime:
+                if v == datetime.datetime.min:
+                    continue
+
                 v = _datetime_to_str(v)
 
             attribute_strings.append("%s = %s" % (k, v))
