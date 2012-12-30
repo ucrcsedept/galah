@@ -50,9 +50,11 @@ class APICall(object):
     
     """
     
-    __slots__ = ("wrapped_function", "allowed", "argspec", "name")
+    __slots__ = (
+        "wrapped_function", "allowed", "argspec", "name", "takes_file"
+    )
     
-    def __init__(self, wrapped_function, allowed = None):
+    def __init__(self, wrapped_function, allowed = None, takes_file = None):
         #: The raw function we are wrapping that performs the actual logic.
         self.wrapped_function = wrapped_function
         
@@ -66,6 +68,8 @@ class APICall(object):
         
         #: The name of the wrapped function.
         self.name = wrapped_function.func_name
+
+        self.takes_file = takes_file if takes_file else []
         
     def __call__(self, current_user, *args, **kwargs):
         arg_spec = getargspec(self.wrapped_function)
@@ -93,14 +97,17 @@ class APICall(object):
 
 from decorator import decorator
 
-def _api_call(allowed = None):
+def _api_call(allowed = None, takes_file = None):
     """Decorator that wraps a function with the :class: APICall class."""
     
     if isinstance(allowed, basestring):
         allowed = (allowed, )
 
+    if isinstance(takes_file, basestring):
+        takes_file = (takes_file, )
+
     def inner(func):
-        return APICall(func, allowed)
+        return APICall(func, allowed, takes_file)
 
     return inner
 
@@ -237,7 +244,13 @@ def get_api_info():
         # information on each argument to the api_info
         current["args"] = []
         for i in xrange(len(v.argspec.args)):
+            if i == 0 and len(v.argspec.args) > 0 and \
+                    v.argspec.args[i] == "current_user":
+                continue
+
             current["args"].append({"name": v.argspec.args[i]})
+
+            current_arg = current["args"][-1]
             
             if v.argspec.defaults:
                 # The number of arguments without default values
@@ -245,9 +258,15 @@ def get_api_info():
                 
                 # If the current argument has a default value make note of it
                 if ndefaultless <= i:
-                    current["args"][-1].update({
+                    current_arg.update({
                         "default_value": v.argspec.defaults[i - ndefaultless]
                     })
+
+            # Note whether this argument expects to receive a file descripter
+            # or not.
+            current_arg.update(
+                {"takes_file": current_arg["name"] in v.takes_file}
+            )
     
     return json.dumps(api_info, separators = (",", ":"))
 
@@ -257,6 +276,15 @@ def whoami(current_user):
         return current_user.id
     else:
         return "Anonymous"
+
+# Example of function that takes a file.
+# @_api_call(takes_file = ("the_file"))
+# def print_file(the_file):
+#     result = ""
+#     for i in the_file:
+#         result += i
+
+#     return result
 
 @_api_call()
 def get_oauth2_keys():

@@ -17,6 +17,8 @@
 # along with Galah.  If not, see <http://www.gnu.org/licenses/>.
 
 from flask import Response, request
+from flask.exceptions import JSONBadRequest
+import flask
 from galah.web import app, oauth_enabled
 from flask.ext.login import current_user
 from galah.web.api.commands import api_calls, UserError
@@ -131,35 +133,47 @@ def api_login():
 @app.route("/api/call", methods = ["POST"])
 def api_call():
     try:
-        # Make sure we got some data we can work with
-        if request.json is None:
-            raise UserError("No request data sent.")
+        request_data = None
+
+        try:
+            request_data = request.json
+        except JSONBadRequest:
+            raise UserError("Request's JSON was poorly formed.")
+
+        if request_data is None:
+            request_data = flask.json.loads(request.form["request"])
+
+        if request_data is None:
+            raise UserError("No recognizable request data sent.")
+
 
         # The top level object must be either a non-empty list or a dictionary
         # with an api_call key. They will have similar information either way
         # however, so here we extract that information.
-        if type(request.json) is list and request.json:
+        if type(request_data) is list and request_data:
             # The API call's name is the first item in the list, so use that
             # to grab the actual APICall object we need.
-            api_name = request.json.pop(0)
+            api_name = request_data.pop(0)
 
-            api_args = list(request.json)
+            api_args = list(request_data)
 
             api_kwargs = {}
-        elif type(request.json) is dict and "api_name" in request.json:
+        elif type(request_data) is dict and "api_name" in request_data:
             # Don't let the user insert their own current_user argument
-            if "current_user" in request.json:
+            if "current_user" in request_data:
                 raise UserError("You cannot fool the all-knowing Galah.")
                 
             # Resolve the name of the API call and retrieve the actual
             # APICall object we need.
-            api_name = request.json["api_name"]
-            api_args = request.json["args"]
+            api_name = request_data["api_name"]
+            del request_data["api_name"]
 
-            del request.json["api_name"]
-            del request.json["args"]
+            api_args = []
+            if "args" in request_data:
+                api_args = request_data["args"]
+                del request_data["args"]
 
-            api_kwargs = dict(**request.json)
+            api_kwargs = dict(**request_data)
         else:
             logger.warning("Could not parse request.")
 
@@ -169,6 +183,15 @@ def api_call():
             api_call = api_calls[api_name]
         else:
             raise UserError("%s is not a recognized API call." % api_name)
+
+        if "current_user" in request.files:
+            raise UserError("You cannot fool the all-knowing Galah.")
+
+        for k, v in request.files.items():
+            if k not in api_call.takes_file:
+                raise UserError("Received unwanted file under key %s.", k)
+
+            api_kwargs[k] = v
 
         logger.info(
             "API call %s with args=%s and kwargs=%s",
