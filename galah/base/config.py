@@ -29,7 +29,11 @@ defaults = {
     "web/HOST_URL": "http://localhost:5000",
     "web/STUDENT_ARCHIVE_LIFETIME": datetime.timedelta(minutes = 2),
     "web/SOURCE_HOST": "https://github.com/brownhead/galah",
-    "sisyphus/TEACHER_ARCHIVE_LIFETIME": datetime.timedelta(minutes = 2)
+    "sisyphus/TEACHER_ARCHIVE_LIFETIME": datetime.timedelta(minutes = 2),
+    "sheep/NCONSUMERS": 1,
+    "shepherd/SHEEP_SOCKET": "ipc:///tmp/shepherd-sheep.sock",
+    "shepherd/PUBLIC_SOCKET": "ipc:///tmp/shepherd-public.sock",
+    "shepherd/REQUEST_QUEUE_TIMEOUT": datetime.timedelta(minutes = 1)
 }
 
 import imp
@@ -80,7 +84,8 @@ def load_config(domain):
     global_prefix = "global/"
 
     # Grab all the configuration values for the given domain, and any global
-    # configuration values.
+    # configuration values, then place the rest of the configuration values
+    # in there as well.
     for k, v in user_config.items():
         if k.startswith(prefix) and k != len(prefix):
             local_key = k[len(prefix):]
@@ -90,5 +95,7 @@ def load_config(domain):
             global_key = k[len(global_prefix):]
 
             local_config[global_key] = v
+        elif "/" in k:
+            local_config[k] = v
 
     return local_config

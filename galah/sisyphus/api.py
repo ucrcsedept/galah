@@ -20,12 +20,12 @@ import zmq
 
 context = zmq.Context()
 
-def send_task(heavylifter_host, task_name, *args, **kwargs):
+def send_task(sisyphus_host, task_name, *args, **kwargs):
     # We create a new socket and connect each time because sisyphus tasks
     # should not be sent very often, therefore it's not useful to hold an open
     # socket for large lengths of time without sending much of anything.
     socket = context.socket(zmq.REQ)
-    socket.connect(heavylifter_host)
+    socket.connect(sisyphus_host)
 
     try:
         socket.send_json({

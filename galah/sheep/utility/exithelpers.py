@@ -19,6 +19,11 @@
 import universal, Queue, time, zmq, copy, time
 from zmq.utils import jsonapi
 
+class Timeout(Exception):
+    def __init__(self, *args, **kwargs):
+        Exception.__init__(self, *args, **kwargs)
+
+
 def enqueue(zqueue, zitem, zpollTimeout = 5):
     """
     Puts an item into a queue. Blocks until ztimeout (indefinitely if None).
@@ -50,24 +55,24 @@ def dequeue(zqueue, zpollTimeout = 5):
 
     raise universal.Exiting()
         
-def recv_json(zsocket, ztimeout = None, zignoreExiting = False):
+def recv_json(socket, timeout = None, ignore_exiting = False):
     """
     Recieves JSON from a socket. Assumes socket is set to timeout properly.
     Raises universal.Exiting if program is exiting, or zmq.ZMQError if
     timed out.
     """
+
+    # Wait for a reply from the sisyphus.
+    poller = zmq.Poller()
+    poller.register(socket, zmq.POLLIN)
     
-    # WARNING: I used time.clock() here previously but for some reason it was
-    # returning the same value (0.02) every time it was called on my testing
-    # server. Not sure why this is, plan to investigate further.
-    
-    if ztimeout != None:
-        startTime = time.time()
-    
-    while (zignoreExiting or not universal.exiting) and \
-          (ztimeout == None or startTime + ztimeout > time.time()):
-        try:
-            msg = zsocket.recv_multipart()
+    if timeout is not None:
+        start_time = time.time()
+
+    poll_wait_time = 1000 if timeout is None else min(timeout, 1000)
+    while ignore_exiting or not universal.exiting:
+        if poller.poll(poll_wait_time):
+            msg = socket.recv_multipart()
             
             # Decode the json in the innermost frame
             msg[-1] = jsonapi.loads(msg[-1])
@@ -76,28 +81,10 @@ def recv_json(zsocket, ztimeout = None, zignoreExiting = False):
             if len(msg) == 1: msg = msg[0]
             
             return msg
-        except zmq.ZMQError:
-            pass
+        elif timeout is not None and start_time + timeout <= time.time():
+            raise Timeout()
     
-    if universal.exiting:
-        raise universal.Exiting()
-    else: # Must have timed out
-        raise zmq.ZMQError()
-    
-def filterDictionary(zdict, zdesiredKeys):
-    """
-    Returns a copy of zdict with only the keys in zdesiredKeys.
-    
-    """
-    
-    # Create a copy of the dictionary
-    zdictCopy = copy.deepcopy(zdict)
-    
-    for k in zdictCopy.keys():
-        if k not in zdesiredKeys:
-            del zdictCopy[k]
-            
-    return zdictCopy
+    raise universal.Exiting()
 
 def waitForQueue(zqueue, zpollTimeout = 5):
     """

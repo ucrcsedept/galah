@@ -16,27 +16,42 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with Galah.  If not, see <http://www.gnu.org/licenses/>.
 
-import universal, threading, logging, consumer, producer, time
+import galah.sheep.utility.universal as universal
+import threading
+import logging
+import consumer
+import producer
+import time
 
-pollTimeout = 10
+# Load Galah's configuration.
+from galah.base.config import load_config
+config = load_config("sheep")
 
-_consumerCount = 0
-def startConsumer():
-    global _consumerCount
+# Set up logging
+import logging
+logger = logging.getLogger("galah.sheep.maintainer")
+
+poll_timeout = 10
+
+# A counter used to generate names for consumer threads, not guarenteed to be
+# the number of consumers currently extant.
+_consumer_counter = 0
+def start_consumer():
+    global _consumer_counter
     
     consumerThread = threading.Thread(target = consumer.run,
-                                      name = "consumer-%d" % _consumerCount)
+                                      name = "consumer-%d" % _consumer_counter)
     consumerThread.start()
     
-    _consumerCount += 1
+    _consumer_counter += 1
     
     return consumerThread
     
-def startProducer():
-    producerThread = threading.Thread(target = producer.run, name = "producer")
-    producerThread.start()
+def start_producer():
+    producer_thread = threading.Thread(target = producer.run, name = "producer")
+    producer_thread.start()
     
-    return producerThread
+    return producer_thread
 
 @universal.handleExiting
 def run(znconsumers):
@@ -44,30 +59,33 @@ def run(znconsumers):
     
     log.info("Maintainer starting")
     
-    producer = startProducer()
+    producer = start_producer()
     consumers = []
     
     # Continually make sure that all of the threads are up until it's time to
     # exit
     while not universal.exiting:
         # Remove any dead consumers from the list
+        dead_consumers = 0
         for c in consumers[:]:
             if not c.isAlive():
-                log.warning("Dead consumer detected, restarting")
-                
+                dead_consumers += 1
                 consumers.remove(c)
+
+        if dead_consumers > 0:
+            logger.warning("Found %d dead consumers, restarting them.")
         
         # Start up consumers until we have the desired amount
         while len(consumers) < znconsumers:
-            consumers.append(startConsumer())
+            consumers.append(start_consumer())
         
         # If the producer died, start it again
         if not producer.isAlive():
-            log.warning("Dead producer detected, restarting")
+            log.warning("Found dead producer, restarting it.")
             
-            producer = startProducer()
+            producer = start_producer()
             
         # Sleep for awhile
-        time.sleep(pollTimeout)
+        time.sleep(poll_timeout)
 
     raise universal.Exiting()
