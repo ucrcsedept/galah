@@ -20,7 +20,7 @@ import datetime
 
 # Default configuration values for Galah.
 defaults = {
-    "global/CURRENT_VERSION": "v0.1rc4",
+    "global/CURRENT_VERSION": "v0.1.2",
     "global/SUBMISSION_DIRECTORY": "/var/local/galah/web/submissions/",
     "global/MONGODB": "galah",
     "global/SISYPHUS_ADDRESS": "ipc:///tmp/sisyphus.sock",
