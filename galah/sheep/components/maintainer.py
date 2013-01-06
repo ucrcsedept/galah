@@ -73,7 +73,9 @@ def run(znconsumers):
                 consumers.remove(c)
 
         if dead_consumers > 0:
-            logger.warning("Found %d dead consumers, restarting them.")
+            logger.warning(
+                "Found %d dead consumers, restarting them.", dead_consumers
+            )
         
         # Start up consumers until we have the desired amount
         while len(consumers) < znconsumers:

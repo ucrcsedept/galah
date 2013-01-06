@@ -16,13 +16,17 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with Galah.  If not, see <http://www.gnu.org/licenses/>.
 
-# Snippet below created by Matteo Dell'Amico and published under the unlicense.
+# Snippet below derived from code published by Matteo Dell'Amico and published
+# under the unlicense.
 #     see: https://gist.github.com/4451520
 # If you wish to use this file in your own project, go to the link above, DO NOT
 # use the code within this file verbatim unless you are prepared to work under
 # the restrictions of the AGPLv3, as this file is licenced under it.
 
 from heapq import heapify, heappush, heappop
+from collections import namedtuple
+
+PriorityValuePair = namedtuple("PriorityValuePair", ["priority", "value"])
 
 class PriorityDict(dict):
     """Dictionary that can be used as a priority queue.
@@ -37,8 +41,8 @@ class PriorityDict(dict):
     priority, and 'pop_smallest' also removes it.
 
     The 'sorted_iter' method provides a destructive sorted iterator.
-    """
-    
+    """    
+
     def __init__(self, *args, **kwargs):
         super(PriorityDict, self).__init__(*args, **kwargs)
         self._rebuild_heap()
@@ -48,9 +52,12 @@ class PriorityDict(dict):
         heapify(self._heap)
 
     def smallest(self):
-        """Return the item with the lowest priority.
+        """
+        Return the item with the lowest priority as a named tuple
+        (priority, value).
 
         Raises IndexError if the object is empty.
+
         """
         
         heap = self._heap
@@ -58,12 +65,15 @@ class PriorityDict(dict):
         while k not in self or self[k] != v:
             heappop(heap)
             v, k = heap[0]
-        return k
+        return PriorityValuePair(v, k)
 
     def pop_smallest(self):
-        """Return the item with the lowest priority and remove it.
+        """
+        Return the item as a named tuple (priority, value) with the lowest
+        priority and remove it.
 
         Raises IndexError if the object is empty.
+
         """
         
         heap = self._heap
@@ -71,7 +81,7 @@ class PriorityDict(dict):
         while k not in self or self[k] != v:
             v, k = heappop(heap)
         del self[k]
-        return k
+        return PriorityValuePair(v, k)
 
     def __setitem__(self, key, val):
         # We are not going to remove the previous value from the heap,

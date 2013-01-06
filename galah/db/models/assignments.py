@@ -19,12 +19,17 @@
 from mongoengine import *
 import datetime
 
-class TestDriver(EmbeddedDocument):
+class TestDriver(Document):
     #test_driver = StringField(required = True)
-    #timeout = IntField(default = 30)
     #actions = ListField(StringField())
-    #config = DictField()
-    environment = DictField(required = True, default = {})
+    
+    # The driver's user-defined configuration. May contain any key value pairs,
+    # but certain pairs have special meaning:
+    #    * "galah/TIMEOUT" is the number of seconds to allow the test driver to
+    #      run before the entire VM is brutally destroyed.
+    #    * "galah/ENVIRONMENT" is a dictionary that explains the environment
+    #      that the VM must have.
+    config = DictField()
     
     meta = {
         "allow_inheritance": False
@@ -36,7 +41,7 @@ class Assignment(Document):
     due_cutoff = DateTimeField()
     hide_until = DateTimeField(default = datetime.datetime.min, required = True)
     for_class = ObjectIdField(required = True)
-    test_driver = EmbeddedDocumentField(TestDriver)
+    test_driver = ObjectIdField()
 
     meta = {
         "allow_inheritance": False

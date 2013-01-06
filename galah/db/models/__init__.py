@@ -33,7 +33,7 @@ import classes
 from classes import Class
 
 import assignments
-from assignments import Assignment
+from assignments import Assignment, TestDriver
 
 import submissions
 from submissions import Submission

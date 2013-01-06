@@ -62,12 +62,11 @@ def recv_json(socket, timeout = None, ignore_exiting = False):
     timed out.
     """
 
-    # Wait for a reply from the sisyphus.
     poller = zmq.Poller()
     poller.register(socket, zmq.POLLIN)
     
     if timeout is not None:
-        start_time = time.time()
+        start_time = time.time() * 1000
 
     poll_wait_time = 1000 if timeout is None else min(timeout, 1000)
     while ignore_exiting or not universal.exiting:
@@ -81,7 +80,7 @@ def recv_json(socket, timeout = None, ignore_exiting = False):
             if len(msg) == 1: msg = msg[0]
             
             return msg
-        elif timeout is not None and start_time + timeout <= time.time():
+        elif timeout is not None and start_time + timeout <= time.time() * 1000:
             raise Timeout()
     
     raise universal.Exiting()
