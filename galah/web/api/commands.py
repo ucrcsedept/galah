@@ -84,7 +84,12 @@ class APICall(object):
                         self.wrapped_function.func_name
                     )
             )
-        
+
+        # Check if the arguments match up.
+        for i in kwargs.keys():
+            if i not in self.argspec[0]:
+                raise UserError("Unexpected keyword argument '%s'." % i)
+
         # Only pass the current user to the function if the function wants it
         if len(self.argspec[0]) != 0 and self.argspec[0][0] == "current_user":
             return self.wrapped_function(current_user, *args, **kwargs)
