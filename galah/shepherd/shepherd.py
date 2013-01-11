@@ -49,7 +49,7 @@ sheep.bind(config["SHEEP_SOCKET"])
 public = context.socket(zmq.DEALER)
 public.bind(config["PUBLIC_SOCKET"])
 
-def match_found(sheep_identity, request):
+def match_found(flock_manager, sheep_identity, request):
     logger.info(
         "Sending test request for submission [%s] to sheep [%s].",
         request.submission_id,
@@ -61,6 +61,8 @@ def match_found(sheep_identity, request):
         sheep_identity,
         FlockMessage("request", request.to_dict()).to_dict()
     )
+
+    return True
 
 def main():
     flock = FlockManager(match_found)
@@ -157,7 +159,7 @@ def main():
                 continue
             
             if sheep_message.type == "bleet":
-                logger.debug("Sheep [%s] bleeted.", "BLABLABLABLA")#str(sheep_identity))
+                logger.debug("Sheep [%s] bleeted.", repr(sheep_identity))
 
                 if not flock.sheep_bleeted(sheep_identity):
                     router_send_json(
@@ -168,7 +170,7 @@ def main():
 
                     logger.info(
                         "Unrecognized sheep [%s] connected, identify sent.",
-                        "BLABLABLA" #str(sheep_identity)
+                        repr(sheep_identity)
                     )
 
                     continue

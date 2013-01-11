@@ -54,16 +54,23 @@ class FlockManager:
 		# test request.
 		self.match_found = match_found
 
+	def _dispatch_match_found(self, sheep_identity, request):
+		if self.match_found(self, sheep_identity, request):
+			del self._request_queue[request]
+			return True
+
+		return False
+
 	def _sheep_available(self, identity):
 		"""Called internally whenever a new sheep becomes available."""
 
 		sheep_environment = self._flock[identity]
 
-		for i in self._request_queue.keys():
+		for i in self._request_queue.keys()[:]:
 			if FlockManager.check_environments(i.environment, \
 					sheep_environment):
-				self.match_found(identity, i)
-				break
+				if self._dispatch_match_found(identity, i):
+					break
 
 	def received_request(self, request):
 		"""Called externally whenever a test request has arrived."""
@@ -76,8 +83,8 @@ class FlockManager:
 		for i in self._bleet_queue.keys():
 			if FlockManager.check_environments(request.environment,
 					self._flock[i].environment):
-				self.match_found(i, request)
-				break
+				if self._dispatch_match_found(i, request):
+					break
 
 	def manage_sheep(self, identity, environment):
 		"""
