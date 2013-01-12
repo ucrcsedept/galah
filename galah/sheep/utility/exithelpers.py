@@ -24,7 +24,7 @@ class Timeout(Exception):
         Exception.__init__(self, *args, **kwargs)
 
 
-def enqueue(zqueue, zitem, zpollTimeout = 5):
+def enqueue(queue, item, poll_timeout = 5):
     """
     Puts an item into a queue. Blocks until ztimeout (indefinitely if None).
     Will raise Exiting exception if universal.exiting is True.
@@ -33,7 +33,7 @@ def enqueue(zqueue, zitem, zpollTimeout = 5):
     
     while not universal.exiting:
         try:
-            zqueue.put(zitem, timeout = zpollTimeout)
+            queue.put(item, timeout = poll_timeout)
             break
         except Queue.Full:
             pass
@@ -41,7 +41,7 @@ def enqueue(zqueue, zitem, zpollTimeout = 5):
     if universal.exiting:
         raise universal.Exiting()
 
-def dequeue(zqueue, zpollTimeout = 5):
+def dequeue(queue, poll_timeout = 5):
     """
     Gets an item from a queue. Similar to enqueue.
     
@@ -49,7 +49,7 @@ def dequeue(zqueue, zpollTimeout = 5):
     
     while not universal.exiting:
         try:
-            return zqueue.get(timeout = zpollTimeout)
+            return queue.get(timeout = poll_timeout)
         except Queue.Empty:
             pass
 
@@ -85,7 +85,7 @@ def recv_json(socket, timeout = None, ignore_exiting = False):
     
     raise universal.Exiting()
 
-def waitForQueue(zqueue, zpollTimeout = 5):
+def wait_for_queue(queue, poll_timeout = 5):
     """
     Blocks until a queue is not full or universal.exiting is True. Returns
     True if queue has available slot, raising universal.Exiting if program
@@ -93,8 +93,8 @@ def waitForQueue(zqueue, zpollTimeout = 5):
     
     """
     
-    while not universal.exiting and zqueue.full():
-        time.sleep(zpollTimeout)
+    while not universal.exiting and queue.full():
+        time.sleep(poll_timeout)
     
     if universal.exiting:
         raise universal.Exiting()
