@@ -25,9 +25,14 @@ import json
 from collections import namedtuple
 from mongoengine import ValidationError
 from galah.sisyphus.api import send_task
+import shutil
+import os
 
 from galah.base.config import load_config
 config = load_config("web")
+
+import logging
+logger = logging.getLogger("galah.web.api")
 
 #: An anonymous admin user useful when accessing this module from the local
 #: system.
@@ -214,6 +219,9 @@ def _get_class(query, instructor = None):
 
 def _class_to_str(the_class):
     return "Class [id = %s, name = %s]" % (the_class.id, the_class.name)
+
+def _driver_to_str(test_driver):
+    return "Test Driver [id = %s]" % test_driver.id
         
 import datetime
 def _to_datetime(time):
@@ -290,6 +298,70 @@ def whoami(current_user):
 #         result += i
 
 #     return result
+
+import galah.base.filemagic as filemagic
+@_api_call(("teacher", "admin"), takes_file = ("harness", "config_file"))
+def upload_harness(current_user, assignment, harness, config_file):
+    assignment = _get_assignment(assignment, current_user)
+
+    if current_user.account_type == "teacher" and \
+            assignment.for_class not in current_user.enrolled_in:
+        raise PermissionError(
+            "You can only upload harnesses for assignments in class you "
+            "are assigned to."
+        )
+
+    # First we need to load the configuration and make sure it's valid
+    try:
+        config_file = json.load(config_file)
+    except ValueError as e:
+        raise UserError("Your configuration was not valid JSON: " + str(e))
+
+    # Create a new ID we will assign the test driver
+    driver_id = ObjectId()
+
+    # Create a new directory for the driver
+    driver_directory_path = \
+        os.path.join(config["DRIVER_DIRECTORY"], str(driver_id))
+    os.mkdir(driver_directory_path)
+
+    try:
+        # We need to uncompress the archived harness we were given now.
+        filemagic.uncompress(harness, driver_directory_path)
+
+        # Next we will form a TestDriver object and save it to the database
+        driver = TestDriver(
+            id = driver_id,
+            config = config_file,
+            driver_path = driver_directory_path
+        ).save()
+
+        try:
+            # Delete any test harness that existed already for the assignmnet
+            if assignment.test_driver:
+                # Delete the old driver from the database
+                old_driver = TestDriver.objects.get(id = assignment.test_driver)
+                old_driver_dir = old_driver.driver_path
+                old_driver.delete()
+
+                # Delete the old driver from the file system
+                try:
+                    shutil.rmtree(old_driver_dir)
+                except OSError:
+                    logger.exception("Could not delete old driver directory.")
+
+
+            # Point the assignment at the test driver
+            assignment.test_driver = driver.id
+            assignment.save()
+        except:
+            driver.delete()
+            raise
+    except:
+        shutil.rmtree(driver_directory_path)
+        raise
+
+    return _driver_to_str(driver) + " succesfully created"
 
 @_api_call()
 def get_oauth2_keys():
