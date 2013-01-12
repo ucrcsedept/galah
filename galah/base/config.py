@@ -22,6 +22,7 @@ import datetime
 defaults = {
     "global/CURRENT_VERSION": "v0.1.3",
     "global/SUBMISSION_DIRECTORY": "/var/local/galah/web/submissions/",
+    "global/DRIVER_DIRECTORY": "/var/local/galah/web/drivers/",
     "global/MONGODB": "galah",
     "global/SISYPHUS_ADDRESS": "ipc:///tmp/sisyphus.sock",
     "web/DEBUG": True,
@@ -89,11 +90,11 @@ def load_config(domain):
     # configuration values, then place the rest of the configuration values
     # in there as well.
     for k, v in user_config.items():
-        if k.startswith(prefix) and k != len(prefix):
+        if k.startswith(prefix) and len(k) != len(prefix):
             local_key = k[len(prefix):]
 
             local_config[local_key] = v
-        elif k.startswith(global_prefix) and k != len(global_prefix):
+        elif k.startswith(global_prefix) and len(k) != len(global_prefix):
             global_key = k[len(global_prefix):]
 
             local_config[global_key] = v

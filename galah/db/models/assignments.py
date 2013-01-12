@@ -20,9 +20,6 @@ from mongoengine import *
 import datetime
 
 class TestDriver(Document):
-    #test_driver = StringField(required = True)
-    #actions = ListField(StringField())
-    
     # The driver's user-defined configuration. May contain any key value pairs,
     # but certain pairs have special meaning:
     #    * "galah/TIMEOUT" is the number of seconds to allow the test driver to
@@ -31,6 +28,9 @@ class TestDriver(Document):
     #      that the VM must have.
     config = DictField()
     
+    # The directory on the filesystem that has the test driver stored within it.
+    driver_path = StringField(required = True)
+
     meta = {
         "allow_inheritance": False
     }
