@@ -26,6 +26,7 @@ from flask import abort, render_template, request, flash, redirect, jsonify, \
                   url_for
 from galah.db.models import Submission, Assignment
 from galah.base.pretty import pretty_list, plural_if
+from galah.shepherd.api import send_test_request
 from galah.web.util import is_url_on_site, GalahWebAdapter
 from werkzeug import secure_filename
 import os.path
@@ -35,6 +36,10 @@ import shutil
 import tempfile
 import datetime
 import logging
+
+# Load Galah's configuration
+from galah.base.config import load_config
+config = load_config("shepherd")
 
 from _view_assignment import SimpleArchiveForm
 
@@ -139,6 +144,10 @@ def upload_submission(assignment_id):
     )
 
     new_submission.save()
+
+    # Tell shepherd to start running tests if there is a test_driver.
+    if (assignment.test_driver):
+        send_test_request(config["PUBLIC_SOCKET"], new_submission.id);
     
     # Communicate to the next page what submission was just added.
     flash(new_submission.id, category = "new_submission")
