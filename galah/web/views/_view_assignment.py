@@ -35,6 +35,10 @@ from galah.web.util import create_time_element, GalahWebAdapter
 import datetime
 import logging
 
+# Load Galah's configuration
+from galah.base.config import load_config
+config = load_config("web")
+
 logger = GalahWebAdapter(logging.getLogger("galah.web.views.view_assignment"))
 
 @app.route("/assignments/<assignment_id>/")
@@ -58,7 +62,7 @@ def view_assignment(assignment_id):
         
         abort(404)
 
-    # Get all of the submissions for this assignmnet
+    # Get all of the submissions for this assignment
     submissions = list(
         Submission.objects(
             user = current_user.id,
@@ -68,10 +72,18 @@ def view_assignment(assignment_id):
             "-timestamp"
         )
     )
+
+    # Current time to be compared to submission test_request_timestamp
+    now = datetime.datetime.now()
     
     # Add the pretty version of each submissions timestamp
     for i in submissions:
         i.timestamp_pretty = pretty_time(i.timestamp)
+
+        # If the user submitted a test request and there aren't any results
+        if (i.test_request_timestamp and not i.test_results):
+            timedelta = now - i.test_request_timestamp
+            i.show_resubmit = (timedelta > config["STUDENT_RETRY_INTERVAL"])
     
     return render_template(
         "assignment.html",
