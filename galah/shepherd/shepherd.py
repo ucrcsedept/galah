@@ -95,7 +95,7 @@ def main():
 
             try:
                 assignment = Assignment.objects.get(id = submission.assignment)
-            except Assignment.DoesNotExit as e:
+            except Assignment.DoesNotExist as e:
                 logger.error(
                     "Received test request for a submission [%s] referencing "
                     "an invalid assignment [%s].",
