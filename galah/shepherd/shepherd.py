@@ -76,7 +76,7 @@ def main():
         # Will grab all of the outstanding messages from the outside and place them
         # in the request queue
         while public.getsockopt(zmq.EVENTS) & zmq.POLLIN != 0:
-            request = outside.recv_json()
+            request = public.recv_json()
             logger.debug("Raw test request: %s", str(request))
 
             request = TestRequest.from_dict(request)
@@ -95,7 +95,7 @@ def main():
 
             try:
                 assignment = Assignment.objects.get(id = submission.assignment)
-            except Assignment.DoesNotExit as e:
+            except Assignment.DoesNotExist as e:
                 logger.error(
                     "Received test request for a submission [%s] referencing "
                     "an invalid assignment [%s].",
@@ -133,7 +133,7 @@ def main():
             processed_request = InternalTestRequest(
                 submission.id,
                 test_driver.config.get("galah/TIMEOUT",
-                    config["shepherd/DEFAULT_TIMEOUT"].seconds),
+                    config["DEFAULT_TIMEOUT"].seconds),
                 test_driver.config.get("galah/ENVIRONMENT", {})
             )
 
