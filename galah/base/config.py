@@ -29,6 +29,7 @@ defaults = {
     "web/SECRET_KEY": "Very Secure Key",
     "web/HOST_URL": "http://localhost:5000",
     "web/STUDENT_ARCHIVE_LIFETIME": datetime.timedelta(minutes = 2),
+    "web/STUDENT_RETRY_INTERVAL": datetime.timedelta(minutes = 3),
     "web/SOURCE_HOST": "https://github.com/brownhead/galah",
     "sisyphus/TEACHER_ARCHIVE_LIFETIME": datetime.timedelta(minutes = 2),
     "sheep/NCONSUMERS": 1,

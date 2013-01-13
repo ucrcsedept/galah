@@ -143,11 +143,12 @@ def upload_submission(assignment_id):
         unset__most_recent = 1
     )
 
-    new_submission.save()
-
     # Tell shepherd to start running tests if there is a test_driver.
     if (assignment.test_driver):
+        new_submission.test_request_timestamp = datetime.datetime.now()
         send_test_request(config["PUBLIC_SOCKET"], new_submission.id);
+
+    new_submission.save()
     
     # Communicate to the next page what submission was just added.
     flash(new_submission.id, category = "new_submission")

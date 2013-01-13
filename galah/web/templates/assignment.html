@@ -69,6 +69,11 @@
 				<li>{{ i }}</li>
 			{% endfor %}
 			</ul>
+			{% if submission.show_resubmit %}
+			<div>
+			  <a href="resubmit/{{ submission.id }}"><input type="button" value="Resubmit"></a>
+			</div>
+			{% endif %}
 			</div>
 			{% endif %}
 		</div>
