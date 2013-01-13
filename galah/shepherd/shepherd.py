@@ -56,10 +56,21 @@ def match_found(flock_manager, sheep_identity, request):
         sheep_identity
     )
 
+    # Get submission and test driver to send to sheep
+    submission = Submission.objects(id = request.submission_id).exclude(
+        "most_recent",
+        "uploaded_filenames"
+    ).first()
+    assignment = Assignment.objects.get(id = submission.assignment)
+    test_driver = TestDriver.objects.get(id = assignment.test_driver)
+
+    data = {"submission": submission.to_dict(), "test_driver": test_driver.to_dict()}
+    logger.info(data)
+
     router_send_json(
         sheep,
         sheep_identity,
-        FlockMessage("request", request.to_dict()).to_dict()
+        FlockMessage("request", data).to_dict()
     )
 
     return True
