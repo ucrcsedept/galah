@@ -53,7 +53,7 @@ def match_found(flock_manager, sheep_identity, request):
     logger.info(
         "Sending test request for submission [%s] to sheep [%s].",
         request.submission_id,
-        sheep_identity
+        repr(sheep_identity)
     )
 
     # Get submission and test driver to send to sheep
@@ -199,6 +199,11 @@ def main():
                 logger.info("Received test result from sheep.")
                 logger.debug(
                     "Received test result from sheep: %s", str(sheep_message.body)
+                )
+                router_send_json(
+                    sheep,
+                    sheep_identity,
+                    FlockMessage("bloot", "").to_dict()
                 )
 
         print flock.cleanup(30, 30)
