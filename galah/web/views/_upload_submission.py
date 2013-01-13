@@ -146,6 +146,8 @@ def upload_submission(assignment_id):
     if (assignment.test_driver):
         new_submission.test_request_timestamp = datetime.datetime.now()
         send_test_request(config["PUBLIC_SOCKET"], new_submission.id);
+        logger.info("Sent test request to shepherd for %s" % \
+                        str(new_submission.id))
 
     new_submission.save()
     
