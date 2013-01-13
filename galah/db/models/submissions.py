@@ -18,41 +18,70 @@
 
 from mongoengine import *
 
-#def rigidDocument(zdocClass):
-    #def validate(self, *zargs, **zkwargs):
-        #for k, v in vars(self).items():
-            #if k.startswith("_"): continue
+class SubTestResult(EmbeddedDocument):
+    name = StringField()
+    score = FloatField(required = True)
+    max_score = FloatField(required = True)
+    message = StringField()
+    parts = ListField(ListField())
+
+    def validate(self):
+        for i in parts:
+            if len(i) != 3:
+                raise ValidationError("Every item in parts must have length 3.")
+
+        return EmbeddedDocument.validate(self)
+
+    meta = {
+        "allow_inheritance": False
+    }
+
+    @staticmethod
+    def from_dict(item):
+        result = SubTestResult()
+
+        # Go through every field the result has and extract that field from the
+        # dict we were given.
+        for i in result:
+            if i in item:
+                result.__getattr__(i) = item.get(i)
+
+        # Make sure all the correct fields were given and formatted correctly.
+        result.validate()
+
+        return result
+
+class TestResult(Document):
+    score = FloatField(required = True)
+    max_score = FloatField(required = True)
+    tests = ListField(EmbeddedDocumentField(SubTestResult))
+
+    meta = {
+        "allow_inheritance": False
+    }
+
+    @staticmethod
+    def from_dict(item):
+        result = TestResult()
+
+        # Go through every field the result has and extract that field from the
+        # dict we were given.
+        for i in result:
+            if i == "id":
+                continue
             
-            #if k not in self._fields:
-                #raise ValidationError("Extraneous attributes were found.")
-        
-        #return super(zdocClass, self).validate(*zargs, **zkwargs)
+            if i == "tests":
+                for j in i:
+                    result.tests.append(SubTestResult.from_dict(j))
+                continue
 
-    #zdocClass.validate = validate
-    
-    #return zdocClass
-        
-#@rigidDocument
-#class SubTest(EmbeddedDocument):
-    #name = StringField(required = True)
-    #score = FloatField()
-    #max_score = FloatField()
-    #message = StringField()
-    #messages = ListField(StringField)
+            if i in item:
+                result.__getattr__(i) = item.get(i)
 
-    #meta = {
-        #"allow_inheritance": False
-    #}
+        # Make sure all the correct fields were given and formatted correctly.
+        result.validate()
 
-#@rigidDocument
-#class TestResult(EmbeddedDocument):
-    #sub_tests = ListField(EmbeddedDocumentField(SubTest))
-    #score = FloatField()
-    #max_score = FloatField()
-    
-    #meta = {
-        #"allow_inheritance": False
-    #}
+        return result
 
 import os.path
 

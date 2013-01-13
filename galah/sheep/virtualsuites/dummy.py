@@ -28,7 +28,7 @@ class Producer:
 
 	def produce_vm(self):
 		self.logger.debug("produce_vm called. Doing nothing.")
-		time.sleep(10)
+		time.sleep(60)
 		return 0
 
 class Consumer:
@@ -43,4 +43,4 @@ class Consumer:
     def run_test(self, container_id, test_request):
         self.logger.debug("run_test called. Doing nothing.")
         time.sleep(20)
-        return """{"submission_id": "abdsfbsdb2342", "result": "applesauce"}"""
+        return """{"tests": [{"message": "Could not find `main.cpp`.", "score": 0, "max_score": 1, "name": "File Name Correct"}, {"parts": [["Found Hello", 0, 0.5], ["Found World", 0, 0.5]], "score": 0, "max_score": 1, "name": "Found Hello World"}], "score": 0, "max_score": 2}"""
