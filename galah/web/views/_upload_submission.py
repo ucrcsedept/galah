@@ -34,7 +34,6 @@ import subprocess
 import datetime
 import shutil
 import tempfile
-import datetime
 import logging
 
 # Load Galah's configuration
