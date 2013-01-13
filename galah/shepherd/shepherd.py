@@ -65,7 +65,6 @@ def match_found(flock_manager, sheep_identity, request):
     test_driver = TestDriver.objects.get(id = assignment.test_driver)
 
     data = {"submission": submission.to_dict(), "test_driver": test_driver.to_dict()}
-    logger.info(data)
 
     router_send_json(
         sheep,
