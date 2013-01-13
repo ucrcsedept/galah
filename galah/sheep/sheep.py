@@ -32,6 +32,11 @@ import zmq
 import galah.sheep.utility.universal as universal
 universal.context = zmq.Context()
 
+# Initialize the correct consumer based on the selected virtual suite.
+from galah.sheep.utility.suitehelpers import get_virtual_suite
+virtual_suite = get_virtual_suite(config["VIRTUAL_SUITE"])
+virtual_suite.setup(logger)
+
 # Start the maintainer (who will start up the other threads)
 import galah.sheep.components as components
 maintainer = threading.Thread(target = components.maintainer.run,

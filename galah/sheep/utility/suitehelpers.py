@@ -16,32 +16,17 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with Galah.  If not, see <http://www.gnu.org/licenses/>.
 
-import logging
-import galah.sheep.utility.universal as universal
-from galah.sheep.utility.suitehelpers import get_virtual_suite
-import Queue
-import utility
-import time
+from galah.base.magic import memoize
 
-# Load Galah's configuration.
-from galah.base.config import load_config
-config = load_config("sheep")
+@memoize
+def get_virtual_suite(suite_name):
+    suite_name = suite_name.lower()
 
-@universal.handleExiting
-def run():
-    """
-    Constantly creates new virtual machines.
-    
-    """
-    
-    logger = logging.getLogger("galah.sheep.producer")
-    
-	# Initialize the correct producer based on the selected virtual suite.
-    virtual_suite = get_virtual_suite(config["VIRTUAL_SUITE"])
-    producer = virtual_suite.Producer(logger)
-
-    logger.info("Producer is starting")
-    
-    # Loop until the program is shutting down
-    while not universal.exiting:
-        producer.produce_vm()
+    if suite_name == "openvz":
+        import galah.sheep.virtualsuites.vz as vz
+        return vz
+    elif suite_name == "dummy":
+        import galah.sheep.virtualsuites.dummy as dummy
+        return dummy
+    else:
+        raise ValueError("Suite name %s not recognized." % suite_name)

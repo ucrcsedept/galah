@@ -16,32 +16,31 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with Galah.  If not, see <http://www.gnu.org/licenses/>.
 
-import logging
-import galah.sheep.utility.universal as universal
-from galah.sheep.utility.suitehelpers import get_virtual_suite
-import Queue
-import utility
 import time
 
-# Load Galah's configuration.
-from galah.base.config import load_config
-config = load_config("sheep")
+# Performs one time setup for the entire module
+def setup(logger):
+    logger.debug("setup called. Doing nothing.")
 
-@universal.handleExiting
-def run():
-    """
-    Constantly creates new virtual machines.
-    
-    """
-    
-    logger = logging.getLogger("galah.sheep.producer")
-    
-	# Initialize the correct producer based on the selected virtual suite.
-    virtual_suite = get_virtual_suite(config["VIRTUAL_SUITE"])
-    producer = virtual_suite.Producer(logger)
+class Producer:
+	def __init__(self, logger):
+		self.logger = logger
 
-    logger.info("Producer is starting")
-    
-    # Loop until the program is shutting down
-    while not universal.exiting:
-        producer.produce_vm()
+	def produce_vm(self):
+		self.logger.debug("produce_vm called. Doing nothing.")
+		time.sleep(10)
+		return 0
+
+class Consumer:
+    def __init__(self, logger):
+        self.logger = logger
+
+    def prepare_machine(self):
+        self.logger.debug("prepare machine called. Doing nothing.")
+        time.sleep(10)
+        return 0
+
+    def run_test(self, container_id, test_request):
+        self.logger.debug("run_test called. Doing nothing.")
+        time.sleep(20)
+        return """{"submission_id": "abdsfbsdb2342", "result": "applesauce"}"""
