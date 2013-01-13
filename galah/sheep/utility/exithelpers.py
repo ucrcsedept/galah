@@ -25,12 +25,6 @@ class Timeout(Exception):
 
 
 def enqueue(queue, item, poll_timeout = 5):
-    """
-    Puts an item into a queue. Blocks until ztimeout (indefinitely if None).
-    Will raise Exiting exception if universal.exiting is True.
-    
-    """
-    
     while not universal.exiting:
         try:
             queue.put(item, timeout = poll_timeout)

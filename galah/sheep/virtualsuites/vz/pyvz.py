@@ -1,5 +1,5 @@
-# Copyright 2012-2013 John Sullivan
-# Copyright 2012-2013 Other contributers as noted in the CONTRIBUTERS file
+# Copyright 2012 John Sullivan
+# Copyright 2012 Other contributers as noted in the CONTRIBUTERS file
 #
 # This file is part of Galah.
 #
@@ -17,6 +17,7 @@
 # along with Galah.  If not, see <http://www.gnu.org/licenses/>.
 
 import subprocess, ConfigParser, sys, os
+from galah.base.magic import memoize
 
 vzctlPath = "/usr/sbin/vzctl"
 vzlistPath = "/usr/sbin/vzlist"
@@ -32,16 +33,17 @@ def check_call(*args, **kwargs):
     else:
         return 0
 
-def runVzctl(zparams):
-    cmd = [vzctlPath] + zparams
+def run_vzctl(params):
+    cmd = [vzctlPath] + params
 
     check_call(cmd, stdout = nullFile, stderr = nullFile)
 
-def findContainerDirectory(zopenVzConfigPath = "/etc/vz/vz.conf"):
+@memoize
+def find_container_directory(config_path = "/etc/vz/vz.conf"):
     """
     Finds the location of the container filesystems and returns it.
 
-    zopenVzConfigPath is the location of the OpenVZ configuration file.
+    config_path is the location of the OpenVZ configuration file.
 
     """
 
@@ -49,13 +51,13 @@ def findContainerDirectory(zopenVzConfigPath = "/etc/vz/vz.conf"):
     # stored.
     vzconfig = ConfigParser.SafeConfigParser()
     try:
-        vzconfig.readfp(FakeHeaderWrapper(open(zopenVzConfigPath)))
+        vzconfig.readfp(FakeHeaderWrapper(open(config_path)))
     except(ConfigParser.NoSectionError, ConfigParser.NoOptionError):
         raise IOError("Badly formed configuration file at %s."
-                      % (zopenVzConfigPath))
+                      % (config_path))
     except:
         raise IOError("Could not access OpenVZ configuration file at %s."
-                      % (zopenVzConfigPath))
+                      % (config_path))
 
     # Get the path to the directory container
     try:
@@ -66,7 +68,7 @@ def findContainerDirectory(zopenVzConfigPath = "/etc/vz/vz.conf"):
         dirpath = containerDirectory.replace("$VEID", "")
     except(ConfigParser.NoSectionError, ConfigParser.NoOptionError):
         raise IOError("Badly formed configuration file at %s."
-                      % (zopenVzConfigPath))
+                      % (config_path))
 
     return dirpath
 
@@ -74,9 +76,9 @@ def findContainerDirectory(zopenVzConfigPath = "/etc/vz/vz.conf"):
 # headers.
 # Courtesy of http://stackoverflow.com/questions/2819696/parsing-properties-file-in-python/2819788#2819788
 class FakeHeaderWrapper(object):
-    def __init__(self, zfile, zdefaultSection = "global"):
-        self.configFile = zfile
-        self.sectionHeader = "[%s]\n" % zdefaultSection
+    def __init__(self, file, default_section = "global"):
+        self.configFile = file
+        self.sectionHeader = "[%s]\n" % default_section
     def __iter__(self):
         return self
     def __next__(self):
@@ -99,10 +101,10 @@ class FakeHeaderWrapper(object):
         else:
             return self.configFile.readline()
 
-def createContainer(zidRange = range(1, 255),
-                    zsubnet = "10.0.1",
-                    zosTemplate = None,
-                    zdescription = None):
+def create_container(id_range = range(1, 255),
+                    subnet = "10.0.1",
+                    os_template = None,
+                    description = None):
     """
     Calls vzctl create  to create a new OpenVZ container with an id in the
     given range. Iff an available id could not be found a RuntimeError is
@@ -115,10 +117,10 @@ def createContainer(zidRange = range(1, 255),
     """
     
     # Get a set of all the extant containes
-    containers = set(getContainers())
+    containers = set(get_containers())
 
     # Find an available ID
-    for i in zidRange:
+    for i in id_range:
         if i not in containers:
             id = i
             break
@@ -130,81 +132,81 @@ def createContainer(zidRange = range(1, 255),
     # Holds additional parameters that will be passed to vzctl create
     parameters = []
     
-    if zsubnet != None:
-        parameters += ["--ipadd", zsubnet + "." + str(id)]
+    if subnet != None:
+        parameters += ["--ipadd", subnet + "." + str(id)]
         
-    if zosTemplate != None:
-        parameters += ["--ostemplate", zosTemplate]
+    if os_template != None:
+        parameters += ["--ostemplate", os_template]
         
-    if zdescription != None:
-        parameters += ["--description", zdescription]
+    if description != None:
+        parameters += ["--description", description]
 
     # Actually call vzctl to create the container
-    runVzctl(["create", str(id)] + parameters)
+    run_vzctl(["create", str(id)] + parameters)
 
     return id
 
-def startContainer(zid):
+def start_container(id):
     "Starts a given container and raises a SystemError if it fails."
 
-    runVzctl(["start", str(zid)])
+    run_vzctl(["start", str(id)])
 
 
-def stopContainer(zid):
+def stop_container(id):
     "Stops a given container and raises a SystemError if it fails."
 
-    runVzctl(["stop", str(zid)])
+    run_vzctl(["stop", str(id)])
 
-def destroyContainer(zid):
+def destroy_container(id):
     "Destroys a given container and raises a SystemError if it fails."
 
-    runVzctl(["destroy", str(zid)])
+    run_vzctl(["destroy", str(id)])
     
-def extirpateContainer(zid):
+def extirpate_container(id):
     "Destroys a container and stops it first if it must."
     
-    stopContainer(zid)
-    destroyContainer(zid)
+    stop_container(id)
+    destroy_container(id)
 
-def injectFile(zid, zfrom, zto, zmove = True, zpermissions = "rwx",
-               zunpack = False):
+def inject_file(id, source, to, move = False, permissions = "rwx",
+               unpack = False):
     """
-    Injects a given file (zfrom) from the host system into the filesystem of
-    the container with id zid at location zto (zto is an absolute filepath as
+    Injects a given file (source) from the host system into the filesystem of
+    the container with id id at location to (to is an absolute filepath as
     seen by the container's filesystem.
     
-    If zfrom is a directory, all of the files inside of that directory will be
+    If source is a directory, all of the files inside of that directory will be
     injected, the directory itself will not be injected.
 
-    If zmove is True, then the file will be moved, otherwise it will be
+    If move is True, then the file will be moved, otherwise it will be
     copied.
     
-    If zunpack is True and zfrom is a .tar or .tar.gz,
-    the file zfrom will be unpacked with the tar command into zto, otherwise
-    this option will be ignored. Iff zmove is True the package will be deleted
+    If unpack is True and source is a .tar or .tar.gz,
+    the file source will be unpacked with the tar command into to, otherwise
+    this option will be ignored. Iff move is True the package will be deleted
     after extracting.
 
     """
 
     # Figure out the fully qualified destination path as seen by the host
     # system
-    ztoReal = containerToHostPath(zid, zto)
+    ztoReal = container_to_host_path(id, to)
 
     # Use the system commands rather than python's filesystem functions for
     # efficiency and simplicity (we certainly know what system this code is
     # running on since OpenVZ only supports *nix).
-    if zunpack and zfrom.endswith((".tar", ".tar.gz")):
-        check_call(["tar", "-xzf", zfrom, "-C", ztoReal],
+    if unpack and source.endswith((".tar", ".tar.gz")):
+        check_call(["tar", "-xzf", source, "-C", ztoReal],
                    stdout = nullFile, stderr = nullFile)
-        if zmove:
-            check_call(["rm", zfrom], stdout = nullFile, stderr = nullFile)
+        if move:
+            check_call(["rm", source], stdout = nullFile, stderr = nullFile)
     else:
-        if os.path.isdir(zfrom):
-            files = [os.path.join(i, l) for i, j, k in os.walk(zfrom) for l in k]
+        if os.path.isdir(source):
+            files = [os.path.join(i, l) for i, j, k in os.walk(source) for l in k]
         else:
-            files = [zfrom]
+            files = [source]
         
-        if zmove:
+        if move:
             check_call(["mv", "-rf"] + files + [ztoReal],
                        stdout = nullFile, stderr = nullFile)
         else:
@@ -213,97 +215,99 @@ def injectFile(zid, zfrom, zto, zmove = True, zpermissions = "rwx",
 
     # Ensure that the permissions and owner are correct
     check_call(["chown", "-R", "0:0", ztoReal], stdout = nullFile, stderr = nullFile)
-    check_call(["chmod", "-R", "a=%s" % (zpermissions), ztoReal],
+    check_call(["chmod", "-R", "a=%s" % (permissions), ztoReal],
                stdout = nullFile, stderr = nullFile)
 
-def runShellScriptFromHost(zid, zscript):
+def run_shell_script_from_host(id, script):
     """
-    Runs the given script located at zscript on the host system inside of the
+    Runs the given script located at script on the host system inside of the
     running container (if the container is not yet running, it will be
     started). The script will be ran as root.
 
-    Note: zscript MUST be a SHELL script located on the HOST system.
+    Note: script MUST be a SHELL script located on the HOST system.
 
     """
 
-    runVzctl(["runscript", str(zid), zscript])
+    run_vzctl(["runscript", str(id), script])
 
-def containerToHostPath(zid, zpath):
+def container_to_host_path(id, path):
     """
     Converts a path from the container's file system's perspective into a path
     from the host's file system's perspective.
 
-    Note that zpath MUST be an absolute file path.
+    Note that path MUST be an absolute file path.
 
     """
 
-    return os.path.join(findContainerDirectory(), str(zid), zpath[1:])
+    return os.path.join(find_container_directory(), str(id), path[1:])
    
 
-def hostToContainerPath(zid, zpath):
+def host_to_container_path(id, path):
     """
     Converts a path from the host's file system's perspective into a path
     from the container's file system's perspective.
 
-    Note that zpath MUST be an absolute file path.
+    Note that path MUST be an absolute file path.
 
     """
 
-    prefix = os.path.join(findContainerDirectory(), str(zid))
+    prefix = os.path.join(find_container_directory(), str(id))
 
-    if not zpath.startswith(prefix):
-        raise ValueError("zpath (%s) is not in the container" % zpath)
+    if not path.startswith(prefix):
+        raise ValueError("path (%s) is not in the container" % path)
 
-    return zpath[len(prefix):]
+    return path[len(prefix):]
 
-def runScript(zid, zscript, zinterpreter = None):
+def run_script(id, script, interpreter = None):
     """
     Runs the given script located on the container's system inside of the
     running container (if the container is not yet running, it will be
     started). The script will be run as root.
 
-    Note zscript must be the path as seen from the container's file system.
+    Note script must be the path as seen from the container's file system.
 
     """
 
     # Form the command
-    command = ("" if zinterpreter == None else zinterpreter + " ")
-    command += zscript
+    command = ("" if interpreter == None else interpreter + " ")
+    command += script
 
-    execute(zid, command, False)
+    execute(id, command, False)
 
-def execute(zid, zcode, zblock = True):
+def execute(id, code, block = True):
     """
-    Runs the given code. Similar to runScript except that zcode is the script.
+    Runs the given code. Similar to runScript except that code is the script.
 
     """
 
-    p = subprocess.Popen([vzctlPath, "exec", str(zid), "-"],
-                         stdin = subprocess.PIPE)
-                         #stdout = nullFile,
-                         #stderr = nullFile)
-    p.stdin.write(zcode)
+    p = subprocess.Popen(
+        [vzctlPath, "exec", str(id), "-"],
+        stdin = subprocess.PIPE
+        #stdout = nullFile,
+        #stderr = nullFile
+    )
+    p.stdin.write(code)
     p.stdin.close()
-    if zblock:
+    if block:
         p.wait()
         return p.returncode
     else:
         return
 
-def setAttribute(zid, zattribute, zvalue, zsave = True):
+def set_attribute(id, attribute, value, save = True):
     """
-    Sets the attribute zattribute (only valid attributes are accepted,
-    check documentation for vzctl set) to zvalue on the given vm.
+    Sets the attribute attribute (only valid attributes are accepted,
+    check documentation for vzctl set) to value on the given vm.
 
-    If zsave is True, the attribute will persist when restarting the VM.
+    If save is True, the attribute will persist when restarting the VM.
 
     """
 
-    runVzctl(["set", str(zid), "--" + zattribute, zvalue] +
-                    (["--save"] if zsave else ["--setmode", "ignore"]))
+    run_vzctl(["set", str(id), "--" + attribute, value] +
+                    (["--save"] if save else ["--setmode", "ignore"]))
 
-def getAttribute(zid, zattribute):
-    p = subprocess.Popen([vzlistPath, "-Ho", zattribute, str(zid)],
+def get_attribute(id, attribute):
+    p = subprocess.Popen([vzlistPath, "-Ho", attribute, str(id)],
                          stdout = subprocess.PIPE,
                          stderr = nullFile)
 
@@ -312,20 +316,20 @@ def getAttribute(zid, zattribute):
     if p.returncode != 0:
         raise SystemError((p.returncode,
                            "Could not get attribute %s of %s." %
-                                (zattribute, zid)))
+                                (attribute, id)))
 
     return output[0].strip()
 
-def getContainers(zdescriptionPattern = None):
+def get_containers(description_pattern = None):
     "Returns a list all of the extant containers."
 
     # If we do not care about the description, we can very quickly get a list
     # of the extant containers by enumerating through the directory which
     # contains the containers' private areas. Otherwise, we have to use
     # vzlist.
-    if zdescriptionPattern == None:
+    if description_pattern == None:
         # Find the directory where the container's private areas are stored
-        dirPath = findContainerDirectory()
+        dirPath = find_container_directory()
 
         # Get all the containers that have already been created
         containers = []
@@ -337,7 +341,7 @@ def getContainers(zdescriptionPattern = None):
                 
         return containers
     else:
-        flags = ["-d", zdescriptionPattern]
+        flags = ["-d", description_pattern]
 
         p = subprocess.Popen([vzlistPath] + flags + ["-aHo", "ctid"],
                              stdout = subprocess.PIPE, stderr = nullFile)

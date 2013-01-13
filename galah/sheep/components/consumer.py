@@ -19,6 +19,7 @@
 import zmq
 import galah.sheep.utility.universal as universal
 import galah.sheep.utility.exithelpers as exithelpers
+from galah.sheep.utility.suitehelpers import get_virtual_suite
 from galah.base.flockmail import FlockMessage
 import time
 import threading
@@ -123,11 +124,14 @@ def send_result(socket, result, timeout):
     else:
         raise ShepherdLost(result = result)
 
-
 @universal.handleExiting
 def run():
     logger = logging.getLogger("galah.sheep.%s" % threading.currentThread().name)
     logger.info("Consumer starting.")
+
+    # Initialize the correct consumer based on the selected virtual suite.
+    virtual_suite = get_virtual_suite(config["VIRTUAL_SUITE"])
+    consumer = virtual_suite.Consumer(logger)
     
     # Set up the socket to send/recieve messages to/from the shepherd
     shepherd = universal.context.socket(zmq.DEALER)
@@ -135,7 +139,10 @@ def run():
     shepherd.connect(config["shepherd/SHEEP_SOCKET"])
    
     # Loop until the program is shutting down
-    while not universal.exiting:        
+    while not universal.exiting:
+        # Prepare a VM
+        machine_id = consumer.prepare_machine()
+
         # Tell the shepherd we are ready for a test request
         logger.debug("Commencing bleets.")
         message = bleet(shepherd, 60 * 1000)
@@ -164,7 +171,6 @@ def run():
         logger.info("Test request received.")
         logger.debug("Test request: %s", str(message))
 
-        logger.debug("Pretending to do work.")
-        time.sleep(10)
+        result = consumer.run_test(machine_id, message.body)
 
-        send_result(shepherd, "tacos", 30 * 1000)
+        send_result(shepherd, result, 30 * 1000)
