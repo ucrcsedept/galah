@@ -44,7 +44,7 @@ class SubTestResult(EmbeddedDocument):
         # dict we were given.
         for i in result:
             if i in item:
-                result.__getattr__(i) = item.get(i)
+                result.__setattr__(i, item.get(i))
 
         # Make sure all the correct fields were given and formatted correctly.
         result.validate()
@@ -76,7 +76,7 @@ class TestResult(Document):
                 continue
 
             if i in item:
-                result.__getattr__(i) = item.get(i)
+                result.__setattr__(i, item.get(i))
 
         # Make sure all the correct fields were given and formatted correctly.
         result.validate()
