@@ -35,6 +35,9 @@ class TestDriver(Document):
         "allow_inheritance": False
     }
 
+    def to_dict(self):
+        return {"config": self.config, "driver_path": self.driver_path}
+
 class Assignment(Document):
     name = StringField(required = True)
     due = DateTimeField(required = True)

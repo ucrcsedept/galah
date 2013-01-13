@@ -113,6 +113,14 @@ class Submission(Document):
         ]
     }
 
+    def to_dict(self):
+        return {"user": self.user,
+                "timestamp": self.timestamp.isoformat(),
+                "marked_for_grading": self.marked_for_grading,
+                "most_recent": self.most_recent,
+                "test_results": self.test_results,
+                "test_request_timestamp": self.test_request_timestamp.isoformat()}
+
     def getFilePath(self):
         return os.path.join(
             config["SUBMISSION_DIRECTORY"],
