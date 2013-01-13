@@ -29,7 +29,7 @@ import heapq
 class FlockManager:
 	__slots__ = ("_flock", "_bleet_queue", "_working_queue")
 
-	SheepInfo = namedtuple("environment", "servicing_request")
+	SheepInfo = namedtuple("SheepInfo", ["environment", "servicing_request"])
 
 	def __init__(self, match_found):
 		# The flock of sheep we are managing. Dictionary mapping sheep
@@ -102,7 +102,7 @@ class FlockManager:
 		if not isinstance(environment, dict):
 			raise TypeError("environment must be a dict.")
 
-		self._flock[identity] = environment
+		self._flock[identity] = FlockManager.SheepInfo(environment, None)
 
 		self.sheep_bleeted(identity)
 
@@ -166,8 +166,7 @@ class FlockManager:
 		"""
 
 		return all(
-			k in sheep.environment and sheep.environment[k] == v
-                for k, v in request.environment.items()
+			k in b and b[k] == v for k, v in a.items()
 		)
 
 	def cleanup(self, bleet_timeout = None, service_timeout = None):
