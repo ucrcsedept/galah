@@ -21,11 +21,13 @@ import zmq
 context = zmq.Context()
 context.linger = 0
 
-# Create a new socket to send a test request to shepherd.
-shepherd = context.socket(zmq.DEALER)
-
 def send_test_request(shepherd_host, submission_id):
+    # Create a new socket to send a test request to shepherd.
+    shepherd = context.socket(zmq.DEALER)
+
     shepherd.connect(shepherd_host)
     shepherd.send_json({
        "submission_id": str(submission_id)
     })
+
+    shepherd.close()
