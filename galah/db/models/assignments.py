@@ -36,7 +36,11 @@ class TestDriver(Document):
     }
 
     def to_dict(self):
-        return {"config": self.config, "driver_path": self.driver_path}
+        return {
+            "config": self.config,
+            "driver_path": self.driver_path,
+            "id": str(self.id)
+        }
 
 class Assignment(Document):
     name = StringField(required = True)

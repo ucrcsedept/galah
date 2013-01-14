@@ -110,7 +110,7 @@ def send_result(socket, result, timeout):
         message = FlockMessage.from_dict(message)
 
         if message.type == "bloot":
-            if message.body != str(result["_id"]):
+            if message.body != str(result["id"]):
                 logger.error("Received bloot with incorrect ID.")
                 raise ShepherdLost(result = result)
             else:
@@ -172,5 +172,8 @@ def run():
         logger.debug("Test request: %s", str(message))
 
         result = consumer.run_test(machine_id, message.body)
+
+        # Add in the submission id to the result that we send back
+        result["id"] = str(message.body["submission"]["id"])
 
         send_result(shepherd, result, 30 * 1000)

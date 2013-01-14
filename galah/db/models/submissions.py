@@ -115,6 +115,7 @@ class Submission(Document):
 
     def to_dict(self):
         return {"id": str(self.id),
+                "assignment": str(self.assignment),
                 "user": self.user,
                 "timestamp": self.timestamp.isoformat(),
                 "marked_for_grading": self.marked_for_grading,
