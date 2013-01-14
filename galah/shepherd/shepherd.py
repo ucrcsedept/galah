@@ -201,7 +201,7 @@ def main():
                     "Received test result from sheep: %s", str(sheep_message.body)
                 )
                 try:
-                    submission_id = ObjectId(sheep_message.body["_id"])
+                    submission_id = ObjectId(sheep_message.body["id"])
                     submission = Submission.objects.get(id = submission_id)
                 except (InvalidId, Submission.DoesNotExist) as e:
                     logger.info("Could not retrieve submission: %s", str(e))
