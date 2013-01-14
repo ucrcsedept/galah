@@ -43,4 +43,4 @@ class Consumer:
     def run_test(self, container_id, test_request):
         self.logger.debug("run_test called. Doing nothing.")
         time.sleep(20)
-        return {"_id": "", "tests": [{"message": "Could not find `main.cpp`.", "score": 0, "max_score": 1, "name": "File Name Correct"}, {"parts": [["Found Hello", 0, 0.5], ["Found World", 0, 0.5]], "score": 0, "max_score": 1, "name": "Found Hello World"}], "score": 0, "max_score": 2}
+        return {"_id": test_request["submission"]["id"], "tests": [{"message": "Could not find `main.cpp`.", "score": 0, "max_score": 1, "name": "File Name Correct"}, {"parts": [["Found Hello", 0, 0.5], ["Found World", 0, 0.5]], "score": 0, "max_score": 1, "name": "Found Hello World"}], "score": 0, "max_score": 2}
