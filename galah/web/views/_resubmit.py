@@ -70,7 +70,7 @@ def resubmit_submission(assignment_id, submission_id):
     try:
         submission_id = ObjectId(submission_id)
         submission = Submission.objects.get(id = submission_id)
-    except (InvalidId, Assignment.DoesNotExist) as e:
+    except (InvalidId, Submission.DoesNotExist) as e:
         logger.info("Could not retrieve submission: %s", str(e))
 
         abort(404)
