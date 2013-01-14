@@ -26,7 +26,7 @@ class SubTestResult(EmbeddedDocument):
     parts = ListField(ListField())
 
     def validate(self):
-        for i in parts:
+        for i in self.parts:
             if len(i) != 3:
                 raise ValidationError("Every item in parts must have length 3.")
 
@@ -71,7 +71,7 @@ class TestResult(Document):
                 continue
             
             if i == "tests":
-                for j in i:
+                for j in item.get(i):
                     result.tests.append(SubTestResult.from_dict(j))
                 continue
 
@@ -114,7 +114,8 @@ class Submission(Document):
     }
 
     def to_dict(self):
-        return {"user": self.user,
+        return {"id": str(self.id),
+                "user": self.user,
                 "timestamp": self.timestamp.isoformat(),
                 "marked_for_grading": self.marked_for_grading,
                 "most_recent": self.most_recent,

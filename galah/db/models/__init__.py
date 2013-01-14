@@ -36,7 +36,7 @@ import assignments
 from assignments import Assignment, TestDriver
 
 import submissions
-from submissions import Submission
+from submissions import Submission, TestResult
 
 import archives
 from archives import Archive
