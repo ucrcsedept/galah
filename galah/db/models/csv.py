@@ -16,30 +16,14 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with Galah.  If not, see <http://www.gnu.org/licenses/>.
 
-import mongoengine
+from mongoengine import *
 
-# If were importing models from another component of galah the users shouldn't
-# (and can't) be loaded.
-try:
-    import users
-    from users import User
-    
-    import invitations
-    from invitations import Invitation
-except ImportError:
-    pass
+class CSV(Document):
+    requester = StringField(required = True)
+    file_location = StringField()
+    error_string = StringField()
+    expires = DateTimeField()
 
-import classes
-from classes import Class
-
-import assignments
-from assignments import Assignment, TestDriver
-
-import submissions
-from submissions import Submission, TestResult
-
-import archives
-from archives import Archive
-
-import csv
-from csv import CSV
+    meta = {
+        "allow_inheritance": False
+    }

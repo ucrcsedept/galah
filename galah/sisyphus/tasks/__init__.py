@@ -18,8 +18,10 @@
 
 from tar_bulk_submissions import _tar_bulk_submissions
 from delete_assignments import _delete_assignments
+from create_assignment_csv import _create_assignment_csv
 
 task_list = {
 	"tar_bulk_submissions": _tar_bulk_submissions,
-    "delete_assignments": _delete_assignments
+        "delete_assignments": _delete_assignments,
+        "create_assignment_csv": _create_assignment_csv
 }

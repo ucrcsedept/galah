@@ -814,6 +814,39 @@ def get_archive(current_user, assignment, email = ""):
         }
     )
 
+@_api_call(("admin", "teacher"))
+def get_csv(current_user, assignment):
+    the_assignment = _get_assignment(assignment, current_user)
+
+    if current_user.account_type != "admin" and \
+            the_assignment.for_class not in current_user.classes:
+        raise PermissionError(
+            "You can only modify assignments for classes you teach."
+        )
+
+    # Create the task ID here rather than inside sisyphus so that we can tell
+    # the user how to find the archive once its done.
+    task_id = ObjectId()
+
+    # We will not perform the work of archiving right now but will instead pass
+    # if off to the heavy lifter to do it for us.
+    send_task(
+        config["SISYPHUS_ADDRESS"],
+        "create_assignment_csv",
+        str(task_id),
+        current_user.email,
+        str(the_assignment.id)
+    )
+
+    return (
+        "The CSV file for this assignment is being created.",
+        {
+            "X-Download": "reports/csv/" + str(task_id),
+            "X-Download-DefaultName": "assignment.csv"
+        }
+    )
+
+
 from types import FunctionType
 api_calls = dict((k, v) for k, v in globals().items() if isinstance(v, APICall))
 
