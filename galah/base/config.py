@@ -22,6 +22,7 @@ import datetime
 defaults = {
     "global/CURRENT_VERSION": "v0.1.3",
     "global/SUBMISSION_DIRECTORY": "/var/local/galah/web/submissions/",
+    "global/CSV_DIRECTORY": "/var/local/galah/reports/csv/",
     "global/DRIVER_DIRECTORY": "/var/local/galah/web/drivers/",
     "global/MONGODB": "galah",
     "global/SISYPHUS_ADDRESS": "ipc:///tmp/sisyphus.sock",
@@ -32,6 +33,7 @@ defaults = {
     "web/STUDENT_RETRY_INTERVAL": datetime.timedelta(minutes = 3),
     "web/SOURCE_HOST": "https://github.com/brownhead/galah",
     "sisyphus/TEACHER_ARCHIVE_LIFETIME": datetime.timedelta(minutes = 2),
+    "sisyphus/TEACHER_CSV_LIFETIME": datetime.timedelta(minutes = 2),
     "sheep/NCONSUMERS": 1,
     "sheep/VIRTUAL_SUITE": "dummy",
     "sheep/vz/OS_TEMPLATE": "centos-6-x86_64",
