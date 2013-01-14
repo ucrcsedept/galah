@@ -73,6 +73,19 @@ def view_assignment(assignment_id):
         )
     )
 
+    test_results = list(
+        TestResult.objects(
+            id__in = [i.test_results for i in submissions if i.test_results]
+        )
+    )
+
+    # Match test results to submissions
+    for i in submissions:
+        for j in test_results:
+            if i.test_results == j.id:
+                i.test_results_obj = j
+
+
     # Current time to be compared to submission test_request_timestamp
     now = datetime.datetime.now()
     
