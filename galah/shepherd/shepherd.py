@@ -22,7 +22,7 @@ import sys
 from galah.base.flockmail import FlockMessage, TestRequest, InternalTestRequest
 from galah.base.zmqhelpers import router_send_json, router_recv_json
 from flockmanager import FlockManager
-from galah.db.models import Submission, Assignment, TestDriver
+from galah.db.models import Submission, Assignment, TestDriver, TestResult
 from bson.objectid import ObjectId
 from bson.errors import InvalidId
 
@@ -200,11 +200,24 @@ def main():
                 logger.debug(
                     "Received test result from sheep: %s", str(sheep_message.body)
                 )
+                try:
+                    submission_id = ObjectId(sheep_message.body["_id"])
+                    submission = Submission.objects.get(id = submission_id)
+                except (InvalidId, Submission.DoesNotExist) as e:
+                    logger.info("Could not retrieve submission: %s", str(e))
+                    continue
+
+                test_result = TestResult.from_dict(sheep_message.body)
+                test_result.save()
+                submission.test_results = test_result.id
+                submission.save()
+
                 router_send_json(
                     sheep,
                     sheep_identity,
-                    FlockMessage("bloot", "").to_dict()
+                    FlockMessage("bloot", str(submission.id)).to_dict()
                 )
+
 
         print flock.cleanup(30, 30)
 
