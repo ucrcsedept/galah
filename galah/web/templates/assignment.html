@@ -74,6 +74,32 @@
 			  <a href="resubmit/{{ submission.id }}"><input type="button" value="Resubmit"></a>
 			</div>
 			{% endif %}
+
+			{% if submission.test_results %}
+			<div>
+				<div>Total Score: {{ submissions.test_results_obj.score }} / {{ submisisons.test_results_obj.max_score }}</div>
+				<table>
+				        <th>
+					        <td>Name</td>
+						<td>Score / Max Score</td>
+						<td>Message</td>
+						<td>Score on each part</td>
+					</th>
+					{% for i in submission.test_results_obj.tests %}
+					<tr>
+						<td>{{ i.name }}</td>
+						<td>{{ i.score }} / {{ i.max_score }}</td>
+						<td>{{ i.message }}</td>
+						<td>
+						    {% for j in i.parts %}
+						            {{ i[0] }}({{ i[1] }}/{{ i[2] }}) 
+						    {% endfor %}
+						</td>
+					</tr>
+					{% endfor %}
+				</table>
+			</div>
+			{% endif %}
 			</div>
 			{% endif %}
 		</div>
