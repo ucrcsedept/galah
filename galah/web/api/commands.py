@@ -234,7 +234,7 @@ def _to_datetime(time):
     try:
         return datetime.datetime.strptime(time, "%m/%d/%Y %H:%M:%S")
     except (OverflowError, ValueError):
-        raise ValueError(
+        raise UserError(
             "Could not convert %s into a time object." % repr(time)
         )
 
