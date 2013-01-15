@@ -68,8 +68,6 @@ class APICall(object):
         self.name = wrapped_function.func_name
         
     def __call__(self, current_user, *args, **kwargs):
-        arg_spec = getargspec(self.wrapped_function)
-        
         # If no validation is required this won't actually be a problem, however
         # it's certainly not something that you should be doing.
         if not hasattr(current_user, "account_type"):
