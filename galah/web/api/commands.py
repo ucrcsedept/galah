@@ -83,10 +83,28 @@ class APICall(object):
                     )
             )
 
-        # Check if the arguments match up.
+        # Determine whether the function has current_user as its first argument
+        has_current_user = \
+            len(self.argspec[0]) != 0 and self.argspec[0][0] == "current_user"
+
+        # Determine the smallest number of arguments that should be passed into
+        # the function.
+        min_nargs = (0 if self.argspec[0] is None else len(self.argspec[0]) -
+            0 if self.argspec[-1] is None else len(self.argspec[-1]))
+        if has_current_user:
+            min_nargs -= 1
+
+        # Check if we got any bad keyword arguments.
         for i in kwargs.keys():
             if i not in self.argspec[0]:
                 raise UserError("Unexpected keyword argument '%s'." % i)
+
+        # Check to see if the user provided enough arguments.
+        nargs = len(args) + len(kwargs)
+        if min_nargs > nargs:
+            raise UserError(
+                "Expected at least %d arguments, got %d." % (min_nargs, nargs)
+            )
 
         # Only pass the current user to the function if the function wants it
         if len(self.argspec[0]) != 0 and self.argspec[0][0] == "current_user":
