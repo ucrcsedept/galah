@@ -79,7 +79,9 @@ def upload_submission(assignment_id):
 
     form = SimpleArchiveForm()
     if not form.validate_on_submit():
-        logger.info("Submission rejected. Validation failure.")
+        logger.info(
+            "Submission rejected due to internal validation problem. Try again."
+        )
 
         flash("The files you passed in were invalid.", category = "error")
 
