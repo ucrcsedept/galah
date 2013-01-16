@@ -54,9 +54,9 @@ def upload_submission(assignment_id):
         assignment = Assignment.objects.get(id = id)
     except (InvalidId, Assignment.DoesNotExist) as e:
         logger.info("Could not retrieve assignment: %s", str(e))
-        
+
         abort(404)
-    
+
     # Figure out where we should redirect the user to once we're done.
     redirect_to = request.args.get("next") or request.referrer
 
@@ -66,7 +66,7 @@ def upload_submission(assignment_id):
             "view_assignment",
             assignment_id = assignment_id
         )
-    
+
     # Check if the assignment's cutoff date has passed
     if assignment.due_cutoff and \
             assignment.due_cutoff < datetime.datetime.today():
@@ -120,7 +120,7 @@ def upload_submission(assignment_id):
 
         # Do the actual saving
         i.data.save(file_path)
-    
+
     new_submission.uploaded_filenames.extend(
         secure_filename(i.data.filename) for i in form.archive.entries
             if i.data.filename
@@ -134,23 +134,25 @@ def upload_submission(assignment_id):
 
     # The old "most_recent" submission is no longer the most recent.
     Submission.objects(
-        user = current_user.email, 
-        assignment = id, 
+        user = current_user.email,
+        assignment = id,
         most_recent = True
     ).update(
         multi = False,
         unset__most_recent = 1
     )
 
-    # Tell shepherd to start running tests if there is a test_driver.
-    if (assignment.test_driver):
+    if assignment.test_driver:
         new_submission.test_request_timestamp = datetime.datetime.now()
-        send_test_request(config["PUBLIC_SOCKET"], new_submission.id);
         logger.info("Sent test request to shepherd for %s" % \
                         str(new_submission.id))
 
     new_submission.save()
-    
+
+    # Tell shepherd to start running tests if there is a test_driver.
+    if assignment.test_driver:
+        send_test_request(config["PUBLIC_SOCKET"], new_submission.id)
+
     # Communicate to the next page what submission was just added.
     flash(new_submission.id, category = "new_submission")
 
@@ -162,6 +164,6 @@ def upload_submission(assignment_id):
             ),
         category = "message"
     )
-    
+
     # Everything seems to have gone well
     return redirect(redirect_to)
