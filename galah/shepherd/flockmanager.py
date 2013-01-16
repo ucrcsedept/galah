@@ -169,27 +169,27 @@ class FlockManager:
 			k in b and b[k] == v for k, v in a.items()
 		)
 
-	def cleanup(self, bleet_timeout = None, service_timeout = None):
-		"""
-		Returns two lists in a tuple where the first list is any sheep who timed
-		out due to bleets, and the second list is any sheep that timed out while
-		servicing a request.
+	# def cleanup(self, bleet_timeout = None, service_timeout = None):
+	# 	"""
+	# 	Returns two lists in a tuple where the first list is any sheep who timed
+	# 	out due to bleets, and the second list is any sheep that timed out while
+	# 	servicing a request.
 
-		"""
+	# 	"""
 	
-		lost_sheep = []
-		killed_sheep = []
+	# 	lost_sheep = []
+	# 	killed_sheep = []
 
-		if bleet_timeout and self._bleet_queue:
-			while (self._bleet_queue.smallest().priority <
-					datetime.datetime.now() -
-					datetime.timedelta(seconds = bleet_timeout)):
-				lost_sheep.append(self._bleet_queue.smallest().value)
+	# 	if bleet_timeout and self._bleet_queue:
+	# 		while (self._bleet_queue.smallest().priority <
+	# 				datetime.datetime.now() -
+	# 				datetime.timedelta(seconds = bleet_timeout)):
+	# 			lost_sheep.append(self._bleet_queue.smallest().value)
 
-		if service_timeout and self._service_queue:
-			while (self._service_queue.smallest().priority <
-					datetime.datetime.now() -
-					datetime.timedelta(seconds = service_timeout)):
-				killed_sheep.append(self._service_queue.smallest().value)
+	# 	if service_timeout and self._service_queue:
+	# 		while (self._service_queue.smallest().priority <
+	# 				datetime.datetime.now() -
+	# 				datetime.timedelta(seconds = service_timeout)):
+	# 			killed_sheep.append(self._service_queue.smallest().value)
 
-		return (lost_sheep, killed_sheep)
+	# 	return (lost_sheep, killed_sheep)

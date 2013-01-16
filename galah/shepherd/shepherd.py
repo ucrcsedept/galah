@@ -218,7 +218,4 @@ def main():
                     FlockMessage("bloot", str(submission.id)).to_dict()
                 )
 
-
-        print flock.cleanup(30, 30)
-
 main()
