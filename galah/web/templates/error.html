@@ -1,10 +1,16 @@
 {% extends "base.html" %}
-{% block title %}{{ error_description }}{% endblock %}
-{% block path %}&rarr; <a href="/error">Oh No!</a>{% endblock %}
+{% block title %}500! Error!{% endblock %}
+{% block path %}&rarr; <a href="/error">500! Error!</a>{% endblock %}
 {% block content %}
     <div id="error_page">
-        <div id="ascii_art"><pre>{{ art_piece.art }}</pre></div>
-        <div id="error_message" class="heading">{{ message|safe }}</div>
-        <div id="ascii_art_author">ASCII Art by {{ art_piece.author }}</div>
+    	<div style="text-align: center">
+	        <div id="error_message" class="heading">500! Something went wrong!</div>
+    	</div>
+        {% if report_to %}
+        <div id="report_to" class="heading">{{ report_to|safe }}</div>
+        {% endif %}
+        <div id="try_here">
+        	You can get back to the main page by <a href="/home">clicking here</a>.
+        </div>
     </div>
 {% endblock %}

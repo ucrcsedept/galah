@@ -18,7 +18,7 @@
     margin: 0px auto;
 }
 
-a { 
+a {
     text-decoration: none;
     color: #00C;
 }
@@ -70,22 +70,28 @@ a {
 }
 
 /* Error Page */
-#error_page > #ascii_art {
-    font-family: "Courier New", Courier, monospace;
-    color: black;
-    font-size: 18pt;
-    white-space: pre;
-    text-align: center;
-    font-weight: bold;
-}
-
-#error_page > #error_message {
-    font-size: 24pt;
+#error_page #error_message {
+    margin-top: 40px;
+    font-size: 42pt;
     font-weight: bold;
     text-align: center;
 }
 
-#error_page > #ascii_art_author {
+#error_page #report_to {
+    font-size: 20pt;
+    font-weight: bold;
+    text-align: center;
+    color: #C00;
+    margin-top: 40px;
+}
+
+#error_page #try_here {
+    font-size: 14pt;
+    text-align: center;
+    margin-top: 40px;
+}
+
+#error_page #ascii_art_author {
     text-align: center;
     margin-top: 30px;
 }
@@ -100,7 +106,7 @@ a {
 #upload_archive > h2 { margin: 0px 0px 5px 0px; }
 
 #upload_archive input {
-    display: inline-block; 
+    display: inline-block;
 }
 
 #upload_archive .simple_file_input {
@@ -203,7 +209,7 @@ h3 {
     padding: 16px;
     background-color: white;
     width: 320px;
-    
+
     margin-top: 20px;
     margin-left: auto;
     margin-right: auto;
@@ -241,25 +247,25 @@ h3 {
 }
 
 /* Background Gradient */
-body 
+body
 {
     /* Gradient*/
-    /* IE10 */ 
+    /* IE10 */
     background-image: -ms-linear-gradient(top left, #FFFFFF 0%, #D9EBFF 100%);
 
-    /* Mozilla Firefox */ 
+    /* Mozilla Firefox */
     background-image: -moz-linear-gradient(top left, #FFFFFF 0%, #D9EBFF 100%);
 
-    /* Opera */ 
+    /* Opera */
     background-image: -o-linear-gradient(top left, #FFFFFF 0%, #D9EBFF 100%);
 
-    /* Webkit (Safari/Chrome 10) */ 
+    /* Webkit (Safari/Chrome 10) */
     background-image: -webkit-gradient(linear, left top, right bottom, color-stop(0, #FFFFFF), color-stop(1, #D9EBFF));
 
-    /* Webkit (Chrome 11+) */ 
+    /* Webkit (Chrome 11+) */
     background-image: -webkit-linear-gradient(top left, #FFFFFF 0%, #D9EBFF 100%);
 
-    /* Proposed W3C Markup */ 
+    /* Proposed W3C Markup */
     background-image: linear-gradient(top left, #FFFFFF 0%, #D9EBFF 100%);
 }
 

@@ -29,7 +29,8 @@ defaults = {
     "web/HOST_URL": "http://localhost:5000",
     "web/STUDENT_ARCHIVE_LIFETIME": datetime.timedelta(minutes = 2),
     "web/SOURCE_HOST": "https://github.com/brownhead/galah",
-    "sisyphus/TEACHER_ARCHIVE_LIFETIME": datetime.timedelta(minutes = 2)
+    "sisyphus/TEACHER_ARCHIVE_LIFETIME": datetime.timedelta(minutes = 2),
+    "web/REPORT_ERRORS_TO": None
 }
 
 import imp
