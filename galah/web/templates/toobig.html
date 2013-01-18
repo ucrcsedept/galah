@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}413! File too large!{% endblock %}
+{% block path %}&rarr; <a href="/error">Whoa there!</a>{% endblock %}
+{% block content %}
+    <div id="error_page">
+    	<div style="text-align: center">
+	        <div id="error_message" class="heading">413! File too large!</div>
+    	</div>
+        <div id="try_here">
+        	You tried to upload a file that was too big. Try again and make sure you are uploading the correct file. If this problem persists, contact your instructor. You can get back to the main page by <a href="/home">clicking here</a>.
+        </div>
+    </div>
+{% endblock %}

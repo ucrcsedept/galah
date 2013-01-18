@@ -44,3 +44,9 @@ def error(e):
         "error.html",
         report_to = config["REPORT_ERRORS_TO"]
     ), 500
+
+@app.errorhandler(413)
+def toobig(e):
+	logger.info("User tried to upload a file that was too large.")
+
+	return render_template("toobig.html"), 413
