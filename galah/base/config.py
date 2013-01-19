@@ -37,7 +37,7 @@ defaults = {
     "sisyphus/TEACHER_ARCHIVE_LIFETIME": datetime.timedelta(minutes = 2),
     "sisyphus/TEACHER_CSV_LIFETIME": datetime.timedelta(minutes = 2),
     "sheep/NCONSUMERS": 1,
-    "sheep/VIRTUAL_SUITE": "openvz",
+    "sheep/VIRTUAL_SUITE": "dummy",
     "sheep/vz/OS_TEMPLATE": "centos-6-x86_64",
     "sheep/vz/MAX_MACHINES": 2,
     "sheep/vz/CALL_MKDIR": True,
