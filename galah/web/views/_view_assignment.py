@@ -21,7 +21,7 @@ from flask.ext.wtf import Form, FieldList, FileField, validators, BooleanField
 
 class SimpleArchiveForm(Form):
     archive = FieldList(FileField("Archive"), min_entries = 3)
-    
+
 ## The Actual View ##
 from galah.web import app
 from flask.ext.login import current_user
@@ -45,21 +45,21 @@ logger = GalahWebAdapter(logging.getLogger("galah.web.views.view_assignment"))
 @account_type_required(("student", "teacher"))
 def view_assignment(assignment_id):
     simple_archive_form = SimpleArchiveForm()
-    
+
     # Convert the assignment in the URL into an ObjectId
     try:
         id = ObjectId(assignment_id)
     except InvalidId:
         logger.info("Invalid Assignment ID requested.")
-        
+
         abort(404)
-    
+
     # Retrieve the assignment
     try:
         assignment = Assignment.objects.get(id = id)
     except Assignment.DoesNotExist:
         logger.info("Non-extant ID requested.")
-        
+
         abort(404)
 
     # Get all of the submissions for this assignment
@@ -85,10 +85,9 @@ def view_assignment(assignment_id):
             if i.test_results == j.id:
                 i.test_results_obj = j
 
-
     # Current time to be compared to submission test_request_timestamp
     now = datetime.datetime.now()
-    
+
     # Add the pretty version of each submissions timestamp
     for i in submissions:
         i.timestamp_pretty = pretty_time(i.timestamp)
@@ -97,12 +96,12 @@ def view_assignment(assignment_id):
         if (i.test_request_timestamp and not i.test_results):
             timedelta = now - i.test_request_timestamp
             i.show_resubmit = (timedelta > config["STUDENT_RETRY_INTERVAL"])
-    
+
     return render_template(
         "assignment.html",
         now = datetime.datetime.today(),
         create_time_element = create_time_element,
-        assignment = assignment, 
+        assignment = assignment,
         submissions = submissions,
         simple_archive_form = simple_archive_form,
         new_submissions = [v for k, v in get_flashed_messages(with_categories = True) if k == "new_submission"]

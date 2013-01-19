@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}404! Not Found!{% endblock %}
+{% block path %}&rarr; <a href="/error">404! Not Found!</a>{% endblock %}
+{% block content %}
+    <div id="error_page">
+    	<div style="text-align: center">
+	        <div id="error_message" class="heading">404! Not found!</div>
+    	</div>
+        <div id="try_here">
+        	You can get back to the main page by <a href="/home">clicking here</a>.
+        </div>
+    </div>
+{% endblock %}

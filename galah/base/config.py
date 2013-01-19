@@ -32,6 +32,8 @@ defaults = {
     "web/STUDENT_ARCHIVE_LIFETIME": datetime.timedelta(minutes = 2),
     "web/STUDENT_RETRY_INTERVAL": datetime.timedelta(minutes = 3),
     "web/SOURCE_HOST": "https://github.com/brownhead/galah",
+    "web/REPORT_ERRORS_TO": None,
+    "web/MAX_CONTENT_LENGTH": None,
     "sisyphus/TEACHER_ARCHIVE_LIFETIME": datetime.timedelta(minutes = 2),
     "sisyphus/TEACHER_CSV_LIFETIME": datetime.timedelta(minutes = 2),
     "sheep/NCONSUMERS": 1,
