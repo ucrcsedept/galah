@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Monitor Assignments{% endblock %}
+{% block path %}&rarr; <a href="/assignments">monitor assignments</a>{% endblock %}
+{% block content %}
+    <button><a href="?as_student">View as student</a></button>
+    <div id="assignments">
+    {% for i in assignments %}
+        <div>
+            <div class="title heading">
+                <span class="class_name">{{ i.class_name}}</span>
+                <a href="/assignments/{{ i.id }}">{{ i.name }}</a>
+            {% if i.submitted %}
+              <span class="submission_status" style="color: {{ i.status_color }}">
+		The most recent submission was 
+		{% autoescape false %}
+		  {{ create_time_element(i.submitted.timestamp) }}
+		{% endautoescape %}
+              </span>
+	    {% else %}
+	      <span class="submission_status">
+		There are no submissions for this assignment.
+	      </span>
+            {% endif %}
+            </div>
+            <div class="due">
+                {% autoescape false %}due {{ create_time_element(i.due) }} {% if i.due_cutoff %}(cutoff {{ create_time_element(i.due_cutoff) }}){% endif %}{% endautoescape %}
+            </div>
+        </div>
+    {% endfor %}
+    {% if not assignments and not hidden_assignments %}
+        <div class="assignment">
+            You do not have, and have never had, any assignments due.
+        </div>
+    {% elif not assignments %}
+        <div class="assignment">
+            You do not have any assignments due.
+        </div>
+    {% endif %}
+    {% if hidden_assignments > 0 %}
+        <a class="show_hidden heading" href="?show_all">
+            Show All Assignments ({{ hidden_assignments }} hidden)
+        </a>
+    {% endif %}
+    {% if hidden_assignments < 0 %}
+        <a class="show_hidden heading" href="?">
+            Showing All Assignments (Show Less)
+        </a>
+    {% endif %}
+    </div>
+{% endblock %}
