@@ -29,7 +29,7 @@ from galah.web.auth import account_type_required
 from bson.objectid import ObjectId
 from bson.errors import InvalidId
 from flask import abort, render_template, get_flashed_messages, request
-from galah.db.models import Assignment, Submission, TestResult
+from galah.db.models import Assignment, Submission, TestResult, User
 from galah.base.pretty import pretty_time
 from galah.web.util import create_time_element, GalahWebAdapter
 import datetime
@@ -69,16 +69,22 @@ def view_assignment(assignment_id):
     if view_as == "teacher" and "as_student" in request.args:
         view_as = "student"
 
-    # Get all of the submissions for this assignment
+    # Get all of the submissions for this assignment    
+    user_count = 1
     if view_as == "teacher":
         submissions = list(
             Submission.objects(
-                assignment = id
+                assignment = id,
+                most_recent = True
             ).order_by(
                 "-most_recent",
                 "-timestamp"
             )
         )
+        user_count = User.objects(
+            account_type = "student",
+            classes = assignment.for_class
+        ).count()
     else:
         submissions = list(
             Submission.objects(
@@ -125,5 +131,6 @@ def view_assignment(assignment_id):
         assignment = assignment,
         submissions = submissions,
         simple_archive_form = simple_archive_form,
+        users = user_count,
         new_submissions = [v for k, v in get_flashed_messages(with_categories = True) if k == "new_submission"]
     )
