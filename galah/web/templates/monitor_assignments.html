@@ -4,14 +4,14 @@
 {% block content %}
     <button><a href="?as_student">View as student</a></button>
     <div id="assignments">
-    {% for i in assignments %}
+    {% for i in assignments %} 
         <div>
             <div class="title heading">
                 <span class="class_name">{{ i.class_name}}</span>
                 <a href="/assignments/{{ i.id }}">{{ i.name }}</a>
             {% if i.submitted %}
               <span class="submission_status" style="color: {{ i.status_color }}">
-		The most recent submission was 
+		The most recent submission was
 		{% autoescape false %}
 		  {{ create_time_element(i.submitted.timestamp) }}
 		{% endautoescape %}
