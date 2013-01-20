@@ -28,8 +28,8 @@ from flask.ext.login import current_user
 from galah.web.auth import account_type_required
 from bson.objectid import ObjectId
 from bson.errors import InvalidId
-from flask import abort, render_template, get_flashed_messages
-from galah.db.models import Assignment, Submission, TestResult
+from flask import abort, render_template, get_flashed_messages, request
+from galah.db.models import Assignment, Submission, TestResult, User
 from galah.base.pretty import pretty_time
 from galah.web.util import create_time_element, GalahWebAdapter
 import datetime
@@ -62,16 +62,39 @@ def view_assignment(assignment_id):
 
         abort(404)
 
-    # Get all of the submissions for this assignment
-    submissions = list(
-        Submission.objects(
-            user = current_user.id,
-            assignment = id
-        ).order_by(
-            "-most_recent",
-            "-timestamp"
+    # Teachers and students have different default browsing view.
+    view_as = current_user.account_type
+
+    # Teachers are able to browse as students by request.
+    if view_as == "teacher" and "as_student" in request.args:
+        view_as = "student"
+
+    # Get all of the submissions for this assignment    
+    user_count = 1
+    if view_as == "teacher":
+        submissions = list(
+            Submission.objects(
+                assignment = id,
+                most_recent = True
+            ).order_by(
+                "-most_recent",
+                "-timestamp"
+            )
         )
-    )
+        user_count = User.objects(
+            account_type = "student",
+            classes = assignment.for_class
+        ).count()
+    else:
+        submissions = list(
+            Submission.objects(
+                user = current_user.id,
+                assignment = id
+            ).order_by(
+                "-most_recent",
+                "-timestamp"
+            )
+        )
 
     test_results = list(
         TestResult.objects(
@@ -97,12 +120,17 @@ def view_assignment(assignment_id):
             timedelta = now - i.test_request_timestamp
             i.show_resubmit = (timedelta > config["STUDENT_RETRY_INTERVAL"])
 
+    # Use different template depending on who the assignment is being viewed by
+    template = "assignment.html" if view_as == "student" \
+        else "assignment_stats.html"
+
     return render_template(
-        "assignment.html",
+        template,
         now = datetime.datetime.today(),
         create_time_element = create_time_element,
         assignment = assignment,
         submissions = submissions,
         simple_archive_form = simple_archive_form,
+        users = user_count,
         new_submissions = [v for k, v in get_flashed_messages(with_categories = True) if k == "new_submission"]
     )

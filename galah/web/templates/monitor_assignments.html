@@ -1,20 +1,25 @@
 {% extends "base.html" %}
-{% block title %}Assignments{% endblock %}
-{% block path %}&rarr; <a href="/assignments">assignments</a>{% endblock %}
+{% block title %}Monitor Assignments{% endblock %}
+{% block path %}&rarr; <a href="/assignments">monitor assignments</a>{% endblock %}
 {% block content %}
-    {% if current_user.account_type == "teacher" %}
-      <button><a href="?">Return to teacher view</a></button>
-    {% endif %}
+    <button><a href="?as_student">View as student</a></button>
     <div id="assignments">
     {% for i in assignments %} 
         <div>
             <div class="title heading">
                 <span class="class_name">{{ i.class_name}}</span>
-                <a href="/assignments/{{ i.id }}?as_student">{{ i.name }}</a>
-            {% if i.status %}
-                <span class="submission_status" style="color: {{ i.status_color }}">
-                    {% autoescape false %}{{ i.status }}{% endautoescape %}
-                </span>
+                <a href="/assignments/{{ i.id }}">{{ i.name }}</a>
+            {% if i.submitted %}
+              <span class="submission_status" style="color: {{ i.status_color }}">
+		The most recent submission was
+		{% autoescape false %}
+		  {{ create_time_element(i.submitted.timestamp) }}
+		{% endautoescape %}
+              </span>
+	    {% else %}
+	      <span class="submission_status">
+		There are no submissions for this assignment.
+	      </span>
             {% endif %}
             </div>
             <div class="due">
@@ -32,20 +37,12 @@
         </div>
     {% endif %}
     {% if hidden_assignments > 0 %}
-	{% if current_user.account_type == "teacher" %}
-	<a class="show_hidden heading" href="?show_all&as_student">
-	{% else %}
         <a class="show_hidden heading" href="?show_all">
-	{% endif %}
             Show All Assignments ({{ hidden_assignments }} hidden)
         </a>
     {% endif %}
     {% if hidden_assignments < 0 %}
-	{% if current_user.account_type == "teacher" %}
-	<a class="show_hidden heading" href="?as_student">
-	{% else %}
         <a class="show_hidden heading" href="?">
-	{% endif %}
             Showing All Assignments (Show Less)
         </a>
     {% endif %}

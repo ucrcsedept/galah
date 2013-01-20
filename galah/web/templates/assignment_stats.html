@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}{{ assignment.name }}{% endblock %}
+{% block path %}&rarr; <a href="/assignments">monitor assignments</a> &rarr; <a href="/assignments/{{ assignment.id }}">{{ assignment.name }} statistics</a>{% endblock %}
+{% block content %}
+  <div class="stats tab">
+    <h2>Overall student progress</h2>
+    {% if assignment.test_driver %}
+      {% if submissions %}
+	<h3 class="students_submitted">
+	  So far, {{ submissions | length }} out of {{ users }} students 
+	  ({{ (submissions | length) / users * 100 }} %) have made
+	  a submission for this assignment:
+	</h3>
+	{% for submission in submissions %}
+	  <div>
+	    {{ submission.user }} made a submission
+	    {% autoescape false %}
+	      {{ create_time_element(submission.timestamp) }}
+	    {% endautoescape %}
+	  </div>
+	{% else %}
+	There are no submissions for this assignment yet.
+      {% endfor %}
+    {% else %}
+      You cannot view overall progress for an assignment without a test harness.
+      Please use the API Client to upload a test harness so students can get their
+      submissions tested.
+    {% endif %}
+  {% endif %}
+  </div>
+{% endblock %}

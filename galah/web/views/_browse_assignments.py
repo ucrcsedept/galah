@@ -38,6 +38,13 @@ def browse_assignments():
     # Get the current time so we don't have to do it over and over again.
     now = datetime.datetime.today()
 
+    # Teachers and students have different default browsing view.
+    browse_as = current_user.account_type
+
+    # Teachers are able to browse as students by request.
+    if browse_as == "teacher" and "as_student" in request.args:
+        browse_as = "student"
+
     if "show_all" in request.args:
         assignments = list(Assignment.objects(
             Q(for_class__in = current_user.classes) &
@@ -61,11 +68,23 @@ def browse_assignments():
         (Q(hide_until = None) | Q(hide_until__lt = now))
     ).count()
 
-    submissions = list(Submission.objects(
-        user = current_user.email,
-        assignment__in = [i.id for i in assignments],
-        most_recent = True
-    ))
+    # Teacher's want to know how many submissions there have been, not specific
+    # to a certain student.
+    if browse_as == "teacher":
+        submissions = list(
+            Submission.objects(
+                assignment__in = [i.id for i in assignments],
+                most_recent = True
+            ).order_by(
+                "-timestamp"
+            )
+        )
+    else:
+        submissions = list(Submission.objects(
+                user = current_user.email,
+                assignment__in = [i.id for i in assignments],
+                most_recent = True
+        ))
 
     # Add a property to all the assignments so the template can display their
     # respective class easier. Additionally, add a plain text version of the
@@ -83,6 +102,7 @@ def browse_assignments():
 
         # Figure out the status messages that we want to display to the user.
         submitted = next((j for j in submissions if j.assignment == i.id), None)
+        i.submitted = submitted
         i.status = i.status_color = None
         if submitted:
             i.status = (
@@ -111,8 +131,12 @@ def browse_assignments():
         reverse = True
     )
 
+    # Pick the correct template to render based on who is browsing.
+    template = "assignments.html" if browse_as == "student" \
+        else "monitor_assignments.html"
+
     return render_template(
-        "assignments.html",
+        template,
         assignments = assignments,
         hidden_assignments = -1 if "show_all" in request.args
                 else all_assignments_count - len(assignments),
