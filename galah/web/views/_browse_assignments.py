@@ -71,9 +71,14 @@ def browse_assignments():
     # Teacher's want to know how many submissions there have been, not specific
     # to a certain student.
     if browse_as == "teacher":
-        submissions = list(Submission.objects(
-                assignment__in = [i.id for i in assignments]
-        ))
+        submissions = list(
+            Submission.objects(
+                assignment__in = [i.id for i in assignments],
+                most_recent = True
+            ).order_by(
+                "-timestamp"
+            )
+        )
     else:
         submissions = list(Submission.objects(
                 user = current_user.email,
