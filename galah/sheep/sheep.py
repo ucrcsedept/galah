@@ -32,6 +32,9 @@ import zmq
 import galah.sheep.utility.universal as universal
 universal.context = zmq.Context()
 
+import Queue
+universal.orphaned_results = Queue.Queue()
+
 # Initialize the correct consumer based on the selected virtual suite.
 from galah.sheep.utility.suitehelpers import get_virtual_suite
 virtual_suite = get_virtual_suite(config["VIRTUAL_SUITE"])
@@ -50,12 +53,8 @@ import time
 try:
     while not universal.exiting:
         time.sleep(5)
-except KeyboardInterrupt:    
+except KeyboardInterrupt:
     universal.exiting = True
-
-# TODO: When zmq's queues have items in them still the program won't exit. This
-# is that problem you (John) went onto freenode for help and solved. The
-# solution is in your head somewhere.... Set linger to 0 when exiting.
 
 # Better idea. Set linger on each socket appropriately. Make sure all the
 # threads shut down nicely here (but give an option to shut down immediately, a

@@ -40,6 +40,15 @@ class ShepherdLost(Exception):
 
 @universal.handleExiting
 def run():
+    try:
+        _run()
+    except ShepherdLost as e:
+        if e.result:
+            universal.orphaned_results.put(e.result)
+
+        raise
+
+def _run():
     logger = logging.getLogger("galah.sheep.%s" % threading.currentThread().name)
     logger.info("Consumer starting.")
 
@@ -150,7 +159,7 @@ def run():
                             confirmation["type"], confirmation["body"]
                         )
                     except exithelpers.Timeout:
-                        raise ShepherdLost(result)
+                        raise ShepherdLost(result = result)
 
                     logger.debug("Received message: %s", str(confirmation))
 

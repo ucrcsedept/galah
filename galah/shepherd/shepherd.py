@@ -79,7 +79,11 @@ def match_found(flock_manager, sheep_identity, request):
     return True
 
 def main():
-    flock = FlockManager(match_found, datetime.timedelta(minutes = 1), datetime.timedelta(minutes = 1))
+    flock = FlockManager(
+        match_found,
+        config["BLEET_TIMEOUT"],
+        config["SERVICE_TIMEOUT"]
+    )
 
     logger.info("Shepherd starting.")
 
@@ -173,7 +177,13 @@ def main():
                 )
                 continue
 
-            if sheep_message.type == "bleet":
+            if sheep_message.type == "distress":
+                logger.warn("Received distress message.")
+                router_send_json(
+                    sheep, sheep_identity, FlockMessage("bloot", "").to_dict()
+                )
+
+            elif sheep_message.type == "bleet":
                 logger.debug(
                     "Sheep [%s] bleeted. Sending bloot.",
                     repr(sheep_identity)
@@ -221,21 +231,11 @@ def main():
                 try:
                     submission_id = ObjectId(sheep_message.body["id"])
 
-                    # Ignore test results from unrecognized sheep.
-                    if not flock.is_sheep_managed(sheep_identity):
-                        logger.warn(
-                            "Received test result for submission [%s] from "
-                            "unrecognized sheep [%s].",
-                            str(submission_id),
-                            repr(sheep_identity)
-                        )
-
-                        continue
-
                     submission = Submission.objects.get(id = submission_id)
 
                     test_result = TestResult.from_dict(sheep_message.body)
                     test_result.save()
+
                     submission.test_results = test_result.id
                     submission.save()
                 except (InvalidId, Submission.DoesNotExist) as e:
@@ -247,21 +247,23 @@ def main():
                     )
 
                     continue
-                finally:
-                    router_send_json(
-                        sheep,
-                        sheep_identity,
-                        FlockMessage(
-                            "bloot", sheep_message.body["id"]
-                        ).to_dict()
-                    )
 
-                    if not flock.sheep_finished(sheep_identity):
-                        logger.error(
-                            "Got result from sheep [%s] who was not processing "
-                            "a test request.",
-                            repr(sheep_identity)
-                        )
+                router_send_json(
+                    sheep,
+                    sheep_identity,
+                    FlockMessage(
+                        "bloot", sheep_message.body["id"]
+                    ).to_dict()
+                )
+
+                if not flock.sheep_finished(sheep_identity):
+                    # This can happen for a variety of uninteresting reasons and
+                    # is unlikely to be useful to a sysadmin.
+                    logger.debug(
+                        "Got result from sheep [%s] who was not processing "
+                        "a test request.",
+                        repr(sheep_identity)
+                    )
 
         # Let the flock manager get rid of any dead or killed sheep.
         lost_sheep, killed_sheep = flock.cleanup()

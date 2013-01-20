@@ -28,7 +28,7 @@ class Producer:
 
 	def produce_vm(self):
 		self.logger.debug("produce_vm called. Doing nothing.")
-		time.sleep(60)
+		time.sleep(10)
 		return 0
 
 class Consumer:
