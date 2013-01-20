@@ -27,11 +27,14 @@ config = load_config("shepherd")
 
 import heapq
 class FlockManager:
-	__slots__ = ("_flock", "_bleet_queue", "_working_queue")
+	class SheepInfo:
+		__slots__ = ("environment", "servicing_request")
 
-	SheepInfo = namedtuple("SheepInfo", ["environment", "servicing_request"])
+		def __init__(self, environment, servicing_request):
+			self.environment = environment
+			self.servicing_request = servicing_request
 
-	def __init__(self, match_found):
+	def __init__(self, match_found, bleet_timeout, service_timeout):
 		# The flock of sheep we are managing. Dictionary mapping sheep
 		# identities to information on that sheep (specifically SheepInfo
 		# instances).
@@ -50,13 +53,22 @@ class FlockManager:
 		# waiting for a match. Same idea as the bleet queue.
 		self._request_queue = PriorityDict()
 
+		# The amount of time a sheep can go without bleeting before it is
+		# assumed to be lost.
+		self.bleet_timeout = bleet_timeout
+
+		# The amount of time that a sheep may spend servicing a request before
+		# it is assumed to be dead.
+		self.service_timeout = service_timeout
+
 		# A function that's called whenever a sheep is paired with a particular
 		# test request.
 		self.match_found = match_found
 
 	def _dispatch_match_found(self, sheep_identity, request):
 		if self.match_found(self, sheep_identity, request):
-			del self._request_queue[request]
+			self.assign_sheep(sheep_identity, request)
+
 			return True
 
 		return False
@@ -114,12 +126,13 @@ class FlockManager:
 
 		del self._flock[identity]
 
-		if identity not in self._bleet_queue:
+		if identity in self._bleet_queue:
 			del self._bleet_queue[identity]
 
-		if identity not in self._service_queue:
+		if identity in self._service_queue:
 			del self._service_queue[identity]
 
+	IGNORE = "ignore"
 	def sheep_bleeted(self, identity):
 		"""
 		Should be called whenever a sheep bleets. Will return True if all is
@@ -127,8 +140,14 @@ class FlockManager:
 
 		"""
 
-		if identity not in self._flock:
+		if not self.is_sheep_managed(identity):
 			return False
+
+		# If the sheep is listed as servicing a request, this bleet may have
+		# come in before the shepherd sent the test request to the sheep, in
+		# which case we just want to ignore the bleet.
+		if identity in self._service_queue:
+			return FlockManager.IGNORE
 
 		newly_available = identity not in self._bleet_queue
 
@@ -152,7 +171,7 @@ class FlockManager:
 		# Make note of when the sheep started on the request
 		self._service_queue[identity] = datetime.datetime.now()
 
-		self._flock.servicing_request = request
+		self._flock[identity].servicing_request = request
 
 	@staticmethod
 	def check_environments(a, b):
@@ -169,27 +188,47 @@ class FlockManager:
 			k in b and b[k] == v for k, v in a.items()
 		)
 
-	# def cleanup(self, bleet_timeout = None, service_timeout = None):
-	# 	"""
-	# 	Returns two lists in a tuple where the first list is any sheep who timed
-	# 	out due to bleets, and the second list is any sheep that timed out while
-	# 	servicing a request.
+	def is_sheep_managed(self, identity):
+		return identity in self._flock
 
-	# 	"""
-	
-	# 	lost_sheep = []
-	# 	killed_sheep = []
+	def cleanup(self):
+		"""
+		Returns two lists in a tuple where the first list is any sheep who timed
+		out due to bleets (lost sheep), and the second list is any sheep that
+		timed out while servicing a request (killed sheep).
 
-	# 	if bleet_timeout and self._bleet_queue:
-	# 		while (self._bleet_queue.smallest().priority <
-	# 				datetime.datetime.now() -
-	# 				datetime.timedelta(seconds = bleet_timeout)):
-	# 			lost_sheep.append(self._bleet_queue.smallest().value)
+		Any lost sheep will simply be forgotten about, any killed sheep will
+		have the test request they were servicing placed back into the request
+		queue than they will be forgotten about as well.
 
-	# 	if service_timeout and self._service_queue:
-	# 		while (self._service_queue.smallest().priority <
-	# 				datetime.datetime.now() -
-	# 				datetime.timedelta(seconds = service_timeout)):
-	# 			killed_sheep.append(self._service_queue.smallest().value)
+		"""
 
-	# 	return (lost_sheep, killed_sheep)
+		lost_sheep = []
+		killed_sheep = []
+
+		# Find all the sheep who are not servicing requests but have not bleeted
+		# in awhile.
+		if self.bleet_timeout:
+			while (self._bleet_queue and self._bleet_queue.smallest().priority <
+					datetime.datetime.now() - self.bleet_timeout):
+				lost_sheep.append(self._bleet_queue.pop_smallest().value)
+
+		# Find all the sheep who have been servicing a single request too long.
+		if self.service_timeout:
+			while (self._service_queue and
+					self._service_queue.smallest().priority <
+					datetime.datetime.now() - self.service_timeout):
+				killed_sheep.append(self._service_queue.pop_smallest().value)
+
+		# Any lost sheep can simply be forgotten about as if they never existed.
+		for i in lost_sheep:
+			self.remove_sheep(i)
+
+		# Any killed sheep needs to have the test request they were servicing
+		# put back into the request queue again and then they need to be
+		# forgotten.
+		for i in killed_sheep:
+			self.received_request(self._flock[i].servicing_request)
+			self.remove_sheep(i)
+
+		return lost_sheep, killed_sheep

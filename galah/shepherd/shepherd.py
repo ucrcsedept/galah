@@ -25,6 +25,7 @@ from flockmanager import FlockManager
 from galah.db.models import Submission, Assignment, TestDriver, TestResult
 from bson.objectid import ObjectId
 from bson.errors import InvalidId
+import datetime
 
 # Load Galah's configuration.
 from galah.base.config import load_config
@@ -75,13 +76,13 @@ def match_found(flock_manager, sheep_identity, request):
     return True
 
 def main():
-    flock = FlockManager(match_found)
+    flock = FlockManager(match_found, datetime.timedelta(minutes = 1), datetime.timedelta(minutes = 1))
 
     logger.info("Shepherd starting.")
 
     while True:
         # Wait until either the public or sheep socket has messages waiting
-        zmq.core.poll.select([public, sheep], [], [])
+        zmq.core.poll.select([public, sheep], [], [], timeout = 5)
 
         # Will grab all of the outstanding messages from the outside and place them
         # in the request queue
@@ -113,7 +114,7 @@ def main():
                     str(submission.assignment)
                 )
                 continue
-            
+
             if not assignment.test_driver:
                 logger.warning(
                     "Received test request for a submission [%s] referencing "
@@ -147,9 +148,10 @@ def main():
                 test_driver.config.get("galah/ENVIRONMENT", {})
             )
 
+            logger.info("Received test request.")
+
             flock.received_request(processed_request)
 
-            logger.info("Received test request.")
 
         # Will grab all of the outstanding messages from the sheep and process them
         while sheep.getsockopt(zmq.EVENTS) & zmq.POLLIN != 0:
@@ -167,11 +169,18 @@ def main():
                     exc_info = sys.exc_info()
                 )
                 continue
-            
+
             if sheep_message.type == "bleet":
                 logger.debug("Sheep [%s] bleeted.", repr(sheep_identity))
 
-                if not flock.sheep_bleeted(sheep_identity):
+                result = flock.sheep_bleeted(sheep_identity)
+
+                # Under certain circumstances we want to completely ignore a
+                # bleet (see FlockManager.sheep_bleeted() for more details)
+                if result is FlockManager.IGNORE:
+                    continue
+
+                if not result:
                     router_send_json(
                         sheep,
                         sheep_identity,
@@ -198,24 +207,64 @@ def main():
             elif sheep_message.type == "result":
                 logger.info("Received test result from sheep.")
                 logger.debug(
-                    "Received test result from sheep: %s", str(sheep_message.body)
+                    "Received test result from sheep: %s",
+                    str(sheep_message.body)
                 )
+
                 try:
                     submission_id = ObjectId(sheep_message.body["id"])
+
+                    # Ignore test results from unrecognized sheep.
+                    if not flock.is_sheep_managed(sheep_identity):
+                        logger.warn(
+                            "Received test result for submission [%s] from "
+                            "unrecognized sheep [%s].",
+                            str(submission_id),
+                            repr(sheep_identity)
+                        )
+
+                        continue
+
                     submission = Submission.objects.get(id = submission_id)
+
+                    test_result = TestResult.from_dict(sheep_message.body)
+                    test_result.save()
+                    submission.test_results = test_result.id
+                    submission.save()
                 except (InvalidId, Submission.DoesNotExist) as e:
-                    logger.info("Could not retrieve submission: %s", str(e))
+                    logger.warn(
+                        "Could not retrieve submission [%s] for test result "
+                        "received from sheep [%s].",
+                        str(submission_id),
+                        repr(sheep_identity)
+                    )
+
                     continue
+                finally:
+                    router_send_json(
+                        sheep,
+                        sheep_identity,
+                        FlockMessage(
+                            "bloot", sheep_message.body["id"]
+                        ).to_dict()
+                    )
 
-                test_result = TestResult.from_dict(sheep_message.body)
-                test_result.save()
-                submission.test_results = test_result.id
-                submission.save()
+        # Let the flock manager get rid of any dead or killed sheep.
+        lost_sheep, killed_sheep = flock.cleanup()
 
-                router_send_json(
-                    sheep,
-                    sheep_identity,
-                    FlockMessage("bloot", str(submission.id)).to_dict()
-                )
+        if lost_sheep:
+            logger.warn(
+                "%d sheep lost due to bleet timeout: %s",
+                len(lost_sheep),
+                str([repr(i) for i in lost_sheep])
+            )
 
-main()
+        if killed_sheep:
+            logger.warn(
+                "%d sheep lost due to request timeout: %s",
+                len(killed_sheep),
+                str([repr(i) for i in killed_sheep])
+            )
+
+if __name__ == "__main__":
+    main()
