@@ -148,6 +148,20 @@ a {
     text-decoration: underline;
 }
 
+.stats {
+    background: white;
+    border: 1px solid #ccc;
+    padding: 5px;
+}
+
+.stats h2 {
+    margin: 0px 0px 5px 0px;
+}
+
+.students_submitted {
+    text-align: center;
+}
+
 .test_results {
     width: 100%;
 }
