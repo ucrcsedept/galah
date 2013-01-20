@@ -65,7 +65,10 @@ def match_found(flock_manager, sheep_identity, request):
     assignment = Assignment.objects.get(id = submission.assignment)
     test_driver = TestDriver.objects.get(id = assignment.test_driver)
 
-    data = {"submission": submission.to_dict(), "test_driver": test_driver.to_dict()}
+    data = {
+        "submission": submission.to_dict(),
+        "test_driver": test_driver.to_dict()
+    }
 
     router_send_json(
         sheep,
@@ -144,7 +147,7 @@ def main():
             processed_request = InternalTestRequest(
                 submission.id,
                 test_driver.config.get("galah/TIMEOUT",
-                    config["DEFAULT_TIMEOUT"].seconds),
+                    config["BLEET_TIMEOUT"].seconds),
                 test_driver.config.get("galah/ENVIRONMENT", {})
             )
 
@@ -171,13 +174,17 @@ def main():
                 continue
 
             if sheep_message.type == "bleet":
-                logger.debug("Sheep [%s] bleeted.", repr(sheep_identity))
+                logger.debug(
+                    "Sheep [%s] bleeted. Sending bloot.",
+                    repr(sheep_identity)
+                )
 
                 result = flock.sheep_bleeted(sheep_identity)
 
                 # Under certain circumstances we want to completely ignore a
                 # bleet (see FlockManager.sheep_bleeted() for more details)
                 if result is FlockManager.IGNORE:
+                    logger.debug("Ignoring bleet.")
                     continue
 
                 if not result:
@@ -248,6 +255,13 @@ def main():
                             "bloot", sheep_message.body["id"]
                         ).to_dict()
                     )
+
+                    if not flock.sheep_finished(sheep_identity):
+                        logger.error(
+                            "Got result from sheep [%s] who was not processing "
+                            "a test request.",
+                            repr(sheep_identity)
+                        )
 
         # Let the flock manager get rid of any dead or killed sheep.
         lost_sheep, killed_sheep = flock.cleanup()

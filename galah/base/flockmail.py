@@ -53,7 +53,7 @@ class TestRequest:
         self.submission_id = submission_id
 
     def to_dict(self):
-    	return {"submission_id": self.submission_id}
+    	return {"submission_id": str(self.submission_id)}
 
     @staticmethod
     def from_dict(raw):

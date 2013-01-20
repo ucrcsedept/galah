@@ -52,7 +52,7 @@ defaults = {
     "shepherd/PUBLIC_SOCKET": "ipc:///tmp/shepherd-public.sock",
     "shepherd/REQUEST_QUEUE_TIMEOUT": datetime.timedelta(minutes = 1),
     "shepherd/SHEEP_SERVICE_TIMEOUT": datetime.timedelta(minutes = 1),
-    "shepherd/DEFAULT_TIMEOUT":  datetime.timedelta(seconds = 30)
+    "shepherd/BLEET_TIMEOUT":  datetime.timedelta(seconds = 30)
 }
 
 import imp
