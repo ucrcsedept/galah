@@ -17,6 +17,7 @@
 # along with Galah.  If not, see <http://www.gnu.org/licenses/>.
 
 import galah.sheep.utility.exithelpers as exithelpers
+from galah.sheep.utility.testrequest import PreparedTestRequest
 import pyvz
 import time
 import Queue
@@ -42,7 +43,7 @@ def setup(logger):
 
     # Get a list of all of the clean virtual machines that already exist
     clean_machines = pyvz.get_containers("galah-vm: clean")
-    
+
     # Add all the clean VMs to the queue
     while clean_machines:
         m = clean_machines.pop()
@@ -51,7 +52,7 @@ def setup(logger):
             containers.put_nowait(m)
         except Queue.Full:
             break
-        
+
         logger.info("Reusing clean VM with CTID %d." % m)
 
     # Any remaining virtual machines will simply be shut down. This is a bit of
@@ -88,7 +89,7 @@ class Producer:
             exithelpers.wait_for_queue(containers)
 
         self.logger.debug("Creating new VM.")
-    
+
         try:
             # Create new container with unique id
             id = pyvz.create_container(
@@ -98,19 +99,19 @@ class Producer:
             )
         except (RuntimeError, SystemError):
             self.logger.exception("Error occured when creating VM")
-            
+
             # Sleep for a bit and then try again
             time.sleep(5)
             return None
-            
+
         self.logger.debug("Created new VM with CTID %d" % id)
-        
+
         try:
             # Start container
             pyvz.start_container(id)
         except SystemError:
             self.logger.exception("Could not start VM with CTID %d" % id)
-            
+
             try:
                 pyvz.extirpate_container(id)
             except SystemError:
@@ -125,13 +126,13 @@ class Producer:
 
                 # Wait for a minute before trying again.
                 time.sleep(60)
-            
+
             return None
-        
+
         # Try to add the container to the queue until successful or the program
         # is exiting.
         exithelpers.enqueue(containers, id)
-                
+
         self.logger.info("Added VM with CTID %d to the queue" % id)
 
         return id
@@ -148,12 +149,12 @@ class Consumer:
 
         try:
             # Mark container as dirty before we do anything at all
-            pyvz.set_attribute(container_id, "description", "galah-vm: dirty") 
+            pyvz.set_attribute(container_id, "description", "galah-vm: dirty")
         except SystemError:
             self.logger.exception(
                 "Error occured during setup, destroying VM with CTID %d.", container_id
             )
-            
+
             try:
                 pyvz.extirpate_container(container_id)
             except SystemError:
@@ -176,13 +177,13 @@ class Consumer:
             )
 
             self.logger.debug(
-                "Injecting testables at '%s' and driver at '%s'." % 
+                "Injecting testables at '%s' and driver at '%s'." %
                     (testable_directory, driver_directory)
             )
 
             if config["CALL_MKDIR"]:
                 pyvz.execute(
-                    container_id, 
+                    container_id,
                     "mkdir -p %s %s" % (
                         config["VM_TESTABLES_DIRECTORY"],
                         config["VM_DRIVER_DIRECTORY"]
@@ -193,10 +194,10 @@ class Consumer:
             pyvz.inject_file(
                 container_id, testable_directory, config["VM_TESTABLES_DIRECTORY"]
             )
-            
+
             # Ditto from the test driver's location
             pyvz.inject_file(container_id, driver_directory, config["VM_DRIVER_DIRECTORY"])
-            
+
             # Inject bootstrapper (which is responsible for running inside of
             # the virtual machine with root privelages and starting up the test
             # driver while communicating with us).
@@ -205,10 +206,10 @@ class Consumer:
             )
             pyvz.inject_file(container_id, config["BOOTSTRAPPER"], "/tmp/")
             pyvz.run_script(
-                container_id, 
+                container_id,
                 os.path.join("/tmp/", os.path.basename(config["BOOTSTRAPPER"]))
             )
-                       
+
             # Bind to a good ole' fashioned tcp socket and wait for the
             # bootstrapper to connect to us.
             bootstrapper = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -234,11 +235,20 @@ class Consumer:
             else:
                 raise RuntimeError("Could not connect to bootstrapper.")
 
-            test_request["vz/UID"] = config["TESTUSER_UID"]
-            test_request["vz/GID"] = config["TESTUSER_GID"]
-            test_request["HARNESS_DIRECTORY"] = config["VM_DRIVER_DIRECTORY"]
-            test_request["TESTABLES_DIRECTORY"] = \
-                config["VM_TESTABLES_DIRECTORY"]
+            prepared_request = PreparedTestRequest(
+                raw_harness = test_request["test_driver"],
+                raw_submission = test_request["submission"],
+                testables_directory = config["VM_TESTABLES_DIRECTORY"],
+                harness_directory = config["VM_DRIVER_DIRECTORY"],
+                suite_specific = {
+                    "vz/uid": config["TESTUSER_UID"],
+                    "vz/gid": config["TESTUSER_GID"]
+                }
+            ).to_dict()
+
+            self.logger.debug(
+                "Test request being sent to bootstrapper: %s", str(test_request)
+            )
 
             # Chuck the test request at the bootstrapper
             bootstrapper.send(json.dumps(test_request))
@@ -250,23 +260,23 @@ class Consumer:
                 results = []
                 while True:
                     received = bootstrapper.recv(4096)
-                    
+
                     if not received:
                         break
 
                     results.append(received)
                 results = "".join(results)
-                
+
                 self.logger.debug("Test results recieved %s.", results)
             except socket.timeout:
                 self.logger.debug("Bootstrapper timed out")
-                
+
                 return None
-            
+
             return json.loads(results)
         finally:
             self.logger.debug("Destroying VM with CTID %d" % container_id)
-            
+
             try:
                 pyvz.extirpate_container(container_id)
             except SystemError:
