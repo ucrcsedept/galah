@@ -25,6 +25,7 @@ import time
 import threading
 import logging
 import random
+import datetime
 
 # Load Galah's configuration.
 from galah.base.config import load_config
@@ -37,143 +38,134 @@ class ShepherdLost(Exception):
 
         Exception.__init__(self)
 
-def bleet(socket, timeout, gap_time = 30 * 1000, fuzz_time = 2 * 1000):
-    """
-    Sends a bleet to the shepherd and responds to bloots. If any other type of
-    message is received, it is returned as a tuple of address and the message
-    itself. If nothing is received after the given timeout, a ShepherdLost
-    exception is raised.
-
-    gap_time is the amount of time between when a bloot is received before
-    another bleet is sent, in milliseconds.
-
-    fuzz_time is the number of milliseconds +/- gap_time that is an acceptable
-    amount of time to wait.
-
-    """
-
-    logger = logging.getLogger("galah.sheep.%s" % threading.currentThread().name)
-
-    while True:
-        # Send a bleet
-        socket.send_json(FlockMessage("bleet", "").to_dict())
-        logger.debug("Sent bleet.")
-
-        try:
-            # Wait for a bloot
-            message = exithelpers.recv_json(socket, timeout = timeout)
-            message = FlockMessage.from_dict(message)
-        except exithelpers.Timeout:
-            raise ShepherdLost()
-
-        if message.type == "bloot":
-            logger.debug("Received bloot.")
-            try:
-                # Sleep for a certain amount of time unless another message
-                # is received (probably a request) or until we're exiting.
-                message = exithelpers.recv_json(
-                    socket, 
-                    timeout = gap_time +
-                            random.randint(-fuzz_time, fuzz_time)
-                )
-                message = FlockMessage.from_dict(message)
-
-                return message
-            except exithelpers.Timeout:
-                pass
-
-            # Send another bleet
-            continue
-        else:
-            return message
-
-def send_result(socket, result, timeout):
-    """
-    Sends a test result to the shepherd and waits for confirmation.
-
-    """
-
-    logger = logging.getLogger("galah.sheep.%s" % threading.currentThread().name)
-
-    poller = zmq.Poller()
-    poller.register(socket, zmq.POLLIN)
-
-    result_message = FlockMessage(
-        type = "result",
-        body = result
-    )
-
-    socket.send_json(result_message.to_dict())
-
-    if poller.poll(timeout):
-        message = exithelpers.recv_json(socket)
-        message = FlockMessage.from_dict(message)
-
-        if message.type == "bloot":
-            if message.body != str(result["id"]):
-                logger.error("Received bloot with incorrect ID.")
-                raise ShepherdLost(result = result)
-            else:
-                return
-        else:
-            logger.error(
-                "Received '%s' message with body '%s' from shepherd. Expected "
-                "bloot.", str(message.type), str(message.body)
-            )
-            raise ShepherdLost(result = result)
-    else:
-        raise ShepherdLost(result = result)
-
 @universal.handleExiting
 def run():
+    try:
+        _run()
+    except ShepherdLost as e:
+        if e.result:
+            universal.orphaned_results.put(e.result)
+
+        raise
+
+def _run():
     logger = logging.getLogger("galah.sheep.%s" % threading.currentThread().name)
     logger.info("Consumer starting.")
 
-    # Initialize the correct consumer based on the selected virtual suite.
+    # Initialize the correct consumer suite.
     virtual_suite = get_virtual_suite(config["VIRTUAL_SUITE"])
     consumer = virtual_suite.Consumer(logger)
-    
+
     # Set up the socket to send/recieve messages to/from the shepherd
     shepherd = universal.context.socket(zmq.DEALER)
     shepherd.linger = 0
     shepherd.connect(config["shepherd/SHEEP_SOCKET"])
-   
+
     # Loop until the program is shutting down
     while not universal.exiting:
-        # Prepare a VM
+        # Prepare a VM and make sure we're completely prepared to handle a test
+        # request before asking the shepherd for one.
+        logger.info("Waiting for virtual machine to become available...")
         machine_id = consumer.prepare_machine()
 
-        # Tell the shepherd we are ready for a test request
-        logger.debug("Commencing bleets.")
-        message = bleet(shepherd, 60 * 1000)
-        logger.debug("Received message: %s", message)
+        def bleet():
+            shepherd.send_json(FlockMessage("bleet", "").to_dict())
 
-        # If the shepherd asked for our environment information
-        if message.type == "identify":
-            logger.info("Received request to identify.")
-
-            identification = FlockMessage(
-                type = "environment",
-                body = universal.environment
+            # Figure out when we should send the next bleet
+            return (
+                datetime.datetime.now() + config["shepherd/BLEET_TIMEOUT"] / 2
             )
 
-            shepherd.send_json(identification.to_dict())
-            continue
+        # Send the intitial bleet so that the shepherd knows we're available
+        logger.info("Ready for test request. Sending initial bleet.")
+        next_bleet_time = bleet()
 
-        if message.type != "request":
-            logger.critical(
-                "Unrecognized message type received. Version of sheep and "
-                "shepherd are likely mismatched."
-            )
-            continue
+        # Set to True whenever the shepherd bloots. Set to False everytime we
+        # bleet. If this variable is still False by the time it's time to bleet
+        # again we know we've lost the shepherd.
+        shepherd_blooted = False
 
-        # Recieved test request from the shepherd
-        logger.info("Test request received.")
-        logger.debug("Test request: %s", str(message))
+        # Process traffic from shepherd.
+        while True:
+            try:
+                message = exithelpers.recv_json(
+                    shepherd,
+                    timeout = max(
+                        1, # 1 millisecond (0 would imply infinite timeout)
+                        (next_bleet_time - datetime.datetime.now()).seconds
+                            * 1000
+                    )
+                )
 
-        result = consumer.run_test(machine_id, message.body)
+                message = FlockMessage(message["type"], message["body"])
+            except exithelpers.Timeout:
+                if not shepherd_blooted:
+                    raise ShepherdLost()
 
-        # Add in the submission id to the result that we send back
-        result["id"] = str(message.body["submission"]["id"])
+                logger.debug("Sending bleet.")
+                next_bleet_time = bleet()
+                shepherd_blooted = False
 
-        send_result(shepherd, result, 30 * 1000)
+                continue
+
+            if message.type == "bloot":
+                logger.debug("Got bloot.")
+                shepherd_blooted = True
+
+            elif message.type == "identify":
+                logger.info(
+                    "Received request to identify. Sending environment."
+                )
+
+                # identify is a valid response to a bleet.
+                shepherd_blooted = True
+
+                identification = FlockMessage(
+                    type = "environment",
+                    body = universal.environment
+                )
+
+                shepherd.send_json(identification.to_dict())
+
+            elif message.type == "request":
+                # Recieved test request from the shepherd
+                logger.info("Test request received, running tests.")
+                logger.debug("Test request: %s", str(message))
+                result = consumer.run_test(machine_id, message.body)
+
+                # Add in the submission id to the result that we send back
+                result["id"] = str(message.body["submission"]["id"])
+
+                logger.info("Testing completed, sending results to shepherd.")
+                logger.debug("Raw test results: %s", str(result))
+                shepherd.send_json(FlockMessage("result", result).to_dict())
+
+                # Wait for the shepherd to acknowledge the result. Ignore any
+                # messages that we get from the shepherd besides an acknowledge.
+                deadline = \
+                    datetime.datetime.now() + datetime.timedelta(seconds = 30)
+                while True:
+                    try:
+                        confirmation = exithelpers.recv_json(
+                            shepherd,
+                            timeout = max(
+                                1, # 1 millisecond (0 would imply infinite timeout)
+                                (deadline - datetime.datetime.now()).seconds
+                                    * 1000
+                            )
+                        )
+
+                        confirmation = FlockMessage(
+                            confirmation["type"], confirmation["body"]
+                        )
+                    except exithelpers.Timeout:
+                        raise ShepherdLost(result = result)
+
+                    logger.debug("Received message: %s", str(confirmation))
+
+                    if confirmation.type == "bloot" and \
+                            confirmation.body == result["id"]:
+                        shepherd_blooted = True
+                        break
+
+                break

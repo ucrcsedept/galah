@@ -17,11 +17,14 @@
 # along with Galah.  If not, see <http://www.gnu.org/licenses/>.
 
 import galah.sheep.utility.universal as universal
+import galah.sheep.utility.exithelpers as exithelpers
+from galah.base.flockmail import FlockMessage
 import threading
 import logging
 import consumer
 import producer
 import time
+import zmq
 
 # Load Galah's configuration.
 from galah.base.config import load_config
@@ -38,33 +41,91 @@ poll_timeout = 10
 _consumer_counter = 0
 def start_consumer():
     global _consumer_counter
-    
+
     consumerThread = threading.Thread(target = consumer.run,
                                       name = "consumer-%d" % _consumer_counter)
     consumerThread.start()
-    
+
     _consumer_counter += 1
-    
+
     return consumerThread
-    
+
 def start_producer():
     producer_thread = threading.Thread(target = producer.run, name = "producer")
     producer_thread.start()
-    
+
     return producer_thread
 
 @universal.handleExiting
 def run(znconsumers):
     log = logging.getLogger("galah.sheep.maintainer")
-    
+
     log.info("Maintainer starting")
-    
+
     producer = start_producer()
     consumers = []
-    
+
     # Continually make sure that all of the threads are up until it's time to
     # exit
     while not universal.exiting:
+        if not universal.orphaned_results.empty():
+            logger.warning(
+                "Orphaned results detected, going into distress mode."
+            )
+
+        while not universal.orphaned_results.empty():
+            try:
+                # We want to create a whole new socket everytime so we don't
+                # stack messages up in the queue. We also don't want to just
+                # send it once and let ZMQ take care of it because it might
+                # be eaten by a defunct shepherd and then we'd be stuck forever.
+                shepherd = universal.context.socket(zmq.DEALER)
+                shepherd.linger = 0
+                shepherd.connect(config["shepherd/SHEEP_SOCKET"])
+
+                shepherd.send_json(FlockMessage("distress", "").to_dict())
+
+                logger.info(
+                    "Sent distress message to shepherd, waiting for response."
+                )
+
+                message = exithelpers.recv_json(shepherd, timeout = 1000 * 60)
+                message = FlockMessage.from_dict(message)
+
+                if message.type == "bloot" and message.body == "":
+                    while not universal.orphaned_results.empty():
+                        result = universal.orphaned_results.get()
+
+                        try:
+                            shepherd.send_json(
+                                FlockMessage("result", result).to_dict()
+                            )
+
+                            confirmation = exithelpers.recv_json(
+                                shepherd, timeout = 1000 * 5
+                            )
+                            confirmation = FlockMessage.from_dict(confirmation)
+
+                            if confirmation.type == "bloot" and \
+                                    confirmation.body == "":
+                                continue
+                        except:
+                            universal.orphaned_results.put(result)
+                            raise
+            except universal.Exiting:
+                logger.warning(
+                    "Orphaned results have not been sent back to the "
+                    "shepherd. I WILL NOT ABANDON THEM, YOU WILL HAVE TO "
+                    "KILL ME WITH FIRE! (SIGKILL is fire in this analogy)."
+                )
+
+                # Nah man.
+                universal.exiting = False
+
+                continue
+            except exithelpers.Timeout:
+                continue
+
         # Remove any dead consumers from the list
         dead_consumers = 0
         for c in consumers[:]:
@@ -76,17 +137,17 @@ def run(znconsumers):
             logger.warning(
                 "Found %d dead consumers, restarting them.", dead_consumers
             )
-        
+
         # Start up consumers until we have the desired amount
         while len(consumers) < znconsumers:
             consumers.append(start_consumer())
-        
+
         # If the producer died, start it again
         if not producer.isAlive():
             log.warning("Found dead producer, restarting it.")
-            
+
             producer = start_producer()
-            
+
         # Sleep for awhile
         time.sleep(poll_timeout)
 

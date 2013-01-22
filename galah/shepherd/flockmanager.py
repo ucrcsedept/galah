@@ -149,6 +149,8 @@ class FlockManager:
 		if identity in self._service_queue:
 			return FlockManager.IGNORE
 
+		# Check whether we're in the bleet queue before we add ourselves to
+		# it.
 		newly_available = identity not in self._bleet_queue
 
 		self._bleet_queue[identity] = datetime.datetime.now()
@@ -157,6 +159,16 @@ class FlockManager:
 			self._sheep_available(identity)
 
 		return True
+
+	def sheep_finished(self, identity):
+		if identity not in self._service_queue:
+			return False
+
+		del self._service_queue[identity]
+		self._flock[identity].servicing_request = None
+
+		return True
+
 
 	def assign_sheep(self, identity, request):
 		"""Assigns a particular request to a sheep."""

@@ -29,6 +29,10 @@ class Exiting:
 # pull from.
 containers = None
 
+# When a consumer loses its shepherd after it has processed a test request, it
+# will kill itself and put the results into this queue.
+orphaned_results = None
+
 # The application-wide ZMQ context used to create sockets
 context = None
 
