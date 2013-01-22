@@ -296,3 +296,23 @@ body
 time[title] {
     opacity: 0.85;
 }
+
+/* Chart styling */
+#chartContainer {
+    margin-top: 10px;
+}
+
+#chart {
+    width: 1000px;
+    height: 500px;
+    margin: 0 auto;
+}
+
+span.disabled {
+    color: #666;
+    text-decoration: line-through;
+}
+
+.right {
+    float: right;
+}
