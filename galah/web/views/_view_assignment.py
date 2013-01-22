@@ -41,6 +41,15 @@ config = load_config("web")
 
 logger = GalahWebAdapter(logging.getLogger("galah.web.views.view_assignment"))
 
+# Custom filter to output submission timestamp in ISO format
+def isoformat(datetime):
+    import re
+    # Date String is close enough, just replace three trailing zeroes with Z
+    datestring = datetime.isoformat()
+    return re.sub(r"000$", "Z", datestring)
+
+app.jinja_env.filters['isoformat'] = isoformat
+
 @app.route("/assignments/<assignment_id>/")
 @account_type_required(("student", "teacher"))
 def view_assignment(assignment_id):

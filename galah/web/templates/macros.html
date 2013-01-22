@@ -44,14 +44,16 @@
         // x is time and y is score.
     	seriesData[0].push([ 
             new Date('{{ i.timestamp }} UTC+0000').getTime(),
-	    {{ i.test_results_obj.score / i.test_results_obj.max_score * 100 }}
+	    //{{ i.test_results_obj.score / i.test_results_obj.max_score * 100 }}
+	    Math.floor(Math.random() * 100 + 1)
     	]);
 
 	// Add subtest scores.
 	{% for j in i.test_results_obj.tests %}
 	  seriesData[{{ loop.index }}].push([
 	    new Date('{{ i.timestamp }} UTC+0000').getTime(),
-	    {{ j.score / j.max_score * 100 }}
+	    //{{ j.score / j.max_score * 100 }}
+	    Math.floor(Math.random() * 100 + 1)
 	  ]);
 	{% endfor %}
       {% endif %} 
@@ -62,10 +64,7 @@
     // Plot drawing hook to disable certain series.
     function disableSeries(plot, ctx, series) {
 	var seriesIndex = plot.getData().indexOf(series);
-
-	console.log(disabledIndices);
 	if (disabledIndices.indexOf(seriesIndex) !== -1) {
-	    console.log(seriesIndex);
 	    series.data = [];
 	    series.datapoints.points = [];
 	}
@@ -219,9 +218,8 @@
 	if (item) {
 	    time = item.datapoint[0];
 	    d = new Date(time);
-	    dateString = d.toISOString().replace("T", "");
+	    dateString = d.toISOString();
 	    element = document.getElementById(dateString);
-	    console.log(element);
 	    $("body").scrollTop($(element).offset().top);
 	}
     });
