@@ -98,10 +98,12 @@ def upload_submission(assignment_id):
         assignment = id,
         user = current_user.id,
         timestamp = datetime.datetime.now(),
-        marked_for_grading = True,
+        test_type = "final" if form.marked_as_final.data else "public",
         most_recent = True
     )
     new_submission.id = ObjectId()
+
+    logger.info(str(new_submission.to_dict()))
 
     # Craft a unique directory path where we will store the new submission. We
     # are guarenteed an ObjectId is unique. However we are not guarenteed that

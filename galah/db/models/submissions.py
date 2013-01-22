@@ -69,7 +69,7 @@ class TestResult(Document):
         for i in result:
             if i == "id":
                 continue
-            
+
             if i == "tests":
                 for j in item.get(i):
                     result.tests.append(SubTestResult.from_dict(j))
@@ -93,16 +93,16 @@ class Submission(Document):
     assignment = ObjectIdField(required = True)
     user = StringField(required = True)
     timestamp = DateTimeField(required = True)
-    marked_for_grading = BooleanField()
     most_recent = BooleanField()
+    test_type = StringField(choices = ["public", "final"])
     test_results = ObjectIdField()
     test_request_timestamp = DateTimeField()
-    
+
     # Each filename should be a path relative to the root of the archive they
     # uploaded if they uploaded an archive, otherwise each filename should be
     # just the filename. Include extensions.
     uploaded_filenames = ListField(StringField())
-    
+
     meta = {
         "allow_inheritance": False,
         "indexes": [
@@ -114,14 +114,18 @@ class Submission(Document):
     }
 
     def to_dict(self):
-        return {"id": str(self.id),
-                "assignment": str(self.assignment),
-                "user": self.user,
-                "timestamp": self.timestamp.isoformat(),
-                "marked_for_grading": self.marked_for_grading,
-                "most_recent": self.most_recent,
-                "test_results": self.test_results,
-                "test_request_timestamp": self.test_request_timestamp.isoformat()}
+        return {
+            "id": str(self.id),
+            "assignment": str(self.assignment),
+            "user": self.user,
+            "timestamp": self.timestamp.isoformat(),
+            "most_recent": self.most_recent,
+            "test_type": self.test_type,
+            "test_results": self.test_results,
+            "test_request_timestamp":
+                    None if not self.test_request_timestamp else
+                        self.test_request_timestamp.isoformat()
+        }
 
     def getFilePath(self):
         return os.path.join(

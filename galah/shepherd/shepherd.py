@@ -150,9 +150,9 @@ def main():
             # received from the outside.
             processed_request = InternalTestRequest(
                 submission.id,
-                test_driver.config.get("galah/TIMEOUT",
+                test_driver.config.get("galah/timeout",
                     config["BLEET_TIMEOUT"].seconds),
-                test_driver.config.get("galah/ENVIRONMENT", {})
+                test_driver.config.get("galah/environment", {})
             )
 
             logger.info("Received test request.")

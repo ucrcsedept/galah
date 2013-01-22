@@ -235,6 +235,7 @@ class Consumer:
             else:
                 raise RuntimeError("Could not connect to bootstrapper.")
 
+            # TODO: Bring this out of the virtual suite. Plz.
             prepared_request = PreparedTestRequest(
                 raw_harness = test_request["test_driver"],
                 raw_submission = test_request["submission"],
@@ -244,14 +245,17 @@ class Consumer:
                     "vz/uid": config["TESTUSER_UID"],
                     "vz/gid": config["TESTUSER_GID"]
                 }
-            ).to_dict()
+            )
+            prepared_request.update_actions()
+            prepared_request = prepared_request.to_dict()
 
             self.logger.debug(
-                "Test request being sent to bootstrapper: %s", str(test_request)
+                "Test request being sent to bootstrapper: %s",
+                str(prepared_request)
             )
 
             # Chuck the test request at the bootstrapper
-            bootstrapper.send(json.dumps(test_request))
+            bootstrapper.send(json.dumps(prepared_request))
             bootstrapper.shutdown(socket.SHUT_WR)
 
             try:

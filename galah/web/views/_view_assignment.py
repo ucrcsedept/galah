@@ -21,6 +21,7 @@ from flask.ext.wtf import Form, FieldList, FileField, validators, BooleanField
 
 class SimpleArchiveForm(Form):
     archive = FieldList(FileField("Archive"), min_entries = 3)
+    marked_as_final = BooleanField("Mark submission as final", default = False)
 
 ## The Actual View ##
 from galah.web import app
@@ -78,7 +79,7 @@ def view_assignment(assignment_id):
     if view_as == "teacher" and "as_student" in request.args:
         view_as = "student"
 
-    # Get all of the submissions for this assignment    
+    # Get all of the submissions for this assignment
     user_count = 1
     if view_as == "teacher":
         submissions = list(
@@ -131,7 +132,7 @@ def view_assignment(assignment_id):
 
     # Use different template depending on who the assignment is being viewed by
     template = "assignment.html" if view_as == "student" \
-        else "assignment_stats.html"
+            else "assignment_stats.html"
 
     return render_template(
         template,
