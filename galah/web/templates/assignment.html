@@ -54,7 +54,12 @@
 	{% endif %}
 	{% from "macros.html" import render_submission_timeline %}
 	{% if submissions %}
-	  {{ render_submission_timeline(submissions) }}
+	  {# Do some filtering to see if any submissions have test_results #}
+	  {% set s = submissions | groupby("test_results") %}
+	  {# Grouping by test_results will condense all none results to the top. #}
+	  {% if (s | length) != 1 or s[0][0] is not none %}
+	    {{ render_submission_timeline(submissions) }}
+	  {% endif %}
 	{% endif %}
 	<div id="submissions">
 		{% for submission in submissions %}
