@@ -4,10 +4,10 @@
 {% block content %}
   <div class="stats tab">
     <h2>Overall student progress</h2>
-    {% if assignment.test_driver %}
+    {% if assignment.test_harness %}
       {% if submissions %}
 	<h3 class="students_submitted">
-	  So far, {{ submissions | length }} out of {{ users }} students 
+	  So far, {{ submissions | length }} out of {{ users }} students
 	  ({{ (submissions | length) / users * 100 }} %) have made
 	  a submission for this assignment:
 	</h3>

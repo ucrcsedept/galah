@@ -171,14 +171,14 @@ class Consumer:
                 test_request["submission"]["id"]
             )
 
-            # Figure out where the test driver is
-            driver_directory = os.path.join(
-                config["DRIVER_DIRECTORY"], test_request["test_driver"]["id"]
+            # Figure out where the test harness is
+            harness_directory = os.path.join(
+                config["HARNESS_DIRECTORY"], test_request["test_harness"]["id"]
             )
 
             self.logger.debug(
-                "Injecting testables at '%s' and driver at '%s'." %
-                    (testable_directory, driver_directory)
+                "Injecting testables at '%s' and harness at '%s'." %
+                    (testable_directory, harness_directory)
             )
 
             if config["CALL_MKDIR"]:
@@ -186,7 +186,7 @@ class Consumer:
                     container_id,
                     "mkdir -p %s %s" % (
                         config["VM_TESTABLES_DIRECTORY"],
-                        config["VM_DRIVER_DIRECTORY"]
+                        config["VM_HARNESS_DIRECTORY"]
                     )
                 )
 
@@ -195,12 +195,12 @@ class Consumer:
                 container_id, testable_directory, config["VM_TESTABLES_DIRECTORY"]
             )
 
-            # Ditto from the test driver's location
-            pyvz.inject_file(container_id, driver_directory, config["VM_DRIVER_DIRECTORY"])
+            # Ditto from the test harness's location
+            pyvz.inject_file(container_id, harness_directory, config["VM_HARNESS_DIRECTORY"])
 
             # Inject bootstrapper (which is responsible for running inside of
             # the virtual machine with root privelages and starting up the test
-            # driver while communicating with us).
+            # harness while communicating with us).
             self.logger.debug(
                 "Running bootstrapper at '%s'." % config["BOOTSTRAPPER"]
             )
@@ -237,10 +237,10 @@ class Consumer:
 
             # TODO: Bring this out of the virtual suite. Plz.
             prepared_request = PreparedTestRequest(
-                raw_harness = test_request["test_driver"],
+                raw_harness = test_request["test_harness"],
                 raw_submission = test_request["submission"],
                 testables_directory = config["VM_TESTABLES_DIRECTORY"],
-                harness_directory = config["VM_DRIVER_DIRECTORY"],
+                harness_directory = config["VM_HARNESS_DIRECTORY"],
                 suite_specific = {
                     "vz/uid": config["TESTUSER_UID"],
                     "vz/gid": config["TESTUSER_GID"]
