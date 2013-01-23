@@ -303,8 +303,15 @@ time[title] {
 }
 
 #chart {
-    width: 1000px;
+    min-width: 350px;
+    max-width: 1080px;
     height: 500px;
+    margin: 0 auto;
+}
+
+#distributionChart {
+    width: 800px;
+    height: 400px;
     margin: 0 auto;
 }
 
