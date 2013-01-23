@@ -22,7 +22,7 @@ import sys
 from galah.base.flockmail import FlockMessage, TestRequest, InternalTestRequest
 from galah.base.zmqhelpers import router_send_json, router_recv_json
 from flockmanager import FlockManager
-from galah.db.models import Submission, Assignment, TestDriver, TestResult
+from galah.db.models import Submission, Assignment, TestHarness, TestResult
 from bson.objectid import ObjectId
 from bson.errors import InvalidId
 import datetime
@@ -57,17 +57,17 @@ def match_found(flock_manager, sheep_identity, request):
         repr(sheep_identity)
     )
 
-    # Get submission and test driver to send to sheep
+    # Get submission and test harness to send to sheep
     submission = Submission.objects(id = request.submission_id).exclude(
         "most_recent",
         "uploaded_filenames"
     ).first()
     assignment = Assignment.objects.get(id = submission.assignment)
-    test_driver = TestDriver.objects.get(id = assignment.test_driver)
+    test_harness = TestHarness.objects.get(id = assignment.test_harness)
 
     data = {
         "submission": submission.to_dict(),
-        "test_driver": test_driver.to_dict()
+        "test_harness": test_harness.to_dict()
     }
 
     router_send_json(
@@ -122,10 +122,10 @@ def main():
                 )
                 continue
 
-            if not assignment.test_driver:
+            if not assignment.test_harness:
                 logger.warning(
                     "Received test request for a submission [%s] referencing "
-                    "an assignment [%s] that does not have a test driver "
+                    "an assignment [%s] that does not have a test harness "
                     "associated with it.",
                     str(submission.id),
                     str(submission.assignment)
@@ -133,16 +133,16 @@ def main():
                 continue
 
             try:
-                test_driver = \
-                    TestDriver.objects.get(id = assignment.test_driver)
-            except TestDriver.DoesNotExit as e:
+                test_harness = \
+                    TestHarness.objects.get(id = assignment.test_harness)
+            except TestHarness.DoesNotExit as e:
                 logger.error(
                     "Received test request for a submission [%s] referencing "
                     "an assignment [%s] that references a non-existant test "
-                    "driver [%s].",
+                    "harness [%s].",
                     str(submission.id),
                     str(submission.assignment),
-                    str(assignment.test_driver)
+                    str(assignment.test_harness)
                 )
                 continue
 
@@ -150,9 +150,9 @@ def main():
             # received from the outside.
             processed_request = InternalTestRequest(
                 submission.id,
-                test_driver.config.get("galah/TIMEOUT",
+                test_harness.config.get("galah/timeout",
                     config["BLEET_TIMEOUT"].seconds),
-                test_driver.config.get("galah/ENVIRONMENT", {})
+                test_harness.config.get("galah/environment", {})
             )
 
             logger.info("Received test request.")

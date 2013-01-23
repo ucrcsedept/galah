@@ -23,7 +23,7 @@ import mongoengine
 try:
     import users
     from users import User
-    
+
     import invitations
     from invitations import Invitation
 except ImportError:
@@ -33,7 +33,7 @@ import classes
 from classes import Class
 
 import assignments
-from assignments import Assignment, TestDriver
+from assignments import Assignment, TestHarness
 
 import submissions
 from submissions import Submission, TestResult

@@ -32,13 +32,13 @@ print >> sys.stderr, "[bootstrapper] Received test request", test_request
 test_request = json.loads(test_request)
 
 # Demote ourselves
-os.setgid(test_request["vz/GID"])
-os.setuid(test_request["vz/UID"])
+os.setgid(test_request["vz/gid"])
+os.setuid(test_request["vz/uid"])
 
 # Start the test harness
 print >> sys.stderr, "[bootstrapper] Starting test harness."
 harness = subprocess.Popen(
-	os.path.join(test_request["HARNESS_DIRECTORY"], "main"),
+	os.path.join(test_request["harness_directory"], "main"),
 	stdin = subprocess.PIPE,
 	stdout = sheep_fd,
 	stderr = subprocess.STDOUT

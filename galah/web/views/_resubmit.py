@@ -44,9 +44,9 @@ def resubmit_submission(assignment_id, submission_id):
         assignment = Assignment.objects.get(id = assignment_id)
     except (InvalidId, Assignment.DoesNotExist) as e:
         logger.info("Could not retrieve assignment: %s", str(e))
-        
+
         abort(404)
-    
+
     # Figure out where we should redirect the user to once we're done.
     redirect_to = request.args.get("next") or request.referrer
 
@@ -56,7 +56,7 @@ def resubmit_submission(assignment_id, submission_id):
             "view_assignment",
             assignment_id = assignment_id
         )
-    
+
     # Recheck if the assignment's cutoff date has passed.
     if assignment.due_cutoff and \
             assignment.due_cutoff < datetime.datetime.today():
@@ -76,7 +76,7 @@ def resubmit_submission(assignment_id, submission_id):
         abort(404)
 
     # Recheck that this assignment has a test harness before signaling shepherd.
-    if (assignment.test_driver):
+    if (assignment.test_harness):
         submission.test_request_timestamp = datetime.datetime.now()
         send_test_request(config["PUBLIC_SOCKET"], submission.id)
         logger.info("Resending test request to shepherd for %s" \

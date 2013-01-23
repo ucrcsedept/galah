@@ -19,17 +19,17 @@
 from mongoengine import *
 import datetime
 
-class TestDriver(Document):
-    # The driver's user-defined configuration. May contain any key value pairs,
+class TestHarness(Document):
+    # The harness's user-defined configuration. May contain any key value pairs,
     # but certain pairs have special meaning:
-    #    * "galah/TIMEOUT" is the number of seconds to allow the test driver to
+    #    * "galah/TIMEOUT" is the number of seconds to allow the test harness to
     #      run before the entire VM is brutally destroyed.
     #    * "galah/ENVIRONMENT" is a dictionary that explains the environment
     #      that the VM must have.
     config = DictField()
-    
-    # The directory on the filesystem that has the test driver stored within it.
-    driver_path = StringField(required = True)
+
+    # The directory on the filesystem that has the test harness stored within it.
+    harness_path = StringField(required = True)
 
     meta = {
         "allow_inheritance": False
@@ -38,7 +38,7 @@ class TestDriver(Document):
     def to_dict(self):
         return {
             "config": self.config,
-            "driver_path": self.driver_path,
+            "harness_path": self.harness_path,
             "id": str(self.id)
         }
 
@@ -48,7 +48,7 @@ class Assignment(Document):
     due_cutoff = DateTimeField()
     hide_until = DateTimeField(default = datetime.datetime.min, required = True)
     for_class = ObjectIdField(required = True)
-    test_driver = ObjectIdField()
+    test_harness = ObjectIdField()
 
     meta = {
         "allow_inheritance": False

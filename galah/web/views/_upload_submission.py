@@ -98,10 +98,12 @@ def upload_submission(assignment_id):
         assignment = id,
         user = current_user.id,
         timestamp = datetime.datetime.now(),
-        marked_for_grading = True,
+        test_type = "final" if form.marked_as_final.data else "public",
         most_recent = True
     )
     new_submission.id = ObjectId()
+
+    logger.info(str(new_submission.to_dict()))
 
     # Craft a unique directory path where we will store the new submission. We
     # are guarenteed an ObjectId is unique. However we are not guarenteed that
@@ -144,15 +146,15 @@ def upload_submission(assignment_id):
         unset__most_recent = 1
     )
 
-    if assignment.test_driver:
+    if assignment.test_harness:
         new_submission.test_request_timestamp = datetime.datetime.now()
         logger.info("Sent test request to shepherd for %s" % \
                         str(new_submission.id))
 
     new_submission.save()
 
-    # Tell shepherd to start running tests if there is a test_driver.
-    if assignment.test_driver:
+    # Tell shepherd to start running tests if there is a test_harness.
+    if assignment.test_harness:
         send_test_request(config["PUBLIC_SOCKET"], new_submission.id)
 
     # Communicate to the next page what submission was just added.

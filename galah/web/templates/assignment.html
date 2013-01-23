@@ -11,7 +11,7 @@
 		var input = $(new_file).children(":last")
 		var old_id = input.attr("id")
 		var new_suffix = parseInt(old_id.substring(old_id.indexOf("-") + 1)) + 1
-		
+
 		input.attr("id", "archive-" + new_suffix)
 		input.attr("name", "archive-" + new_suffix)
 
@@ -35,6 +35,10 @@
 					{% for i in simple_archive_form.archive.entries %}
 					<div>{{ i(class_ = "simple_file_input") }}</div>
 					{% endfor %}
+				</div>
+				<div style="margin-bottom: 10px">
+					{{ simple_archive_form.marked_as_final() }}
+					{{ simple_archive_form.marked_as_final.label }}
 				</div>
 				<input id="add_field" onclick="addFileField()" type="button" value="Add More Files">
 				<input id="submit_archive" type="submit" value="Upload">

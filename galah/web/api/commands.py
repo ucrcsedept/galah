@@ -52,36 +52,36 @@ class PermissionError(UserError):
 class APICall(object):
     """Wraps an API call and handles basic permissions along with providing a
     simple interface to get meta data on the API call.
-    
+
     """
-    
+
     __slots__ = (
         "wrapped_function", "allowed", "argspec", "name", "takes_file"
     )
-    
+
     def __init__(self, wrapped_function, allowed = None, takes_file = None):
         #: The raw function we are wrapping that performs the actual logic.
         self.wrapped_function = wrapped_function
-        
-        #: The account types that are allowed to call this function, if None 
+
+        #: The account types that are allowed to call this function, if None
         #: any account type may call this function.
         self.allowed = allowed
-        
+
         #: Information about the arguments this API call accepts in the same
         #: format :func: inspect.getargspec returns.
         self.argspec = getargspec(wrapped_function)
-        
+
         #: The name of the wrapped function.
         self.name = wrapped_function.func_name
 
         self.takes_file = takes_file if takes_file else []
-        
+
     def __call__(self, current_user, *args, **kwargs):
         # If no validation is required this won't actually be a problem, however
         # it's certainly not something that you should be doing.
         if not hasattr(current_user, "account_type"):
             raise ValueError("current_user is not a valid user object.")
-        
+
         # Check if the current user has permisson to perform this operation
         if self.allowed and current_user.account_type not in self.allowed:
             raise PermissionError(
@@ -118,14 +118,14 @@ class APICall(object):
         # Only pass the current user to the function if the function wants it
         if len(self.argspec[0]) != 0 and self.argspec[0][0] == "current_user":
             return self.wrapped_function(current_user, *args, **kwargs)
-        else: 
+        else:
             return self.wrapped_function(*args, **kwargs)
 
 from decorator import decorator
 
 def _api_call(allowed = None, takes_file = None):
     """Decorator that wraps a function with the :class: APICall class."""
-    
+
     if isinstance(allowed, basestring):
         allowed = (allowed, )
 
@@ -218,9 +218,9 @@ def _get_class(query, instructor = None):
         query_dict["id__in": instructor.classes]
 
     matches = list(Class.objects(**query_dict))
-    
+
     if not matches:
-        raise UserError("No classes matched your query of '%s'." % query)    
+        raise UserError("No classes matched your query of '%s'." % query)
     elif len(matches) == 1:
         return matches[0]
     else:
@@ -228,7 +228,7 @@ def _get_class(query, instructor = None):
             "%d classes match your query of '%s', however, this API expects 1 "
             "class. Refine your query and try again.\n\t%s" % (
                 len(matches),
-                query, 
+                query,
                 "\n\t".join(_class_to_str(i) for i in matches)
             )
         )
@@ -236,16 +236,16 @@ def _get_class(query, instructor = None):
 def _class_to_str(the_class):
     return "Class [id = %s, name = %s]" % (the_class.id, the_class.name)
 
-def _driver_to_str(test_driver):
-    return "Test Driver [id = %s]" % test_driver.id
-        
+def _harness_to_str(test_harness):
+    return "Test Harness [id = %s]" % test_harness.id
+
 import datetime
 def _to_datetime(time):
     try:
         return datetime.datetime(time)
     except TypeError:
         pass
-        
+
     try:
         return datetime.datetime.strptime(time, "%m/%d/%Y %H:%M:%S")
     except (OverflowError, ValueError):
@@ -258,17 +258,17 @@ def _datetime_to_str(time):
         return datetime.datetime.strftime(time, "%m/%d/%Y %H:%M:%S")
     except TypeError:
         return "None"
-        
+
 ## Below are the actual API calls ##
 @_api_call()
 def get_api_info():
     # TODO: This function should be memoized
-    
+
     api_info = []
     for k, v in api_calls.items():
         api_info.append({"name": k})
         current = api_info[-1]
-        
+
         # Loop through all the arguments the function takes in and add
         # information on each argument to the api_info
         current["args"] = []
@@ -280,11 +280,11 @@ def get_api_info():
             current["args"].append({"name": v.argspec.args[i]})
 
             current_arg = current["args"][-1]
-            
+
             if v.argspec.defaults:
                 # The number of arguments without default values
                 ndefaultless = len(v.argspec.args) - len(v.argspec.defaults)
-                
+
                 # If the current argument has a default value make note of it
                 if ndefaultless <= i:
                     current_arg.update({
@@ -296,7 +296,7 @@ def get_api_info():
             current_arg.update(
                 {"takes_file": current_arg["name"] in v.takes_file}
             )
-    
+
     return json.dumps(api_info, separators = (",", ":"))
 
 @_api_call()
@@ -333,51 +333,51 @@ def upload_harness(current_user, assignment, harness, config_file):
     except ValueError as e:
         raise UserError("Your configuration was not valid JSON: " + str(e))
 
-    # Create a new ID we will assign the test driver
-    driver_id = ObjectId()
+    # Create a new ID we will assign the test harness
+    harness_id = ObjectId()
 
-    # Create a new directory for the driver
-    driver_directory_path = \
-        os.path.join(config["DRIVER_DIRECTORY"], str(driver_id))
-    os.mkdir(driver_directory_path)
+    # Create a new directory for the harness
+    harness_directory_path = \
+        os.path.join(config["HARNESS_DIRECTORY"], str(harness_id))
+    os.mkdir(harness_directory_path)
 
     try:
         # We need to uncompress the archived harness we were given now.
-        filemagic.uncompress(harness, driver_directory_path)
+        filemagic.uncompress(harness, harness_directory_path)
 
-        # Next we will form a TestDriver object and save it to the database
-        driver = TestDriver(
-            id = driver_id,
+        # Next we will form a TestHarness object and save it to the database
+        harness = TestHarness(
+            id = harness_id,
             config = config_file,
-            driver_path = driver_directory_path
+            harness_path = harness_directory_path
         ).save()
 
         try:
             # Delete any test harness that existed already for the assignmnet
-            if assignment.test_driver:
-                # Delete the old driver from the database
-                old_driver = TestDriver.objects.get(id = assignment.test_driver)
-                old_driver_dir = old_driver.driver_path
-                old_driver.delete()
+            if assignment.test_harness:
+                # Delete the old harness from the database
+                old_harness = TestHarness.objects.get(id = assignment.test_harness)
+                old_harness_dir = old_harness.harness_path
+                old_harness.delete()
 
-                # Delete the old driver from the file system
+                # Delete the old harness from the file system
                 try:
-                    shutil.rmtree(old_driver_dir)
+                    shutil.rmtree(old_harness_dir)
                 except OSError:
-                    logger.exception("Could not delete old driver directory.")
+                    logger.exception("Could not delete old harness directory.")
 
 
-            # Point the assignment at the test driver
-            assignment.test_driver = driver.id
+            # Point the assignment at the test harness
+            assignment.test_harness = harness.id
             assignment.save()
         except:
-            driver.delete()
+            harness.delete()
             raise
     except:
-        shutil.rmtree(driver_directory_path)
+        shutil.rmtree(harness_directory_path)
         raise
 
-    return _driver_to_str(driver) + " succesfully created"
+    return _harness_to_str(harness) + " succesfully created"
 
 @_api_call()
 def get_oauth2_keys():
@@ -396,18 +396,18 @@ from mongoengine import OperationError
 @_api_call("admin")
 def create_user(email, password = "", account_type = "student"):
     new_user = User(
-        email = email, 
+        email = email,
         account_type = account_type
     )
 
     if password:
         new_user.seal = serialize_seal(seal(password))
-    
+
     try:
         new_user.save(force_insert = True)
     except OperationError:
         raise UserError("A user with that email already exists.")
-    
+
     return "Success! %s created." % _user_to_str(new_user)
 
 @_api_call("admin")
@@ -494,13 +494,13 @@ def user_info(current_user, email):
         return "%s is enrolled in:\n\t%s" % (_user_to_str(user), class_list)
 
 @_api_call("admin")
-def delete_user(current_user, email):    
+def delete_user(current_user, email):
     to_delete = _get_user(email, current_user)
 
     to_delete.delete()
-        
+
     return "Success! %s deleted." % _user_to_str(to_delete)
-    
+
 @_api_call(("admin", "teacher"))
 def find_class(current_user, name_contains = "", enrollee = ""):
     if not enrollee and current_user.account_type != "admin":
@@ -513,7 +513,7 @@ def find_class(current_user, name_contains = "", enrollee = ""):
         the_instructor = _get_user(enrollee, current_user)
         query = {"id__in": the_instructor.classes}
         instructor_string = _user_to_str(the_instructor) + " is"
-        
+
     if name_contains:
         query["name__icontains"] = name_contains
 
@@ -531,17 +531,17 @@ def enroll_student(current_user, email, enroll_in):
     if current_user.account_type != "admin" and \
             user.account_type == "teacher":
         raise PermissionError("Only admins can assign teachers to classes.")
-    
+
     the_class = _get_class(enroll_in)
 
     if the_class.id in user.classes:
         raise UserError("%s is already enrolled in %s." %
             (_user_to_str(user), _class_to_str(the_class))
         )
-            
+
     user.classes.append(the_class.id)
     user.save()
-    
+
     return "Success! %s enrolled in %s." % (
         _user_to_str(user), _class_to_str(the_class)
     )
@@ -551,22 +551,22 @@ def assign_teacher(current_user, email, assign_to):
     return enroll_student(current_user, email, assign_to)
 
 @_api_call(("admin", "teacher"))
-def drop_student(current_user, email, drop_from):    
+def drop_student(current_user, email, drop_from):
     if current_user.account_type == "admin":
         the_class = _get_class(drop_from)
     else:
         the_class = _get_class(drop_from, current_user)
 
     user = _get_user(email, current_user)
-        
+
     if the_class.id not in user.classes:
         raise UserError("%s is not enrolled in %s." %
             (_user_to_str(user), _class_to_str(the_class))
         )
-    
+
     user.classes.remove(the_class.id)
     user.save()
-    
+
     return "Success! Dropped %s from %s." % (
         _user_to_str(user), _class_to_str(the_class)
     )
@@ -594,7 +594,7 @@ def class_info(for_class):
 def create_class(name):
     new_class = Class(name = name)
     new_class.save()
-    
+
     return "Success! %s created." % _class_to_str(new_class)
 
 @_api_call("admin")
@@ -615,11 +615,11 @@ def modify_class(the_class, name):
 @_api_call("admin")
 def delete_class(to_delete):
     the_class = _get_class(to_delete)
-        
+
     # Get all of the assignments for the class
     assignments = \
         [str(i.id) for i in Assignment.objects(for_class = the_class.id)]
-    
+
     send_task(
         config["SISYPHUS_ADDRESS"],
         "delete_assignments",
@@ -659,7 +659,7 @@ def create_assignment(current_user, name, due, for_class, due_cutoff = "",
     print atts
     new_assignment = Assignment(**atts)
     new_assignment.save()
-    
+
     return "Success! %s created." % _assignment_to_str(new_assignment)
 
 @_api_call(("admin", "teacher"))
@@ -732,7 +732,7 @@ def modify_assignment(current_user, id, name = "", due = "", for_class = "",
 
         assignment.due_cutoff = cutoff_date
 
-    if hide_until:    
+    if hide_until:
         if hide_until.lower() == "none":
             hide_until = datetime.datetime.min
         else:
@@ -789,7 +789,7 @@ def delete_assignment(current_user, id):
         [str(to_delete.id)],
         ""
     )
-    
+
     return (
         "%s has been queued for deletion. Please allow a few minutes for the "
         "task to complete." % _assignment_to_str(to_delete)
@@ -821,7 +821,7 @@ def get_archive(current_user, assignment, email = ""):
         str(the_assignment.id),
         email
     )
-    
+
     return (
         "Your archive is being created.",
         {
