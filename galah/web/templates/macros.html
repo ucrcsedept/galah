@@ -18,7 +18,8 @@
 	start = new Date('{{ i.timestamp }} UTC+0000');
         start.addHours(-10);
         options.timeline.xaxis.min = start;
-      {% elif loop.last %}
+      {% endif %}
+      {% if loop.last %}
 	end = new Date('{{ i.timestamp }} UTC+0000');
         end.addHours(10);
         options.timeline.xaxis.max = end;
