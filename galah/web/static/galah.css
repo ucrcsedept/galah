@@ -162,6 +162,10 @@ a {
     text-align: center;
 }
 
+.tab {
+    margin-bottom: 10px;
+}
+
 .test_results {
     width: 100%;
 }
@@ -298,28 +302,26 @@ time[title] {
 }
 
 /* Chart styling */
-#chartContainer {
+chartContainer {
     margin-top: 10px;
 }
 
-#chart {
+.chart {
     min-width: 350px;
     max-width: 1080px;
     height: 500px;
     margin: 0 auto;
 }
 
-#distributionChart {
-    width: 800px;
-    height: 400px;
-    margin: 0 auto;
+.legendLabel {
+    cursor: pointer;
+}
+
+.right {
+    float: right;
 }
 
 span.disabled {
     color: #666;
     text-decoration: line-through;
-}
-
-.right {
-    float: right;
 }
