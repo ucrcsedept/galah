@@ -1,25 +1,14 @@
 {% macro render_submission_timeline(submissions) %}
-  <!-- Dependencies for rendering the chart -->
-  <script type="text/javascript" src="/static/date.js"></script>
-  <script type="text/javascript" src="/static/jquery.flot.js"></script>
-  <script type="text/javascript" src="/static/jquery.flot.crosshair.js"></script>
-  <script type="text/javascript" src="/static/jquery.flot.selection.js"></script>
-  <script type="text/javascript" src="/static/jquery.flot.stack.js"></script>
-  <script type="text/javascript" src="/static/jquery.flot.resize.js"></script>
-
   <!-- The chart holder -->
-  <div id="chartContainer" class="stats">
+  <div id="timelineChart" class="stats chartContainer">
     <h2>Submission Scores</h2>
     <p>Select a submission from timeline view to focus on submission details</p>
     <small>Highlight a range to zoom in. Right-click to zoom out</small>
     <small class="right">Click the legend's labels to toggle their data</small>
-    <div id="chart"></div>
+    <div id="timeline" class="chart"></div>
   </div>
+  <script type="text/javascript" src="/static/flot_helpers.js"></script>
   <script type="text/javascript">
-    // Start and end time of series data for spacing.
-    var start = null;
-    var end = null;
-
     // Populate series with data about student's submissions.
     var seriesData = [ [] ];
     var seriesLabels = ["Total Score"];
@@ -27,10 +16,12 @@
       // Compute start and end times based on submission times.
       {% if loop.first %}
 	start = new Date('{{ i.timestamp }} UTC+0000');
-        start.addHours(-6);
+        start.addHours(-10);
+        options.timeline.xaxis.min = start;
       {% elif loop.last %}
 	end = new Date('{{ i.timestamp }} UTC+0000');
-        end.addHours(6);
+        end.addHours(10);
+        options.timeline.xaxis.max = end;
       {% endif %}
       {% if i.test_results and i.test_results_obj %} 
 	// Push on arrays for subtests if they exist
@@ -55,171 +46,121 @@
 	  ]);
 	{% endfor %}
       {% endif %} 
-    {% endfor %} 
+    {% endfor %}
 
-    var disabledIndices = [];
-    
-    // Plot drawing hook to disable certain series.
-    function disableSeries(plot, ctx, series) {
-	var seriesIndex = plot.getData().indexOf(series);
-	if (disabledIndices.indexOf(seriesIndex) !== -1) {
-	    series.data = [];
-	    series.datapoints.points = [];
-	}
-    }
-
-    var plotData = [];
+    var timelineData = [];
     for (i = 0; i < seriesData.length; ++i) {
-	plotData.push({
+	timelineData.push({
 	    data: seriesData[i],
 	    label: seriesLabels[i]
 	});
     }
 
-    // Setup graphing options
-    var options = {
-	series: {
-	    lines: {
-		show: true,
-		lineWidth: 3
-	    },
-	    points: {
-		show: true,
-		radius: 5
-	    }
-	},
-	crosshair: {
-	    mode: "x"
-	},
-	grid: { 
-	    hoverable: true, 
-	    clickable: true
-	},
-	interaction: {
-	    redrawOverlayInterval: 5
-	},
-	selection: {
-	    mode: "x"
-	},
-	legend: {
-	    labelFormatter: function(label, series) {
-		labelIndex = seriesLabels.indexOf(label);
+    var timeline = $.plot($("#timeline"), timelineData, options.timeline);
+    plots["timeline"] = timeline;
+  </script>
+{% endmacro %}
 
-		if (disabledIndices.indexOf(labelIndex) !== -1) {
-		    label = "<span class='disabled'>" + label + "</span>";
-		}
-
-		return label;
-	    }
-	},
-	xaxis: {
-	    min: start,
-	    max: end,
-	    mode: "time",
-	    timeZone: "America/LosAngeles",
-	    tickLength: 5,
-	    twelveHourClock: true
-	},
-	yaxis: {
-	    // Some padding room for 0% and 100%
-	    min: -10,
-	    max: 110
-	},
-	hooks: {
-	    drawSeries: [disableSeries]
+{% macro render_grade_distribution_curve(submissions) %}
+  <!-- The chart holder -->
+  <div id="distributionChart" class="stats chartContainer">
+    <h2>Recent submission distribution</h2>
+    <div id="distribution" class="chart"></div>
+  </div>
+  <script type="text/javascript" src="/static/flot_helpers.js"></script>
+  <script type="text/javascript">
+    // Create Distribution curve.
+    var distributionData = [ [] ];
+    var distributionLabels = ["Total Score"];
+    var distribution = [];
+    var rangeCount = [ [] ];
+    
+    // Compute running mean and variance for normal distribution.
+    var n = [0];
+    var mean = [0.0];
+    var variance = [0.0];
+    var prev_mean = [0.0];
+    {% for i in submissions %}
+      {% if i.test_results and i.test_results_obj %}
+	// Push on arrays for subtests if they exist
+	if (distributionData.length === 1) {
+	  {% for j in i.test_results_obj.tests %}
+	    distributionData.push([]);
+	    n.push(0);
+	    mean.push(0.0);
+	    variance.push(0.0);
+	    prev_mean.push(0.0);
+	    distributionLabels.push("{{ j.name }}");
+	    users.push({});
+	    rangeCount.push([]);
+	  {% endfor %}
 	}
-    };
+    	var percent =     
+    	  {{ i.test_results_obj.score / i.test_results_obj.max_score * 100 }};
+        rangeCount[0].push(percent);
 
-    // Logic for disabling certain series on click.
-    function updateDisabledSeries(child_index) {
-	var index = disabledIndices.indexOf(child_index);
-
-	// Add index if it doesn't exist.
-	if (index === -1) {
-	    disabledIndices.push(child_index);
+        // Allow multiple users to share same percentage.
+        if (percent in users[0]) {
+            users[0][percent] += ", {{ i.user }}";
 	} else {
-	    // Delete it if it does.
-	    disabledIndices.splice(index, 1);
+	    users[0][percent] = "{{ i.user }}";
 	}
+        ++n[0];
+        prev_mean[0] = mean[0];
+        mean[0] = mean[0] + (percent - mean[0]) / n[0];
+        variance[0] = variance[0] + (percent - mean[0]) * (percent - prev_mean[0]);
 
-	// Redraw plot to exclude/include series.
-	plot = $.plot($("#chart"), plotData, plot.getOptions());
+	// Add subtest scores.
+	{% for j in i.test_results_obj.tests %}
+          percent = {{ j.score / j.max_score * 100 }};
+          index = {{ loop.index }};
+          rangeCount[index].push(percent);
+          if (percent in users[index]) {
+              users[index][percent] += ", {{ i.user }}";
+	  } else {
+	      users[index][percent] = "{{ i.user }}";
+	  }
+          ++n[index];
+          prev_mean[index] = mean[index];
+          mean[index] = mean[index] + (percent - mean[index]) / n[index];
+          variance[index] = variance[index] + (percent - mean[index]) *
+                        (percent - prev_mean[index]);
+	{% endfor %}
+      {% endif %}        
+    {% endfor %}    
+
+    stdDev = new Array(variance.length);
+    for (var i = 0; i < variance.length; ++i) {
+	variance[i] = variance[i] / n[i];
+	stdDev[i] = Math.sqrt(variance[i]);
     }
 
-
-
-    // Create plot.
-    var plot = $.plot($("#chart"), plotData, options);
-
-    // User can zoom in to section by highlighting.
-    $("#chart").bind("plotselected", function (event, ranges) {
-	plot = $.plot($("#chart"), plotData,
-                      $.extend(true, {}, options,
-			       {
-				   xaxis: { 
-				       min: ranges.xaxis.from,
-				       max: ranges.xaxis.to 
-				   }
-			       }));
-    });
-
-    // Capture right click and zoom out to original view.
-    $("#chart").bind("contextmenu", function(e) {
-	plot = $.plot($("#chart"), plotData, options);
-	return false;
-    });
-
-   // Logic to display score tooltip on point hover
-   function showTooltip(x, y, contents) {
-        $('<div id="tooltip">' + contents + '</div>').css( {
-            position: 'absolute',
-            display: 'none',
-            top: y + 5,
-            left: x + 5,
-            border: '1px solid #fdd',
-            padding: '2px',
-            'background-color': '#fee',
-            opacity: 0.80
-        }).appendTo("body").fadeIn(200);
+    // Explicitly sort a and b as floats or lines will draw improperly.
+    for (var i = 0; i < rangeCount.length; ++i) {
+	rangeCount[i].sort(function(a, b) {
+	    return parseFloat(a) - parseFloat(b);
+	});
     }
 
-    var previousPoint = null;
-    $("#chart").bind("plothover", function (event, pos, item) {
-        $("#y").text(pos.y.toFixed(2));
-
-        if (item) {
-            if (previousPoint != item.dataIndex) {
-                previousPoint = item.dataIndex;
-                
-                $("#tooltip").remove();
-		x = new Date(item.datapoint[0]);
-		// Adjust stored datetime from UTC-0800 (LosAngeles) to original
-		x.addHours(8);
-                y = item.datapoint[1].toFixed(2);
-                
-                showTooltip(item.pageX, item.pageY,
-                            item.series.label + " : " +  y + "<br>"
-			    + "Submitted " + x.toString("M/d/yyyy hh:mm tt"));
-            }
-        }
-        else {
-            $("#tooltip").remove();
-            previousPoint = null;            
-        }
-    });
-
-    $("#chart .legend tr").live("click", function() {
-	updateDisabledSeries($(this).index());
-    });
-
-    $("#chart").bind("plotclick", function (event, pos, item) {
-	if (item) {
-	    time = item.datapoint[0];
-	    d = new Date(time);
-	    dateString = d.toISOString();
-	    element = document.getElementById(dateString);
-	    $("body").scrollTop($(element).offset().top);
+    for (var i = 0; i < rangeCount.length; ++i) {
+	for (var j = 0; j < rangeCount[i].length; ++j) {
+	    distributionData[i].push([
+		rangeCount[i][j],
+		NormalDensityZx(rangeCount[i][j], mean[i], stdDev[i])
+	    ]);
 	}
-    });
+    }
+
+    for (var i = 0; i < rangeCount.length; ++i) {
+	distribution.push({
+	    data: distributionData[i],
+	    label: distributionLabels[i]
+	});
+    }
+
+    var distributionPlot = $.plot($("#distribution"), distribution,
+				  options.distribution);
+
+    plots["distribution"] = distributionPlot;
   </script>
 {% endmacro %}
