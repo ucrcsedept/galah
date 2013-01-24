@@ -18,7 +18,6 @@ var options = {
 function disableSeries(plot, ctx, series) {
     var seriesIndex = plot.getData().indexOf(series);
     var id = $(plot.getPlaceholder()).attr('id');
-    console.log(id);
     if (disabledIndices[id].indexOf(seriesIndex) !== -1) {
 	series.data = [];
 	series.datapoints.points = [];
@@ -243,7 +242,9 @@ $("#timeline").bind("plotclick", function (event, pos, item) {
 	d = new Date(time);
 	dateString = d.toISOString();
 	element = document.getElementById(dateString);
-	$("body").scrollTop($(element).offset().top);
+	if (element !== null) {
+	    $("body").scrollTop($(element).offset().top);
+	}
     }
 });
 
@@ -251,6 +252,5 @@ $(".legend tr").live("click", function() {
     var chart = $(this).closest(".chart");
     var plot = plots[$(chart).attr('id')];
     var disabledIndex = disabledIndices[$(chart).attr('id')];
-    console.log(disabledIndex);
     updateDisabledSeries(chart, plot, disabledIndex, $(this).index());
 });
