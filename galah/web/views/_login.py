@@ -120,7 +120,11 @@ def login():
         return redirect(auth_uri)
 
     return render_template(
-        "login.html", form = form, oauth_enabled = oauth_enabled
+        "login.html",
+        form = form,
+        oauth_enabled = oauth_enabled,
+        google_login_heading = app.config["GOOGLE_LOGIN_HEADING"],
+        google_login_caption = app.config["GOOGLE_LOGIN_CAPTION"]
     )
 
 @app.route("/oauth2callback/")

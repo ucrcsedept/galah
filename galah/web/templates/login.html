@@ -13,10 +13,9 @@
     <div class="login_block">
         <div class="login_button">
             <div class="heading directions">
-                If you have an R'Mail account, please log in with it by clicking
-                the button below.
+                {{ google_login_heading }}
             </div>
-            <a href="/login/?type=rmail"><input type="button" value="Login with R'Mail"></a>
+            <a href="/login/?type=rmail"><input type="button" value="{{ google_login_caption }}"></a>
         </div>
     </div>
     {% endif %}

@@ -34,6 +34,10 @@ defaults = {
     "web/SOURCE_HOST": "https://github.com/brownhead/galah",
     "web/REPORT_ERRORS_TO": None,
     "web/MAX_CONTENT_LENGTH": None,
+    "web/GOOGLE_LOGIN_HEADING":
+        "If you have a Google account, please log in with it by clicking the "
+        "the button below.",
+    "web/GOOGLE_LOGIN_CAPTION": "Login with Google",
     "sisyphus/TEACHER_ARCHIVE_LIFETIME": datetime.timedelta(minutes = 2),
     "sisyphus/TEACHER_CSV_LIFETIME": datetime.timedelta(minutes = 2),
     "sheep/NCONSUMERS": 1,
