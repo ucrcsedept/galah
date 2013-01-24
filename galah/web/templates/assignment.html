@@ -18,6 +18,12 @@
 		new_file.appendTo("#file_input_container")
 	}
 	</script>
+	<!-- Dependencies for rendering the chart -->
+	<script type="text/javascript" src="/static/date.js"></script>
+	<script type="text/javascript" src="/static/jquery.flot.js"></script>
+	<script type="text/javascript" src="/static/jquery.flot.crosshair.js"></script>
+	<script type="text/javascript" src="/static/jquery.flot.selection.js"></script>
+	<script type="text/javascript" src="/static/jquery.flot.resize.js"></script>
 {% endblock %}
 {% block content %}
 	{% if not assignment.due_cutoff or now < assignment.due_cutoff %}
