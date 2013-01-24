@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}{{ assignment.name }}{% endblock %}
+{% block path %}&rarr; <a href="/assignments">assignments</a> &rarr; <a href="/assignments/{{ assignment.id }}">{{ assignment.name }}</a> &rarr; <a href="/assignments/{{ assignment.id }}/snapshot/{{ student.id }}">{{ student.email }}'s submission history</a>{% endblock %}
+{% block includes %}
+  <!-- Dependencies for rendering the chart -->
+  <script type="text/javascript" src="/static/date.js"></script>
+  <script type="text/javascript" src="/static/jquery.flot.js"></script>
+  <script type="text/javascript" src="/static/jquery.flot.crosshair.js"></script>
+  <script type="text/javascript" src="/static/jquery.flot.selection.js"></script>
+  <script type="text/javascript" src="/static/jquery.flot.resize.js"></script>
+{% endblock %}
+{% block content %}
+  <h2>{{ student.email }}'s submissions for {{ assignment.name }}</h2>
+  {% from "macros.html" import render_submission_timeline %}
+  {% if submissions %}
+    {# Do some filtering to see if any submissions have test_results #}
+    {% set s = submissions | groupby("test_results") %}
+    {# Grouping by test_results will condense all none results to the top. #}
+    {% if (s | length) > 1 or s[0][0] is not none %}
+      {{ render_submission_timeline(submissions) }}
+    {% else %}
+      {{ student.email }} has made submissions, but there is currently no test results data.
+      If they expected test results, they should go back to submission and resubmit it.
+    {% endif %}
+  {% else %}
+    It doesn't appear that {{ student.email }} has made any submissions yet.
+  {% endif %}
+{% endblock %}

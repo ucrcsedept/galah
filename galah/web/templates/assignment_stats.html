@@ -41,4 +41,10 @@
       {{ render_grade_distribution_curve(submissions) }}
     {% endif %}
   {% endif %}
+  <div class="stats tab">
+    <h2>Select an enrolled student below to see their progress in detail.</h2>
+    {% for i in submissions %}
+      <button><a href="snapshot/{{ i.user }}/">{{ i.user }}</a></button>
+    {% endfor %}
+  </div>
 {% endblock %}
