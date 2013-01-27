@@ -98,8 +98,8 @@ class APICall(object):
 
         # Determine the smallest number of arguments that should be passed into
         # the function.
-        min_nargs = (0 if self.argspec[0] is None else len(self.argspec[0]) -
-            0 if self.argspec[-1] is None else len(self.argspec[-1]))
+        min_nargs = ((0 if self.argspec[0] is None else len(self.argspec[0])) -
+            (0 if self.argspec[3] is None else len(self.argspec[3])))
         if has_current_user:
             min_nargs -= 1
 
