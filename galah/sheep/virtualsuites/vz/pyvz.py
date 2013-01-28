@@ -64,7 +64,7 @@ def find_container_directory(config_path = "/etc/vz/vz.conf"):
         # The VE_PRIVATE key contains the location of the directory which houses
         # all of the root directorites of the VMs
         containerDirectory = vzconfig.get("global", "VE_PRIVATE")
-        
+
         dirpath = containerDirectory.replace("$VEID", "")
     except(ConfigParser.NoSectionError, ConfigParser.NoOptionError):
         raise IOError("Badly formed configuration file at %s."
@@ -115,7 +115,7 @@ def create_container(id_range = range(1, 255),
     This function blocks until the container is fully created.
 
     """
-    
+
     # Get a set of all the extant containes
     containers = set(get_containers())
 
@@ -131,13 +131,13 @@ def create_container(id_range = range(1, 255),
 
     # Holds additional parameters that will be passed to vzctl create
     parameters = []
-    
+
     if subnet != None:
         parameters += ["--ipadd", subnet + "." + str(id)]
-        
+
     if os_template != None:
         parameters += ["--ostemplate", os_template]
-        
+
     if description != None:
         parameters += ["--description", description]
 
@@ -161,10 +161,10 @@ def destroy_container(id):
     "Destroys a given container and raises a SystemError if it fails."
 
     run_vzctl(["destroy", str(id)])
-    
+
 def extirpate_container(id):
     "Destroys a container and stops it first if it must."
-    
+
     stop_container(id)
     destroy_container(id)
 
@@ -174,13 +174,13 @@ def inject_file(id, source, to, move = False, permissions = "rwx",
     Injects a given file (source) from the host system into the filesystem of
     the container with id id at location to (to is an absolute filepath as
     seen by the container's filesystem.
-    
+
     If source is a directory, all of the files inside of that directory will be
     injected, the directory itself will not be injected.
 
     If move is True, then the file will be moved, otherwise it will be
     copied.
-    
+
     If unpack is True and source is a .tar or .tar.gz,
     the file source will be unpacked with the tar command into to, otherwise
     this option will be ignored. Iff move is True the package will be deleted
@@ -202,10 +202,10 @@ def inject_file(id, source, to, move = False, permissions = "rwx",
             check_call(["rm", source], stdout = nullFile, stderr = nullFile)
     else:
         if os.path.isdir(source):
-            files = [os.path.join(i, l) for i, j, k in os.walk(source) for l in k]
+            files = [os.path.join(source, i) for i in os.listdir(source)]
         else:
             files = [source]
-        
+
         if move:
             check_call(["mv", "-rf"] + files + [ztoReal],
                        stdout = nullFile, stderr = nullFile)
@@ -240,7 +240,7 @@ def container_to_host_path(id, path):
     """
 
     return os.path.join(find_container_directory(), str(id), path[1:])
-   
+
 
 def host_to_container_path(id, path):
     """
@@ -338,17 +338,17 @@ def get_containers(description_pattern = None):
                 containers.append(int(i))
             except ValueError:
                 pass
-                
+
         return containers
     else:
         flags = ["-d", description_pattern]
 
         p = subprocess.Popen([vzlistPath] + flags + ["-aHo", "ctid"],
                              stdout = subprocess.PIPE, stderr = nullFile)
-        
+
         output = p.communicate()
-        
+
         if p.returncode != 0:
             raise SystemError((p.returncode, "Could not list containers"))
-        
+
         return [int(i.strip()) for i in output[0].splitlines()]
