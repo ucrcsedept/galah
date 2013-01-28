@@ -12,7 +12,7 @@
     // Populate series with data about student's submissions.
     var seriesData = [ [] ];
     var seriesLabels = ["Total Score"];
-    {% for i in submissions | reverse %} 
+    {% for i in submissions | reverse %}
       // Compute start and end times based on submission times.
       {% if loop.first %}
 	start = new Date('{{ i.timestamp }} UTC+0000');
@@ -24,7 +24,7 @@
         end.addHours(10);
         options.timeline.xaxis.max = end;
       {% endif %}
-      {% if i.test_results and i.test_results_obj %} 
+      {% if i.test_results and i.test_results_obj %}
 	// Push on arrays for subtests if they exist
 	if (seriesData.length === 1) {
 	  {% for j in i.test_results_obj.tests %}
@@ -34,19 +34,19 @@
 	}
 
         // x is time and y is score.
-    	seriesData[0].push([ 
+    	seriesData[0].push([
             new Date('{{ i.timestamp }} UTC+0000').getTime(),
-	    {{ i.test_results_obj.score / i.test_results_obj.max_score * 100 }}
+	    {{ 0 if i.test_results_obj.max_score == 0 else i.test_results_obj.score / i.test_results_obj.max_score * 100 }}
     	]);
 
 	// Add subtest scores.
 	{% for j in i.test_results_obj.tests %}
 	  seriesData[{{ loop.index }}].push([
 	    new Date('{{ i.timestamp }} UTC+0000').getTime(),
-	    {{ j.score / j.max_score * 100 }}
+	    {{ 0 if j.max_score == 0 else j.score / j.max_score * 100 }}
 	  ]);
 	{% endfor %}
-      {% endif %} 
+      {% endif %}
     {% endfor %}
 
     var timelineData = [];
@@ -75,7 +75,7 @@
     var distributionLabels = ["Total Score"];
     var distribution = [];
     var rangeCount = [ [] ];
-    
+
     // Compute running mean and variance for normal distribution.
     var n = [0];
     var mean = [0.0];
@@ -96,7 +96,7 @@
 	    rangeCount.push([]);
 	  {% endfor %}
 	}
-    	var percent =     
+    	var percent =
     	  {{ i.test_results_obj.score / i.test_results_obj.max_score * 100 }};
         rangeCount[0].push(percent);
 
@@ -127,8 +127,8 @@
           variance[index] = variance[index] + (percent - mean[index]) *
                         (percent - prev_mean[index]);
 	{% endfor %}
-      {% endif %}        
-    {% endfor %}    
+      {% endif %}
+    {% endfor %}
 
     stdDev = new Array(variance.length);
     for (var i = 0; i < variance.length; ++i) {
