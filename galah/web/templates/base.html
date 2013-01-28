@@ -10,7 +10,7 @@
 {% endmacro %}
 <html>
 <head>
-    <title>{% block title %}{% endblock %} - Galah</title>
+    <title>{% block title %}{% endblock %} - {{ config["ALIAS"] }}</title>
     <link rel="stylesheet" href="/static/galah.css"></link>
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
     <script type="text/javascript">
@@ -26,7 +26,7 @@
 <body>
 <div id="container">
     <div id="header" class="heading">
-        <span class="logo"><a href="/home">Galah</a></span>
+        <span class="logo"><a href="/home">{{ config["ALIAS"] }}</a></span>
         <span class="path">
             {% block path %}{% endblock %}
         </span>
@@ -55,11 +55,11 @@
         {% endif %}
         {% endwith %}
     </div>
-            
+
     {%- block content %}{% endblock -%}
 
     <div id="source_download">
-        <b>Galah</b> Copyright John Sullivan and other contributers,
+        {% if config["ALIAS"] != "Galah" %}(Powered by Galah){% endif %} <b>Galah</b> Copyright John Sullivan and other contributers,
         <a href="http://www.gnu.org/licenses/agpl-3.0.html">some rights reserved</a>.
         Running {{ config['CURRENT_VERSION'] }}.
         (<a href="{{ config['SOURCE_HOST'] }}">Get the code!</a>)

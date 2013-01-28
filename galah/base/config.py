@@ -26,6 +26,7 @@ defaults = {
     "global/HARNESS_DIRECTORY": "/var/local/galah/web/harness/",
     "global/MONGODB": "galah",
     "global/SISYPHUS_ADDRESS": "ipc:///tmp/sisyphus.sock",
+    "web/ALIAS": "Galah",
     "web/DEBUG": True,
     "web/SECRET_KEY": "Very Secure Key",
     "web/HOST_URL": "http://localhost:5000",
