@@ -240,7 +240,7 @@ class FlockManager:
 		# put back into the request queue again and then they need to be
 		# forgotten.
 		for i in killed_sheep:
-			self.received_request(self._flock[i].servicing_request)
+			#self.received_request(self._flock[i].servicing_request)
 			self.remove_sheep(i)
 
 		return lost_sheep, killed_sheep
