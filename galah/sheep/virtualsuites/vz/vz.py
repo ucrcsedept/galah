@@ -231,7 +231,7 @@ class Consumer:
 
                     break
                 except socket.error:
-                    time.sleep(5)
+                    time.sleep(0.1)
             else:
                 raise RuntimeError("Could not connect to bootstrapper.")
 
