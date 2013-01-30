@@ -166,12 +166,41 @@ a {
     margin-bottom: 10px;
 }
 
+.submission {
+    margin-bottom: 20px;
+}
+
 .test_results {
     width: 100%;
+    border: 1px solid #ddd;
+    border-collapse: collapse;
+    background-color: #fff;
+    margin-top: 6px;
+}
+
+.test_results_even_row td {
+    background-color: #f5f5f5;
+}
+
+.test_results_message p {
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+
+.test_results_message > *:first-child {
+    margin-top: 0px;
 }
 
 .test_results td {
-    text-align: center;
+    padding: 7px 0px 7px 14px;
+}
+
+.test_results td:first-child {
+    width: 1px;
+    white-space: nowrap;
+}
+
+.test_results_test_header td {
     border-top: 1px solid #dddddd;
 }
 
