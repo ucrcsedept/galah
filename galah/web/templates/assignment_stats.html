@@ -15,14 +15,12 @@
     {% if assignment.test_harness %}
       {% if submissions %}
 	<h3 class="students_submitted">
-	  So far, {{ submissions | length }} out of {{ users }} students
-	  ({{ (submissions | length) / users * 100 }}%) have made
+	  So far, {{ submissions | length }} out of {{ users }} students have made
 	  a submission for this assignment.
 	</h3>
 	{% set finals = submissions | groupby("test_type") %}
 	<h3 class="students_submitted">
 	  Out of those, {{ finals[0][1] | length }} out of {{ users }} students
-	  ({{ finals[0][1] | length / users * 100 }}%)
 	  have made their final submission for this assignment.
 	</h3>
       {% else %}

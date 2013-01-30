@@ -36,14 +36,14 @@
         // x is time and y is score.
     	seriesData[0].push([
             new Date('{{ i.timestamp }} UTC+0000').getTime(),
-	    {{ 0 if i.test_results_obj.max_score == 0 else i.test_results_obj.score / i.test_results_obj.max_score * 100 }}
+	    {{ i.test_results_obj.score }}
     	]);
 
 	// Add subtest scores.
 	{% for j in i.test_results_obj.tests %}
 	  seriesData[{{ loop.index }}].push([
 	    new Date('{{ i.timestamp }} UTC+0000').getTime(),
-	    {{ 0 if j.max_score == 0 else j.score / j.max_score * 100 }}
+	    {{ j.score }}
 	  ]);
 	{% endfor %}
       {% endif %}
@@ -96,36 +96,35 @@
 	    rangeCount.push([]);
 	  {% endfor %}
 	}
-    	var percent =
-    	  {{ i.test_results_obj.score / i.test_results_obj.max_score * 100 }};
-        rangeCount[0].push(percent);
+    	var score = {{ i.test_results_obj.score }};
+        rangeCount[0].push(score);
 
-        // Allow multiple users to share same percentage.
-        if (percent in users[0]) {
-            users[0][percent] += ", {{ i.user }}";
+        // Allow multiple users to share same score.
+        if (score in users[0]) {
+            users[0][score] += ", {{ i.user }}";
 	} else {
-	    users[0][percent] = "{{ i.user }}";
+	    users[0][score] = "{{ i.user }}";
 	}
         ++n[0];
         prev_mean[0] = mean[0];
-        mean[0] = mean[0] + (percent - mean[0]) / n[0];
-        variance[0] = variance[0] + (percent - mean[0]) * (percent - prev_mean[0]);
+        mean[0] = mean[0] + (score - mean[0]) / n[0];
+        variance[0] = variance[0] + (score - mean[0]) * (score - prev_mean[0]);
 
 	// Add subtest scores.
 	{% for j in i.test_results_obj.tests %}
-          percent = {{ j.score / j.max_score * 100 }};
+          score = {{ j.score }};
           index = {{ loop.index }};
-          rangeCount[index].push(percent);
-          if (percent in users[index]) {
-              users[index][percent] += ", {{ i.user }}";
+          rangeCount[index].push(score);
+          if (score in users[index]) {
+              users[index][score] += ", {{ i.user }}";
 	  } else {
-	      users[index][percent] = "{{ i.user }}";
+	      users[index][score] = "{{ i.user }}";
 	  }
           ++n[index];
           prev_mean[index] = mean[index];
-          mean[index] = mean[index] + (percent - mean[index]) / n[index];
-          variance[index] = variance[index] + (percent - mean[index]) *
-                        (percent - prev_mean[index]);
+          mean[index] = mean[index] + (score - mean[index]) / n[index];
+          variance[index] = variance[index] + (score - mean[index]) *
+                        (score - prev_mean[index]);
 	{% endfor %}
       {% endif %}
     {% endfor %}

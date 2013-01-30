@@ -72,11 +72,6 @@ options.timeline = {
 	tickLength: 5,
 	twelveHourClock: true
     },
-    yaxis: {
-	// Some padding room for 0% and 100%
-	min: -10,
-	max: 110
-    },
     hooks: {
 	drawSeries: [disableSeries]
     }
@@ -92,12 +87,6 @@ options.distribution = {
 	points: {
 	    show: true,
 	    radius: 4
-	},
-	bars: {
-	    show: true,
-	    align: "center",
-	    barWidth: 0.75,
-	    zero: true
 	}
     },
     crosshair: {
@@ -198,7 +187,7 @@ $("#timeline").bind("plothover", function (event, pos, item) {
             y = item.datapoint[1].toFixed(2);
             
             showTooltip(item.pageX, item.pageY,
-                        item.series.label + " : " +  y + "%<br>"
+                        item.series.label + " : " +  y + "<br>"
 			+ "Submitted " + x.toString("M/d/yyyy hh:mm tt"));
         }
     }
@@ -222,7 +211,7 @@ function distributionToolTip(event, pos, item) {
             
 	    labelPos = distributionLabels.indexOf(item.series.label);
             showTooltip(item.pageX, item.pageY,
-                        item.series.label + " : " + x + "%<br>"
+                        item.series.label + " : " + x + "<br>"
 			+ "Submission from: " + 
 			users[labelPos][item.datapoint[0]]);
         }
