@@ -130,13 +130,6 @@ def view_assignment(assignment_id):
             timedelta = now - i.test_request_timestamp
             i.show_resubmit = (timedelta > config["STUDENT_RETRY_INTERVAL"])
 
-    # Mark each test request as having parts or not.
-    for i in submissions:
-        i.has_parts = (
-            i.test_results and
-            any(j.parts for j in i.test_results_obj.tests)
-        )
-
     # Use different template depending on who the assignment is being viewed by
     template = "assignment.html" if view_as == "student" \
             else "assignment_stats.html"
@@ -149,6 +142,5 @@ def view_assignment(assignment_id):
         submissions = submissions,
         simple_archive_form = simple_archive_form,
         users = user_count,
-        new_submissions = [v for k, v in get_flashed_messages(with_categories = True) if k == "new_submission"],
-        enumerate = enumerate
+        new_submissions = [v for k, v in get_flashed_messages(with_categories = True) if k == "new_submission"]
     )
