@@ -29,9 +29,20 @@ Version 0.1 is stable and ready to be used within a production environment. This
 first version is only a submission system and does not perform any testing on
 student's code.
 
-Full support for automatic testing will be made available in version 0.2.
+Version 0.2 is unstable but highly useable (and is being used already).
 
 ## News
+
+### Wednesday, January 30, 2013
+
+A rapid release cycle has started on the version 0.2 branch.
+[Galah has been deployed at UCR](https://galah.cs.ucr.edu) and the full
+auto-testing functionality is being used. This week we had the first series of
+labs taking advantage of Galah and it went very well. Students seemed to
+appreciate the quickness and quality of the feedback they got. We'll be using
+the feedback from this round of labs and improving things appropriately.
+
+We're on track for a stable 0.2 release by the time the next quarter start.
 
 ### Wednesday, December 5, 2012
 
