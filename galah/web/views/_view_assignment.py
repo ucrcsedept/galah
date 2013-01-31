@@ -123,7 +123,6 @@ def view_assignment(assignment_id):
 
     # Flag to set refresh trigger if user is waiting on test results
     wait_and_refresh = False
-    refresh_element = None
 
     # Add the pretty version of each submissions timestamp
     for i in submissions:
@@ -144,12 +143,8 @@ def view_assignment(assignment_id):
         elif (i.test_results and not i.test_results_obj.failed):
             i.status = "Tests Completed"
 
-    for i in submissions:
-        if i.status == "Waiting for tests...":
-            refresh_element = isoformat(i.timestamp)
-
     wait_and_refresh = \
-        any(i.status == "Waiting for tests..." for i in submissions)
+        any(i.status == "Waiting for test results..." for i in submissions)
 
     # Use different template depending on who the assignment is being viewed by
     template = "assignment.html" if view_as == "student" \
@@ -164,7 +159,6 @@ def view_assignment(assignment_id):
         simple_archive_form = simple_archive_form,
         users = user_count,
         wait_and_refresh = wait_and_refresh,
-        refresh_to = refresh_element,
         new_submissions = [v for k, v in get_flashed_messages(with_categories = True) if k == "new_submission"],
         enumerate = enumerate
     )
