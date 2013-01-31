@@ -52,9 +52,13 @@ class SubTestResult(EmbeddedDocument):
         return result
 
 class TestResult(Document):
-    score = FloatField(required = True)
-    max_score = FloatField(required = True)
+    score = FloatField()
+    max_score = FloatField()
     tests = ListField(EmbeddedDocumentField(SubTestResult))
+
+    # Set to true if the test harness crashed or gave output rather than a valid
+    # TestResult object.
+    failed = BooleanField()
 
     meta = {
         "allow_inheritance": False
@@ -70,7 +74,7 @@ class TestResult(Document):
             if i == "id":
                 pass
 
-            elif i == "tests":
+            elif i == "tests" and "tests" in item:
                 for j in item.get(i):
                     result.tests.append(SubTestResult.from_dict(j))
 

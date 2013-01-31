@@ -133,6 +133,13 @@ def _run():
                 logger.debug("Test request: %s", str(message))
                 result = consumer.run_test(machine_id, message.body)
 
+                # Check to see if the test harness crashed/somehow testing was
+                # unable to be done.
+                if result is None:
+                    result = {
+                        "failed": True
+                    }
+
                 # Add in the submission id to the result that we send back
                 result["id"] = str(message.body["submission"]["id"])
 

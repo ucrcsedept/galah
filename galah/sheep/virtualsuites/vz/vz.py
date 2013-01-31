@@ -277,7 +277,10 @@ class Consumer:
 
                 return None
 
-            return json.loads(results)
+            try:
+                return json.loads(results)
+            except ValueError:
+                return None
         finally:
             self.logger.debug("Destroying VM with CTID %d" % container_id)
 
