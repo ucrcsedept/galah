@@ -68,14 +68,13 @@ class TestResult(Document):
         # dict we were given.
         for i in result:
             if i == "id":
-                continue
+                pass
 
-            if i == "tests":
+            elif i == "tests":
                 for j in item.get(i):
                     result.tests.append(SubTestResult.from_dict(j))
-                continue
 
-            if i in item:
+            elif i in item:
                 result.__setattr__(i, item.get(i))
 
         # Make sure all the correct fields were given and formatted correctly.
