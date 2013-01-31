@@ -15,6 +15,8 @@ language agnostic, scalable, secure, easy to use, and simple
 ([more on Galah's goals](https://github.com/brownhead/galah/wiki/Goals-and-Ideals)). Check
 out this
 [comparison to similar software](https://github.com/brownhead/galah/wiki/Comparison-to-Similar-Software).
+You can also take a look at [these screenshots](http://imgur.com/a/NG1xq) to get an idea of what using
+Galah is like.
 
 ## Documentation and Getting Started
 
