@@ -148,6 +148,13 @@ a {
     text-decoration: underline;
 }
 
+.detail_prompt {
+    margin-left: 30%;
+    font-style: italic;
+    color: #999;
+    font-weight: bold;
+}
+
 .stats {
     background: white;
     border: 1px solid #ccc;
@@ -203,6 +210,10 @@ a {
     vertical-align: top;
 }
 
+.test_results tr:not(.total) {
+    display: none;
+}
+
 .test_results tr:nth-child(n+2) td {
     border-top: 1px solid #dddddd;
 }
@@ -210,6 +221,10 @@ a {
 .test_results td:first-child {
     width: 1px;
     white-space: nowrap;
+}
+
+.total {
+    cursor: pointer;
 }
 
 /* Hierarchical Headings */
