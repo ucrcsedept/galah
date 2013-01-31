@@ -118,6 +118,14 @@ a {
     padding: 5px 15px;
 }
 
+#submissions .context_message {
+    background: white;
+    border: 1px solid #ccc;
+    padding: 10px;
+    margin-top: -4px;
+    color: #C83F39;
+}
+
 #submissions .uploaded_filenames {
     line-height: 30px;
 }

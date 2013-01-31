@@ -89,6 +89,13 @@
 			    {{ submission.status }}
 			  </small>
 			</h3>
+			{% if submission.test_results is not none and submission.test_results_obj.failed %}
+			  <div class="context_message">
+			    The test harness crashed when running your code.
+			    This can mean a number of different things,
+			    but the most likely reason for this is that your code did something the test harness did not expect to happen.
+			  </div>
+			{% endif %}
 			{% if submission.uploaded_filenames %}
 			<div class="uploaded_filenames">
 				<span style="float: right">
