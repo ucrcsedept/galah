@@ -22,7 +22,7 @@ from galah.web.auth import account_type_required
 from bson.objectid import ObjectId
 from bson.errors import InvalidId
 from flask import abort, request, flash, redirect, url_for
-from galah.db.models import Submission, Assignment
+from galah.db.models import Submission, Assignment, TestResult
 from galah.shepherd.api import send_test_request
 from galah.web.util import is_url_on_site, GalahWebAdapter
 import datetime
@@ -81,6 +81,13 @@ def resubmit_submission(assignment_id, submission_id):
         send_test_request(config["PUBLIC_SOCKET"], submission.id)
         logger.info("Resending test request to shepherd for %s" \
                         % str(submission.id))
+
+        # If the test result failed, remove it from submissions and database
+        if submission.test_results:
+            result = TestResult.objects.get(id = submission.test_results)
+            if result.failed:
+                result.delete()
+                submission.test_results = None
 
         # Save new reqeust timestamp in submission.
         submission.save()

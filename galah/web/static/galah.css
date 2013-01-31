@@ -158,6 +158,17 @@ a {
     margin: 0px 0px 5px 0px;
 }
 
+.status {
+    background: white;
+    color: #4F81BD;
+    padding: 5px;
+    border: 1px solid;
+    font-style: italic;
+    -webkit-box-shadow: 1px 1px 1px inset;
+    -moz-box-shadow: 1px 1px 1px inset;
+    box-shadow: 1px 1px 1px inset;
+}
+
 .students_submitted {
     text-align: center;
 }
@@ -254,6 +265,10 @@ h3 {
 #assignments .submission_status {
     font-size: 10pt;
     font-weight: normal;
+}
+
+.waitingLabel {
+    margin-left: 15px;
 }
 
 /* Login Page */

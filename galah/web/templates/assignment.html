@@ -2,6 +2,9 @@
 {% block title %}{{ assignment.name }}{% endblock %}
 {% block path %}&rarr; <a href="/assignments">assignments</a> &rarr; <a href="/assignments/{{ assignment.id }}">{{ assignment.name }}</a>{% endblock %}
 {% block includes %}
+        {% if wait_and_refresh %}
+	  <meta http-equiv="refresh" content="10">
+	{% endif %}
 	<script type="text/javascript">
 	$(function() {
 		$("#email").focus()
@@ -75,7 +78,10 @@
 		<div id="{{ submission.timestamp | isoformat }}" class="submission">
 		{% endif %}
 			<h3>
-			Submission on {{ submission.timestamp_pretty }}
+			  Submission on {{ submission.timestamp_pretty }}
+			  <small class="status">
+			    {{ submission.status }}
+			  </small>
 			</h3>
 			{% if submission.uploaded_filenames %}
 			<div class="uploaded_filenames">
@@ -92,7 +98,7 @@
 			  <a href="resubmit/{{ submission.id }}"><input type="button" value="Resubmit"></a>
 			</div>
 			{% endif %}
-			{% if submission.test_results and submission.test_results_obj %}
+			{% if submission.test_results and submission.test_results_obj and submission.test_results_obj.score is not none %}
 			<div>
 				<table class="test_results">
 					<tr class="heading">
