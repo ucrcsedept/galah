@@ -115,7 +115,7 @@
 			<div>
 				<table class="test_results">
 					<tr class="total heading">
-						<td style="font-weight: bold">{{ "%d / %d" % (submission.test_results_obj.score, submission.test_results_obj.max_score) }}</td>
+						<td style="font-weight: bold">{{ "%.3g / %.3g" % (submission.test_results_obj.score, submission.test_results_obj.max_score) }}</td>
 						<td>
 						  Total Score
 						  <small class="detail_prompt">
@@ -125,7 +125,7 @@
 					</tr>
 					{% for i in submission.test_results_obj.tests %}
 					<tr>
-						<td class="heading test_results_score">{{ "%d / %d" % (i.score, i.max_score) }}</td>
+						<td class="heading test_results_score">{{ "%.3g / %.3g" % (i.score, i.max_score) }}</td>
 						<td>
 							<div class="heading">{{ i.name }}</div>
 							{% if i.message %}
