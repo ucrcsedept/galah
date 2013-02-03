@@ -239,6 +239,7 @@ class Consumer:
             prepared_request = PreparedTestRequest(
                 raw_harness = test_request["test_harness"],
                 raw_submission = test_request["submission"],
+                raw_assignment = test_request["assignment"],
                 testables_directory = config["VM_TESTABLES_DIRECTORY"],
                 harness_directory = config["VM_HARNESS_DIRECTORY"],
                 suite_specific = {
