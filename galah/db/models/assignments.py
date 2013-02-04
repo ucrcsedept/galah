@@ -54,6 +54,16 @@ class Assignment(Document):
         "allow_inheritance": False
     }
 
+    def to_dict(self):
+        return {
+            "name": self.name,
+            "due": self.due.isoformat(),
+            "due_cutoff":
+                None if not self.due_cutoff else self.due_cutoff.isoformat(),
+            "hide_until": str(self.for_class),
+            "test_harness": str(self.test_harness)
+        }
+
     def validate(self):
         if self.due_cutoff and self.due > self.due_cutoff:
             raise ValidationError("due cannot be later than due_cutoff")

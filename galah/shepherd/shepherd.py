@@ -66,6 +66,7 @@ def match_found(flock_manager, sheep_identity, request):
     test_harness = TestHarness.objects.get(id = assignment.test_harness)
 
     data = {
+        "assignment": assignment.to_dict(),
         "submission": submission.to_dict(),
         "test_harness": test_harness.to_dict()
     }
