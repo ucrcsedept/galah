@@ -12,15 +12,15 @@
     // Populate series with data about student's submissions.
     var seriesData = [ [] ];
     var seriesLabels = ["Total Score"];
+    // Compute start and end times based on submission times.
     {% for i in submissions | reverse %}
-      // Compute start and end times based on submission times.
       {% if loop.first %}
-	start = new Date('{{ i.timestamp }} UTC+0000');
+	start = smartTimestamp('{{ i. timestamp }}');
         start.addHours(-10);
         options.timeline.xaxis.min = start;
       {% endif %}
       {% if loop.last %}
-	end = new Date('{{ i.timestamp }} UTC+0000');
+	end = smartTimestamp('{{ i. timestamp }}');
         end.addHours(10);
         options.timeline.xaxis.max = end;
       {% endif %}
@@ -36,14 +36,14 @@
 
         // x is time and y is score.
     	seriesData[0].push([
-            new Date('{{ i.timestamp }} UTC+0000').getTime(),
+	    smartTimestamp('{{ i.timestamp }}').getTime(),
 	    {{ i.test_results_obj.score }}
     	]);
 
 	// Add subtest scores.
 	{% for j in i.test_results_obj.tests %}
 	  seriesData[{{ loop.index }}].push([
-	    new Date('{{ i.timestamp }} UTC+0000').getTime(),
+	    smartTimestamp('{{ i.timestamp }}').getTime(),
 	    {{ j.score }}
 	  ]);
 	{% endfor %}
@@ -59,6 +59,7 @@
     }
 
     var timeline = $.plot($("#timeline"), timelineData, options.timeline);
+    console.log(timeline);
     plots["timeline"] = timeline;
   </script>
 {% endmacro %}

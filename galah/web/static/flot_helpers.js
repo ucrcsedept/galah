@@ -243,3 +243,14 @@ $(".legend tr").live("click", function() {
     var disabledIndex = disabledIndices[$(chart).attr('id')];
     updateDisabledSeries(chart, plot, disabledIndex, $(this).index());
 });
+
+// Converts default timestamp in db to one recognized by firefox and chrome
+function smartTimestamp(default_time) {
+    // Replace first space with "T" for firefox timestamp RFC.
+    var smartStamp = default_time.replace(/ /, "T");
+    // Adjusting to UTC for Flot uses.
+    smartStamp += "+00:00";
+
+    var d = new Date(smartStamp);
+    return d;
+}
