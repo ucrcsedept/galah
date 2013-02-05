@@ -91,7 +91,7 @@
 			    {{ submission.status }} 
 			  </span> 
 			</div> 
-			{% if submission.test_results is not none and submission.test_results_obj.failed %}
+			{% if "Failed" in submission.status %}
 			  <div class="context_message">
 			    The test harness crashed when running your code.
 			    This can mean a number of different things,
@@ -134,6 +134,16 @@
 							<div class="test_results_message">
 								{{ i.message | markdown }}
 							</div>
+							{% endif %}
+							{% if i.parts | length %}
+							  <section class="parts">
+							    {% for j in i.parts  %}
+							      <div class="part">
+								<span class="parts_score heading">{{ "%.3g / %.3g" % (j[1], j[2]) }}</span>
+								<span class="parts_name heading">{{ j[0] }}</span>
+							      </div>
+							    {% endfor %}
+							  </section>
 							{% endif %}
 						</td>
 					</tr>

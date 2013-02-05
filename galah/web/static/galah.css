@@ -163,6 +163,27 @@ a {
     font-weight: bold;
 }
 
+.part > span {
+    display: inline-block;
+}
+
+.parts {
+    text-indent: 10px;
+    border: 1px solid #4f81bd;
+    border-left: 4px solid #4F81BD;
+    width: 90%;
+    background: white;
+}
+
+.part:not(:last-child) {
+    border-bottom: 1px solid #ccc;
+}
+
+.parts_score {
+    min-width: 100px;
+    border-right: 1px solid #ccc;
+}
+
 .stats {
     background: white;
     border: 1px solid #ccc;
