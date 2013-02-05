@@ -167,3 +167,17 @@
     plots["distribution"] = distributionPlot;
   </script>
 {% endmacro %}
+
+{% macro status_class(status) %}
+  {% if "Failed" in status %}
+    failed
+  {% elif "Completed" in status %}
+    success
+  {% elif "timed out" in status %}
+    timed_out
+  {% elif "Waiting" in status %}
+    waiting
+  {% else %}
+    submitted
+  {% endif %}
+{% endmacro %}

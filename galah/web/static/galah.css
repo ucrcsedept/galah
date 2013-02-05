@@ -174,18 +174,37 @@ a {
 }
 
 .status {
-    background: white;
-    color: #4F81BD;
-    padding: 5px;
-    border: 1px solid;
+    float: right;
+    width: 25%;
+    padding: 4px;
+    text-align: center;
+    border-left: 2px solid white;
+    display: inline-block;
     font-style: italic;
-    -webkit-box-shadow: 1px 1px 1px inset;
-    -moz-box-shadow: 1px 1px 1px inset;
-    box-shadow: 1px 1px 1px inset;
 }
 
 .students_submitted {
     text-align: center;
+}
+
+.failed {
+    background: #da4f49;
+}
+
+.submitted {
+    opacity: 0.7;
+}
+
+.success { 
+    background: #51a351;
+}
+
+.timed_out {
+    background: #EBA709;
+}
+
+.waiting {
+    background: #A3A3A3;
 }
 
 .tab {
@@ -194,6 +213,20 @@ a {
 
 .submission {
     margin-bottom: 20px;
+}
+
+.submission_header {
+    margin-bottom: 4px;
+    background-color: #4F81BD;
+    color: white;
+    font-family: Helvetica, "Helvetica Neue", Arial, sans-serif;
+}
+
+.submission_time {
+    font-size: 12pt;
+    font-weight: bold;
+    display: inline-block;
+    padding: 4px;
 }
 
 .test_results {

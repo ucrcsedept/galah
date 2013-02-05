@@ -67,7 +67,7 @@
 		{% endautoescape %}
 	</div>
 	{% endif %}
-	{% from "macros.html" import render_submission_timeline %}
+	{% from "macros.html" import render_submission_timeline, status_class %}
 	{% if submissions %}
 	  {# Do some filtering to see if any submissions have test_results #}
 	  {% set s = submissions | groupby("test_results") %}
@@ -83,12 +83,14 @@
 		{% else %}
 		<div id="{{ submission.timestamp | isoformat }}" class="submission">
 		{% endif %}
-			<h3>
-			  Submission on {{ submission.timestamp_pretty }}
-			  <small class="status">
-			    {{ submission.status }}
-			  </small>
-			</h3>
+		        <div class="submission_header"> 
+			  <span class="submission_time"> 
+			    Submission on {{ submission.timestamp_pretty }} 
+			  </span> 
+			  <span class="status {{ status_class (submission.status) }}"> 
+			    {{ submission.status }} 
+			  </span> 
+			</div> 
 			{% if submission.test_results is not none and submission.test_results_obj.failed %}
 			  <div class="context_message">
 			    The test harness crashed when running your code.
