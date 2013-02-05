@@ -33,7 +33,7 @@
 		});
 	})
 	function addFileField() {
-		var new_file = $("#file_input_container").children(":last").clone()
+		var new_file = $("#file_input_container").children(":last").clone(true)
 		var input = $(new_file).children(":last")
 		var old_id = input.attr("id")
 		var new_suffix = parseInt(old_id.substring(old_id.indexOf("-") + 1)) + 1
@@ -41,6 +41,7 @@
 		input.attr("id", "archive-" + new_suffix)
 		input.attr("name", "archive-" + new_suffix)
 
+	        $(input).val('');
 		new_file.appendTo("#file_input_container")
 	}
 	</script>
