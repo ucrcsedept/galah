@@ -14,6 +14,23 @@
 		    // Toggles its own siblings so user can hide all results.
 		    $(this).siblings().toggle("fast");
 		});
+
+	        $(".parts_detail.active").each(function() {
+		    // Show all parts details where the score is 100% by default.
+		    $(this).next(".parts").show();
+	        });
+
+	        $(".test_results").on("click", ".parts_detail", function() {
+		    // Toggle showing parts details.
+		    if ($(this).text() === "- Collapse") {
+			$(this).text("+ Expand");
+		    } else {
+			$(this).text("- Collapse");
+		    }
+
+		    $(this).toggleClass("active");
+		    $(this).next(".parts").slideToggle();
+		});
 	})
 	function addFileField() {
 		var new_file = $("#file_input_container").children(":last").clone()
@@ -129,13 +146,18 @@
 					<tr>
 						<td class="heading test_results_score">{{ "%.3g / %.3g" % (i.score, i.max_score) }}</td>
 						<td>
-							<div class="heading">{{ i.name }}</div>
+							<div class="heading test_name">{{ i.name }}</div>
 							{% if i.message %}
 							<div class="test_results_message">
 								{{ i.message | markdown }}
 							</div>
 							{% endif %}
 							{% if i.parts | length %}
+							  {% if i.score == i.max_score %}
+							    <small class="detail_prompt parts_detail">+ Expand</small>
+							  {% else %}
+							    <small class="detail_prompt parts_detail active">- Collapse</small>
+							  {% endif %}
 							  <section class="parts">
 							    {% for j in i.parts  %}
 							      <div class="part">

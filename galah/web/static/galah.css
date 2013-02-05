@@ -167,16 +167,22 @@ a {
     display: inline-block;
 }
 
+.part:not(:last-child) {
+    border-bottom: 1px solid #ccc;
+}
+
 .parts {
     text-indent: 10px;
     border: 1px solid #4f81bd;
     border-left: 4px solid #4F81BD;
-    width: 90%;
+    width: 93%;
     background: white;
+    display: none;
 }
 
-.part:not(:last-child) {
-    border-bottom: 1px solid #ccc;
+.parts_detail {
+    cursor: pointer;
+    color: #333;
 }
 
 .parts_score {
@@ -248,6 +254,10 @@ a {
     font-weight: bold;
     display: inline-block;
     padding: 4px;
+}
+
+.test_name {
+    display: inline-block;
 }
 
 .test_results {
