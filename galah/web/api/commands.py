@@ -321,7 +321,7 @@ def upload_harness(current_user, assignment, harness, config_file):
     assignment = _get_assignment(assignment, current_user)
 
     if current_user.account_type == "teacher" and \
-            assignment.for_class not in current_user.enrolled_in:
+            assignment.for_class not in current_user.classes:
         raise PermissionError(
             "You can only upload harnesses for assignments in class you "
             "are assigned to."
