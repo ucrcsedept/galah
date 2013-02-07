@@ -135,7 +135,13 @@
 			<div>
 				<table class="test_results">
 					<tr class="total heading">
-						<td style="font-weight: bold">{{ "%.3g / %.3g" % (submission.test_results_obj.score, submission.test_results_obj.max_score) }}</td>
+						<td style="font-weight: bold">
+						  {% if submission.test_results_obj.max_score > 0 %}
+						    {{ "%.3g / %.3g" % (submission.test_results_obj.score, submission.test_results_obj.max_score) }}
+						  {% else %}
+						    {{ "%.3g" % (submission.test_results_obj.score) }}
+						  {% endif %}
+						</td>
 						<td>
 						  Total Score
 						  <small class="detail_prompt">
@@ -145,7 +151,13 @@
 					</tr>
 					{% for i in submission.test_results_obj.tests %}
 					<tr>
-						<td class="heading test_results_score">{{ "%.3g / %.3g" % (i.score, i.max_score) }}</td>
+						<td class="heading test_results_score">
+						  {% if i.max_score > 0 %}
+						    {{ "%.3g / %.3g" % (i.score, i.max_score) }}
+						  {% else %}
+						    {{ "%.3g" % (i.max_score) }}
+						  {% endif %}
+						</td>
 						<td>
 							<div class="heading test_name">{{ i.name }}</div>
 							{% if i.message %}
@@ -162,7 +174,13 @@
 							  <section class="parts">
 							    {% for j in i.parts  %}
 							      <div class="part">
-								<span class="parts_score heading">{{ "%.3g / %.3g" % (j[1], j[2]) }}</span>
+								<span class="parts_score heading">
+								  {% if j[2] > 0 %}
+								    {{ "%.3g / %.3g" % (j[1], j[2]) }}
+								  {% else %}
+								    {{ "%.3g" % (j[1]) }}
+								  {% endif %}
+								</span>
 								<span class="parts_name heading">{{ j[0] }}</span>
 							      </div>
 							    {% endfor %}
