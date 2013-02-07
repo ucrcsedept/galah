@@ -3,7 +3,7 @@
 {% block path %}&rarr; <a href="/assignments">assignments</a>{% endblock %}
 {% block content %}
     {% if current_user.account_type == "teacher" %}
-      <button><a href="?">Return to teacher view</a></button>
+      <a href="?">Return to teacher view</a>
     {% endif %}
     <div id="assignments">
     {% for i in assignments %} 
