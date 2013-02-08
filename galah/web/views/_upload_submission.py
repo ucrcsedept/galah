@@ -67,6 +67,9 @@ def upload_submission(assignment_id):
             assignment_id = assignment_id
         )
 
+    if "as_student" in request.args:
+        redirect_to += "?as_student"
+
     # Check if the assignment's cutoff date has passed
     if assignment.due_cutoff and \
             assignment.due_cutoff < datetime.datetime.today():

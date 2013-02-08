@@ -57,6 +57,9 @@ def resubmit_submission(assignment_id, submission_id):
             assignment_id = assignment_id
         )
 
+    if "as_student" in request.args:
+        redirect_to += "?as_student"
+
     # Recheck if the assignment's cutoff date has passed.
     if assignment.due_cutoff and \
             assignment.due_cutoff < datetime.datetime.today():

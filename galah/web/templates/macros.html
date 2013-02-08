@@ -169,15 +169,23 @@
 {% endmacro %}
 
 {% macro status_class(status) %}
-  {% if "Failed" in status %}
+  {%- if "Failed" in status -%}
     failed
-  {% elif "Completed" in status %}
+  {%- elif "Completed" in status -%}
     success
-  {% elif "timed out" in status %}
+  {%- elif "timed out" in status -%}
     timed_out
-  {% elif "Waiting" in status %}
+  {%- elif "Waiting" in status -%}
     waiting
-  {% else %}
+  {%- else -%}
     submitted
-  {% endif %}
+  {%- endif -%}
+{% endmacro %}
+
+{% macro maybe_view_as_student(user, url='', prepend='?') %}
+  {%- if user.account_type == "teacher" -%}
+    {{ url + prepend + "as_student" }}
+  {%- else -%}
+    {{ url }}
+  {%- endif -%}
 {% endmacro %}
