@@ -684,7 +684,8 @@ def assignment_info(current_user, id):
 
 @_api_call(("admin", "teacher"))
 def modify_assignment(current_user, id, name = "", due = "", for_class = "",
-                      due_cutoff = "", hide_until = ""):
+                      due_cutoff = "", hide_until = "",
+                      allow_final_submission = True):
     assignment = _get_assignment(id, current_user)
 
     # Save the string representation of the original assignment show we can show
@@ -762,6 +763,16 @@ def modify_assignment(current_user, id, name = "", due = "", for_class = "",
                 "You cannot reassign an assignment to a class you're not "
                 "teaching."
             )
+
+    allow_final_submission = True if allow_final_submission == "True" else False
+    if assignment.allow_final_submission != allow_final_submission:
+        change_log.append(
+            "Allow Final Submission option changed from '%s' to '%s'."
+                % (str(assignment.allow_final_submission),
+                   str(allow_final_submission))
+        )
+
+        assignment.allow_final_submission = allow_final_submission
 
     assignment.save()
 
