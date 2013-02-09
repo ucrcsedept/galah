@@ -157,10 +157,11 @@ a {
 }
 
 .detail_prompt {
-    margin-left: 30%;
     font-style: italic;
     color: #999;
     font-weight: bold;
+    float: right;
+    padding-right: 14px;
 }
 
 .part > span {
