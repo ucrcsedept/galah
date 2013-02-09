@@ -190,6 +190,11 @@ a {
     border-right: 1px solid #ccc;
 }
 
+.passed {
+    color: green;
+    font-size: 24px;
+}
+
 .stats {
     background: white;
     border: 1px solid #ccc;

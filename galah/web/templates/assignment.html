@@ -142,8 +142,10 @@
 						<td style="font-weight: bold">
 						  {% if submission.test_results_obj.max_score > 0 %}
 						    {{ "%.3g / %.3g" % (submission.test_results_obj.score, submission.test_results_obj.max_score) }}
-						  {% else %}
+						  {% elif submission.test_results_obj.score < 0 %}
 						    {{ "%.3g" % (submission.test_results_obj.score) }}
+						  {% else %}
+						    <span class="passed">✓</span>
 						  {% endif %}
 						</td>
 						<td>
@@ -158,8 +160,10 @@
 						<td class="heading test_results_score">
 						  {% if i.max_score > 0 %}
 						    {{ "%.3g / %.3g" % (i.score, i.max_score) }}
+						  {% elif i.score < 0  %}
+						    {{ "%.3g" % (i.score) }}
 						  {% else %}
-						    {{ "%.3g" % (i.max_score) }}
+						    <span class="passed">✓</span>
 						  {% endif %}
 						</td>
 						<td>
@@ -181,8 +185,10 @@
 								<span class="parts_score heading">
 								  {% if j[2] > 0 %}
 								    {{ "%.3g / %.3g" % (j[1], j[2]) }}
+								  {% elif j[2] < 0 %}
+								    {{ "%.3g" % (j[2]) }}
 								  {% else %}
-								    {{ "%.3g" % (j[1]) }}
+								    <span class="passed">✓</span>
 								  {% endif %}
 								</span>
 								<span class="parts_name heading">{{ j[0] }}</span>
