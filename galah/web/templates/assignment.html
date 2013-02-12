@@ -185,8 +185,8 @@
 								<span class="parts_score heading">
 								  {% if j[2] > 0 %}
 								    {{ "%.3g / %.3g" % (j[1], j[2]) }}
-								  {% elif j[2] < 0 %}
-								    {{ "%.3g" % (j[2]) }}
+								  {% elif j[1] < 0 %}
+								    {{ "%.3g" % (j[1]) }}
 								  {% else %}
 								    <span class="passed">✓</span>
 								  {% endif %}
