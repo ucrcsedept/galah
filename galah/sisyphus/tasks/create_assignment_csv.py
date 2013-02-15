@@ -72,10 +72,6 @@ def _create_assignment_csv(csv_id, requester, assignment):
         # Grab the most recent submissions from each user.
         submissions = list(Submission.objects(**query))
 
-        if not submissions:
-            logger.info("No submissions found matching query.")
-            return
-
         # Create the actual csv file.
         csv_file = open(config["CSV_DIRECTORY"] + str(csv_id), "w")
 
