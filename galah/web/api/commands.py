@@ -685,7 +685,7 @@ def assignment_info(current_user, id):
 @_api_call(("admin", "teacher"))
 def modify_assignment(current_user, id, name = "", due = "", for_class = "",
                       due_cutoff = "", hide_until = "",
-                      allow_final_submission = True):
+                      allow_final_submission = ""):
     assignment = _get_assignment(id, current_user)
 
     # Save the string representation of the original assignment show we can show
@@ -764,15 +764,27 @@ def modify_assignment(current_user, id, name = "", due = "", for_class = "",
                 "teaching."
             )
 
-    allow_final_submission = True if allow_final_submission == "True" else False
-    if assignment.allow_final_submission != allow_final_submission:
-        change_log.append(
-            "Allow Final Submission option changed from '%s' to '%s'."
-                % (str(assignment.allow_final_submission),
-                   str(allow_final_submission))
-        )
+    if allow_final_submission != "":
+        # Transform the user's value into a boolean value, throwing a user
+        # error if it's not perfect.
+        if allow_final_submission.lower() == "true":
+            allow_final_submission = True
+        elif allow_final_submission.lower() == "false":
+            allow_final_submission = False
+        else:
+            raise UserError(
+                "Invalid value for allow_final_submission: %s. Expected True "
+                "or False." % allow_final_submission
+            )
 
-        assignment.allow_final_submission = allow_final_submission
+        if assignment.allow_final_submission != allow_final_submission:
+            change_log.append(
+                "Allow Final Submission option changed from '%s' to '%s'."
+                    % (str(assignment.allow_final_submission),
+                       str(allow_final_submission))
+            )
+
+            assignment.allow_final_submission = allow_final_submission
 
     assignment.save()
 
