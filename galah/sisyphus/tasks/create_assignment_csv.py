@@ -76,12 +76,12 @@ def _create_assignment_csv(csv_id, requester, assignment):
         csv_file = open(config["CSV_DIRECTORY"] + str(csv_id), "w")
 
         for i in submissions:
-            score = 0.0
+            score = "None"
             if i.test_results:
                 test_result = TestResult.objects.get(id = i.test_results)
-                score = test_result.score
+                score = str(test_result.score)
 
-            print >> csv_file, "%s,%f,%s" % \
+            print >> csv_file, "%s,%s,%s" % \
                 (i.user, score, i.timestamp.strftime("%Y-%m-%d-%H-%M-%S"))
 
         csv_file.close()
