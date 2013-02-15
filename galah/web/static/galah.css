@@ -157,10 +157,11 @@ a {
 }
 
 .detail_prompt {
-    margin-left: 30%;
     font-style: italic;
     color: #999;
     font-weight: bold;
+    float: right;
+    padding-right: 14px;
 }
 
 .part > span {
@@ -188,6 +189,11 @@ a {
 .parts_score {
     min-width: 100px;
     border-right: 1px solid #ccc;
+}
+
+.passed {
+    color: green;
+    font-size: 24px;
 }
 
 .stats {

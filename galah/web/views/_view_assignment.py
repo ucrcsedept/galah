@@ -85,7 +85,7 @@ def view_assignment(assignment_id):
         submissions = list(
             Submission.objects(
                 assignment = id,
-                most_recent = True
+                most_recent = True,
             ).order_by(
                 "-most_recent",
                 "-timestamp"

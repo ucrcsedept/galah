@@ -42,7 +42,7 @@
   <div class="stats tab">
     <h2>Select an enrolled student below to see their progress in detail.</h2>
     {% for i in submissions %}
-      <button><a href="snapshot/{{ i.user }}/">{{ i.user }}</a></button>
+       <a href="snapshot/{{ i.user }}/">{{ i.user }}</a>
     {% endfor %}
   </div>
 {% endblock %}

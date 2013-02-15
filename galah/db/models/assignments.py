@@ -49,6 +49,7 @@ class Assignment(Document):
     hide_until = DateTimeField(default = datetime.datetime.min, required = True)
     for_class = ObjectIdField(required = True)
     test_harness = ObjectIdField()
+    allow_final_submission = BooleanField(default = True)
 
     meta = {
         "allow_inheritance": False

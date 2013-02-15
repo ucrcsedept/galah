@@ -34,7 +34,7 @@ def enqueue(queue, item, poll_timeout = 5):
 
     if universal.exiting:
         raise universal.Exiting()
-
+ 
 def dequeue(queue, poll_timeout = 5):
     """
     Gets an item from a queue. Similar to enqueue.
@@ -102,3 +102,8 @@ def exit():
     universal.exiting = True
 
     raise universal.Exiting()
+
+# Raises SystemExit when program is terminated by SIGTERM or SIGINT to invoke
+# Sheep's graceful shutdown.
+def exitGracefully(signum, frame):
+    raise SystemExit

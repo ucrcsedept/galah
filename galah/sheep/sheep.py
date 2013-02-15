@@ -49,11 +49,16 @@ maintainer.start()
 
 # Wait until we recieve a SIGINT (a hook was added by universal.py that changes
 # exiting to True when a SIGINT is recieved)
+from galah.sheep.utility.exithelpers import exitGracefully
+import signal
+signal.signal(signal.SIGINT, exitGracefully)
+signal.signal(signal.SIGTERM, exitGracefully)
+
 import time
 try:
     while not universal.exiting:
         time.sleep(5)
-except KeyboardInterrupt:
+except (SystemExit):
     universal.exiting = True
 
 # Better idea. Set linger on each socket appropriately. Make sure all the

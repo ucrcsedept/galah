@@ -50,12 +50,6 @@ environment = {
     ]
 }
 
-# Set it so that when we recieve a SIGINT we set exiting to True.
-#def sigintHandler(a, b):
-#    global exiting
-#    exiting = True
-#signal.signal(signal.SIGINT, sigintHandler)
-
 # Create a decorator to allow thread's run functions to handle exiting
 # exceptions.
 _log = logging.getLogger("galah.sheep.universal")
