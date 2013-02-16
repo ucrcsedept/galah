@@ -1,8 +1,6 @@
 {% extends "base.html" %}
 {% block title %}{{ assignment.name }}{% endblock %}
-{% from "macros.html" import maybe_view_as_student %}
-{% set user = current_user %}
-{% block path %}&rarr; <a href="{{ maybe_view_as_student(user, '/assignments') }}">assignments</a> &rarr; <a href="{{ maybe_view_as_student(user, '/assignments/' ~ assignment.id) }}">{{ assignment.name }}</a>{% endblock %}
+{% block path %}&rarr; <a href="/assignments">assignments</a> &rarr; <a href="/assignments/{{ assignment.id }}">{{ assignment.name }}</a>{% endblock %}
 {% block includes %}
         {% if wait_and_refresh %}
 	  <meta http-equiv="refresh" content="10">
@@ -52,7 +50,7 @@
 	{% if not assignment.due_cutoff or now < assignment.due_cutoff %}
 	<div class="tab" id="upload_archive">
 		<h2>Upload a Submission</h2>
-		<form method="post" action="upload{{ maybe_view_as_student(user) }}" enctype="multipart/form-data">
+		<form method="post" action="upload" enctype="multipart/form-data">
 			{{ simple_archive_form.hidden_tag() }}
 			<div class="heading directions">
 				Select one of more files to include in your submission below.
@@ -118,7 +116,7 @@
 			</ul>
 			{% if submission.show_resubmit %}
 			<div>
-			  <a href="{{ maybe_view_as_student(user, 'resubmit/' ~ submission.id) }}"><input type="button" value="Resubmit"></a>
+			  <a href="resubmit/{{ submission.id }}"><input type="button" value="Resubmit"></a>
 			</div>
 			{% endif %}
 			{% if submission.test_results and submission.test_results_obj and submission.test_results_obj.score is not none %}

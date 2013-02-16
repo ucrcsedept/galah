@@ -67,9 +67,6 @@ def upload_submission(assignment_id):
             assignment_id = assignment_id
         )
 
-    if "as_student" in request.args:
-        redirect_to += "?as_student"
-
     # Check if the assignment's cutoff date has passed
     if assignment.due_cutoff and \
             assignment.due_cutoff < datetime.datetime.today():
@@ -120,7 +117,7 @@ def upload_submission(assignment_id):
         if not i.data.filename:
             continue
 
-        # Figure out where we want to save the user's file
+        #  Figure out where we want to save the user's file
         file_path = os.path.join(
             new_submission.testables, secure_filename(i.data.filename)
         )

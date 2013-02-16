@@ -1,18 +1,14 @@
 {% extends "base.html" %}
 {% block title %}Assignments{% endblock %}
-{% from "macros.html" import maybe_view_as_student %}
 {% set user = current_user %}
-{% block path %}&rarr; <a href="{{ maybe_view_as_student(user, '/assignments') }}">assignments</a>{% endblock %}
+{% block path %}&rarr; <a href="/assignments">assignments</a>{% endblock %}
 {% block content %}
-    {% if current_user.account_type == "teacher" %}
-      <a href="?">Return to teacher view</a>
-    {% endif %}
     <div id="assignments">
     {% for i in assignments %} 
         <div>
             <div class="title heading">
                 <span class="class_name">{{ i.class_name}}</span>
-                <a href="{{ maybe_view_as_student(user, '/assignments/' ~ i.id) }}">{{ i.name }}</a>
+                <a href="/assignments/{{ i.id }}">{{ i.name }}</a>
             {% if i.status %}
                 <span class="submission_status" style="color: {{ i.status_color }}">
                     {% autoescape false %}{{ i.status }}{% endautoescape %}
@@ -34,12 +30,12 @@
         </div>
     {% endif %}
     {% if hidden_assignments > 0 %}
-	<a class="show_hidden heading" href="{{ maybe_view_as_student(user, '?show_all', '&') }}">
+	<a class="show_hidden heading" href="?show_all">
             Show All Assignments ({{ hidden_assignments }} hidden)
         </a>
     {% endif %}
     {% if hidden_assignments < 0 %}
-	<a class="show_hidden heading" href="{{ maybe_view_as_student(user) }}">
+	<a class="show_hidden heading" href="#">
             Showing All Assignments (Show Less)
         </a>
     {% endif %}

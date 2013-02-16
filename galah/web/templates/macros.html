@@ -11,11 +11,3 @@
     submitted
   {%- endif -%}
 {% endmacro %}
-
-{% macro maybe_view_as_student(user, url='', prepend='?') %}
-  {%- if user.account_type == "teacher" -%}
-    {{ url + prepend + "as_student" }}
-  {%- else -%}
-    {{ url }}
-  {%- endif -%}
-{% endmacro %}
