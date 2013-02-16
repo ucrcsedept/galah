@@ -435,26 +435,6 @@ time[title] {
     opacity: 0.85;
 }
 
-/* Chart styling */
-chartContainer {
-    margin-top: 10px;
-}
-
-.chart {
-    min-width: 350px;
-    max-width: 1080px;
-    height: 500px;
-    margin: 0 auto;
-}
-
-.legendLabel {
-    cursor: pointer;
-}
-
-.right {
-    float: right;
-}
-
 span.disabled {
     color: #666;
     text-decoration: line-through;
