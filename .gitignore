@@ -36,3 +36,7 @@ nosetests.xml
 
 # Credentials cache
 .cache/
+
+# Sublime
+*.sublime-project
+*.sublime-workspace

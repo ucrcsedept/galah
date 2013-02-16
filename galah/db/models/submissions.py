@@ -124,7 +124,7 @@ class Submission(Document):
             "timestamp": self.timestamp.isoformat(),
             "most_recent": self.most_recent,
             "test_type": self.test_type,
-            "test_results": self.test_results,
+            "test_results": str(self.test_results),
             "test_request_timestamp":
                     None if not self.test_request_timestamp else
                         self.test_request_timestamp.isoformat()

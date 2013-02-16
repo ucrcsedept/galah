@@ -38,6 +38,12 @@ def parse_arguments(args = sys.argv[1:]):
             dest = "password_env",
             help = "The name of an environmental variable to pull the password "
                    "for the new admin user from."
+        ),
+        make_option(
+            "--debug", "-d", action = "store_true", default = False,
+            help = "If specified, when errors occur a full stack trace will be "
+                   "given rather than a less informative more user-friendly "
+                   "error message."
         )
     ]
 
@@ -87,12 +93,15 @@ def main():
             return 1
 
     print "Creating admin user", args[0]
-    try:
+    if options.debug:
         create_admin(args[0], password)
-    except Exception as e:
-        print >> sys.stderr, "Could not create admin user.", str(e)
+    else:
+        try:
+            create_admin(args[0], password)
+        except Exception as e:
+            print >> sys.stderr, "Could not create admin user.", str(e)
 
-        return 1
+            return 1
 
     return 0
 
