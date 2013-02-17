@@ -179,6 +179,7 @@ a {
     width: 93%;
     background: white;
     display: none;
+    clear: both;
 }
 
 .parts_detail {
