@@ -13,23 +13,31 @@
 	            $(".total").not(this).siblings().hide("fast");
 		    // Toggles its own siblings so user can hide all results.
 		    $(this).siblings().toggle("fast");
+		    var toggle_arrow = $(this).find(".detail_prompt");
+		    console.log($(toggle_arrow).text());
+		    if ($(toggle_arrow).text() === "▸") {
+			$(toggle_arrow).text("▾");
+		    } else {
+			$(toggle_arrow).text("▸");
+		    }
+		    
 		});
 
 	        $(".parts_detail.active").each(function() {
-		    // Show all parts details where the score is 100% by default.
-		    $(this).next(".parts").show();
+		    // Show all parts details where the score is not 100% by default.
+		    $(this).parent().siblings(".parts").show();
 	        });
 
 	        $(".test_results").on("click", ".parts_detail", function() {
 		    // Toggle showing parts details.
-		    if ($(this).text() === "- Collapse") {
-			$(this).text("+ Expand");
+		    if ($(this).hasClass("active")) {
+			$(this).text("▸");
 		    } else {
-			$(this).text("- Collapse");
+			$(this).text("▾");
 		    }
 
 		    $(this).toggleClass("active");
-		    $(this).next(".parts").slideToggle();
+		    $(this).parent().siblings(".parts").slideToggle();
 		});
 
 	        $("form").on("click", "#submit_archive", function() {
@@ -137,23 +145,25 @@
 				<table class="test_results">
 					<tr class="total heading">
 						<td style="font-weight: bold">
-						  {% if submission.test_results_obj.max_score > 0 %}
+					          <span class="detail_prompt">▸</span>
+						  {%- if submission.test_results_obj.max_score > 0 -%}
 						    {{ "%.3g / %.3g" % (submission.test_results_obj.score, submission.test_results_obj.max_score) }}
-						  {% elif submission.test_results_obj.score < 0 %}
+						  {%- elif submission.test_results_obj.score < 0 -%}
 						    {{ "%.3g" % (submission.test_results_obj.score) }}
-						  {% else %}
+						  {%- else -%}
 						    <span class="passed">✓</span>
-						  {% endif %}
+						  {%- endif -%}
 						</td>
 						<td>
 						  Total Score
-						  <small class="detail_prompt">
-						    Click to toggle score details
-						  </small>
 						</td>
 					</tr>
 					{% for i in submission.test_results_obj.tests %}
-					<tr>
+					  {%- if i.parts | length -%}
+					    <tr class="expandable_parts">
+					  {%- else -%}
+					    <tr>
+					  {%- endif -%}
 						<td class="heading test_results_score">
 						  {% if i.max_score > 0 %}
 						    {{ "%.3g / %.3g" % (i.score, i.max_score) }}
@@ -164,18 +174,22 @@
 						  {% endif %}
 						</td>
 						<td>
-							<div class="heading test_name">{{ i.name }}</div>
+							<div class="heading test_name">
+							  {%- if i.parts | length -%}
+                                                            {%- if i.score == i.max_score -%}
+							      <small class="detail_prompt parts_detail">▸</small>
+							    {%- else -%}
+							      <small class="detail_prompt parts_detail active">▾</small>
+							    {%- endif -%}
+							  {%- endif -%}
+							  {{- i.name -}}
+							</div>
 							{% if i.message %}
 							<div class="test_results_message">
 								{{ i.message | markdown }}
 							</div>
 							{% endif %}
 							{% if i.parts | length %}
-							  {% if i.score == i.max_score %}
-							    <small class="detail_prompt parts_detail">+ Expand</small>
-							  {% else %}
-							    <small class="detail_prompt parts_detail active">- Collapse</small>
-							  {% endif %}
 							  <section class="parts">
 							    {% for j in i.parts  %}
 							      <div class="part">

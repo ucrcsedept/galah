@@ -157,11 +157,7 @@ a {
 }
 
 .detail_prompt {
-    font-style: italic;
-    color: #999;
-    font-weight: bold;
-    float: right;
-    padding-right: 14px;
+    padding-right: 10px;
 }
 
 .part > span {
