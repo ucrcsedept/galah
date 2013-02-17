@@ -31,6 +31,19 @@
 		    $(this).toggleClass("active");
 		    $(this).next(".parts").slideToggle();
 		});
+
+	        $("form").on("click", "#submit_archive", function() {
+		    var files_added = 0; 
+		    $("#file_input_container").children().each(function() {
+			if ($(this).children("input").val() != '') {
+			    ++files_added;
+			}
+		    });
+		    if (files_added > 0) {
+			$(this).attr("disabled", "disabled");
+			$("form").submit();
+		    }
+		});
 	})
 	function addFileField() {
 		var new_file = $("#file_input_container").children(":last").clone(true)
