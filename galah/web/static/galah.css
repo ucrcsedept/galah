@@ -164,6 +164,10 @@ a {
     cursor: pointer;
 }
 
+.negative_score {
+    color: #da4f49;
+}
+
 .part > span {
     display: inline-block;
 }
