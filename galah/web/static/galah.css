@@ -160,6 +160,10 @@ a {
     padding-right: 10px;
 }
 
+.expandable_parts {
+    cursor: pointer;
+}
+
 .part > span {
     display: inline-block;
 }

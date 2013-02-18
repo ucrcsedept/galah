@@ -28,16 +28,17 @@
 		    $(this).parent().siblings(".parts").show();
 	        });
 
-	        $(".test_results").on("click", ".parts_detail", function() {
+	        $(".expandable_parts").click(function() {
 		    // Toggle showing parts details.
-		    if ($(this).hasClass("active")) {
-			$(this).text("▸");
+	            var parts_detail = $(this).find(".parts_detail");
+		    if ($(parts_detail).hasClass("active")) {
+			$(parts_detail).text("▸");
 		    } else {
-			$(this).text("▾");
+			$(parts_detail).text("▾");
 		    }
 
-		    $(this).toggleClass("active");
-		    $(this).parent().siblings(".parts").slideToggle();
+		    $(parts_detail).toggleClass("active");
+		    $(this).find(".parts").slideToggle();
 		});
 
 	        $("form").on("click", "#submit_archive", function() {
