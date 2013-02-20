@@ -11,7 +11,7 @@
 #container {
     color: #333;
     font-size: 12pt;
-    padding: 0px 30px;
+    padding: 8px 30px;
     font-family: Palatino, Georgia, serif;
     min-width: 400px;
     max-width: 1080px;
@@ -38,8 +38,19 @@ a {
     text-align: center;
 }
 
+/* Announcements */
+#announcement {
+    text-align: center;
+    background-color: #FFF2AF;
+    font-weight: bold;
+    padding: 20px;
+    font-size: 18pt;
+    border-bottom: 4px solid #555;
+    margin-bottom: 20px;
+}
+
 /* Top Login Bar */
-#topbar > #login_status, #topbar > #flashes > div {
+#login_status, #topbar > #flashes > div {
     display: block;
     border: 1px solid #ccc;
     padding: 4px;
@@ -415,6 +426,8 @@ h3 {
 /* Background Gradient */
 body
 {
+    padding: 0px;
+    margin: 0px;
     /* Gradient*/
     /* IE10 */
     background-image: -ms-linear-gradient(top left, #FFFFFF 0%, #D9EBFF 100%);
