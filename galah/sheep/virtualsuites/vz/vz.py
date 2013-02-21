@@ -54,7 +54,7 @@ def setup(logger):
         except Queue.Full:
             break
 
-        logger.info("Reusing clean VM with CTID %d." % m)
+        logger.info("Reusing clean VM with CTID %d.", m)
 
     # Any remaining virtual machines will simply be shut down. This is a bit of
     # a waste but makes it easier to handle. No reason not to come back and add
