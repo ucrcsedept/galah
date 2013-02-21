@@ -59,6 +59,11 @@ def handleExiting(zfunc):
             zfunc(*zargs, **zkwargs)
         except Exiting:
             pass
+        except Exception:
+            _log.exception(
+                "%s's thread aborted with an exception.",
+                threading.currentThread().name
+            )
 
         _log.info("%s's thread exited" % threading.currentThread().name)
     return newFunc
