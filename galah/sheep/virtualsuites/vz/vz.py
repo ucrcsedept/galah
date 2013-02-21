@@ -33,7 +33,9 @@ config = load_config("sheep/vz")
 
 containers = Queue.Queue(maxsize = config["MAX_MACHINES"])
 
-# Performs one time setup for the entire module
+# Performs one time setup for the entire module. Cannot be a member function of
+# producer because it needs to be called once at startup, and the producer class
+# would not have been made yet.
 def setup(logger):
     if config["MAX_MACHINES"] == 0:
         logger.warning(
@@ -73,13 +75,12 @@ def setup(logger):
 
     # Get a list of all the dirty virtual machines
     dirty_machines = pyvz.get_containers("galah-vm: dirty")
+    logger.info("Destroying dirty VMs with CTIDs %s.", str(dirty_machines))
     for i in dirty_machines:
-        self.logger.info("Destroying dirty VM with CTID %d.", i)
-
         try:
             pyvz.extirpate_container(i)
         except SystemError:
-            self.logger.exception("Could not destroy dirty VM with CTID %d.", i)
+            logger.exception("Could not destroy dirty VM with CTID %d.", i)
 
 class Producer:
     def __init__(self, logger):
