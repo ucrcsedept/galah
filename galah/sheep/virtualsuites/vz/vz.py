@@ -25,6 +25,7 @@ import socket
 import os
 import os.path
 import json
+import datetime
 
 # Load Galah's configuration.
 from galah.base.config import load_config
@@ -81,12 +82,24 @@ def setup(logger):
 class Producer:
     def __init__(self, logger):
         self.logger = logger
+        self._last_low_machine_log = datetime.datetime.min
 
     def produce_vm(self):
         if containers.full():
             self.logger.info("MAX_MACHINES machines exist. Waiting...")
 
             exithelpers.wait_for_queue(containers)
+
+        # Check to see if we are low on virtual machines.
+        if (self._last_low_machine_log + config["LOW_MACHINE_PERIOD"] <
+                datetime.datetime.today() and
+                containers.qsize() < config["LOW_MACHINE_THRESHOLD"]):
+            self.logger.warning(
+                "VM cache is below LOW_MACHINE_THRESHOLD (%d). The current "
+                "number of VMs in the cache is %d.",
+                config["LOW_MACHINE_THRESHOLD"],
+                containers.qsize()
+            )
 
         self.logger.debug("Creating new VM.")
 

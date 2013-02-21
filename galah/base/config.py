@@ -45,6 +45,8 @@ defaults = {
     "sheep/VIRTUAL_SUITE": "dummy",
     "sheep/vz/OS_TEMPLATE": "centos-6-x86_64",
     "sheep/vz/MAX_MACHINES": 2,
+    "sheep/vz/LOW_MACHINE_THRESHOLD": 1,
+    "sheep/vz/LOW_MACHINE_PERIOD": datetime.timedelta(minutes = 1),
     "sheep/vz/CALL_MKDIR": True,
     "sheep/vz/VM_TESTABLES_DIRECTORY": "/tmp/testables/",
     "sheep/vz/VM_HARNESS_DIRECTORY": "/tmp/harness/",
