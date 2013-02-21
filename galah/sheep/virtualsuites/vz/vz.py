@@ -46,22 +46,24 @@ def setup(logger):
     clean_machines = pyvz.get_containers("galah-vm: clean")
 
     # Add all the clean VMs to the queue
+    reused_machines = []
     while clean_machines:
         m = clean_machines.pop()
+
+        reused_machines.append(m)
 
         try:
             containers.put_nowait(m)
         except Queue.Full:
             break
 
-        logger.info("Reusing clean VM with CTID %d.", m)
+    logger.info("Reusing clean VMs with CTIDs %s.", str(reused_machines))
+    logger.info("Destroying clean VMs with CTIDs %s.", str(clean_machines))
 
     # Any remaining virtual machines will simply be shut down. This is a bit of
     # a waste but makes it easier to handle. No reason not to come back and add
     # logic to use these in the future.
     for i in clean_machines:
-        logger.info("Destroying clean VM with CTID %d.", i)
-
         try:
             pyvz.extirpate_container(i)
         except SystemError:
