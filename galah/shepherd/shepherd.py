@@ -90,7 +90,7 @@ def main():
 
     while True:
         # Wait until either the public or sheep socket has messages waiting
-        zmq.core.poll.select([public, sheep], [], [], timeout = 5)
+        zmq.select([public, sheep], [], [], timeout = 5)
 
         # Will grab all of the outstanding messages from the outside and place them
         # in the request queue
