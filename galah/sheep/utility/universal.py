@@ -64,8 +64,13 @@ def handleExiting(zfunc):
     def newFunc(*zargs, **zkwargs):
         try:
             zfunc(*zargs, **zkwargs)
-        except (Exiting, ShepherdLost):
+        except Exiting:
             pass
+        except ShepherdLost:
+            _log.warning(
+                "%s's thread aborted due with a ShepherdLost exception.",
+                threading.currentThread().name
+            )
         except Exception:
             _log.exception(
                 "%s's thread aborted with an exception.",
