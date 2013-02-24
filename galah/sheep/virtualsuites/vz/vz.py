@@ -59,8 +59,11 @@ def setup(logger):
         except Queue.Full:
             break
 
-    logger.info("Reusing clean VMs with CTIDs %s.", str(reused_machines))
-    logger.info("Destroying clean VMs with CTIDs %s.", str(clean_machines))
+    if reused_machines:
+        logger.info("Reusing clean VMs with CTIDs %s.", str(reused_machines))
+    
+    if clean_machines:
+        logger.info("Destroying clean VMs with CTIDs %s.", str(clean_machines))
 
     # Any remaining virtual machines will simply be shut down. This is a bit of
     # a waste but makes it easier to handle. No reason not to come back and add
@@ -75,7 +78,9 @@ def setup(logger):
 
     # Get a list of all the dirty virtual machines
     dirty_machines = pyvz.get_containers("galah-vm: dirty")
-    logger.info("Destroying dirty VMs with CTIDs %s.", str(dirty_machines))
+    if dirty_machines:
+        logger.info("Destroying dirty VMs with CTIDs %s.", str(dirty_machines))
+
     for i in dirty_machines:
         try:
             pyvz.extirpate_container(i)
