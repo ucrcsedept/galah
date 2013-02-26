@@ -683,6 +683,27 @@ def assignment_info(current_user, id):
                 % (_assignment_to_str(assignment), attributes)
 
 @_api_call(("admin", "teacher"))
+def assignment_progress(current_user, id):
+    assignment = _get_assignment(id, current_user)
+
+    # Get a count of all students in this class
+    total_students = User.objects(
+        account_type = "student",
+        classes = assignment.for_class
+    ).count()
+
+    # Get all submissions for this assignment
+    submissions = list(
+        Submission.objects(
+            assignment = assignment.id,
+            most_recent = True
+        )
+    )
+
+    return "%d out of %d students have submitted" % (total_students,
+                                                     len(submissions))
+
+@_api_call(("admin", "teacher"))
 def modify_assignment(current_user, id, name = "", due = "", for_class = "",
                       due_cutoff = "", hide_until = "",
                       allow_final_submission = ""):
@@ -884,7 +905,6 @@ def get_csv(current_user, assignment):
             "X-Download-DefaultName": "assignment.csv"
         }
     )
-
 
 from types import FunctionType
 api_calls = dict((k, v) for k, v in globals().items() if isinstance(v, APICall))
