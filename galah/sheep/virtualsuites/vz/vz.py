@@ -25,6 +25,7 @@ import socket
 import os
 import os.path
 import json
+import datetime
 
 # Load Galah's configuration.
 from galah.base.config import load_config
@@ -32,7 +33,9 @@ config = load_config("sheep/vz")
 
 containers = Queue.Queue(maxsize = config["MAX_MACHINES"])
 
-# Performs one time setup for the entire module
+# Performs one time setup for the entire module. Cannot be a member function of
+# producer because it needs to be called once at startup, and the producer class
+# would not have been made yet.
 def setup(logger):
     if config["MAX_MACHINES"] == 0:
         logger.warning(
@@ -45,22 +48,27 @@ def setup(logger):
     clean_machines = pyvz.get_containers("galah-vm: clean")
 
     # Add all the clean VMs to the queue
+    reused_machines = []
     while clean_machines:
         m = clean_machines.pop()
+
+        reused_machines.append(m)
 
         try:
             containers.put_nowait(m)
         except Queue.Full:
             break
 
-        logger.info("Reusing clean VM with CTID %d." % m)
+    if reused_machines:
+        logger.info("Reusing clean VMs with CTIDs %s.", str(reused_machines))
+    
+    if clean_machines:
+        logger.info("Destroying clean VMs with CTIDs %s.", str(clean_machines))
 
     # Any remaining virtual machines will simply be shut down. This is a bit of
     # a waste but makes it easier to handle. No reason not to come back and add
     # logic to use these in the future.
     for i in clean_machines:
-        logger.info("Destroying clean VM with CTID %d.", i)
-
         try:
             pyvz.extirpate_container(i)
         except SystemError:
@@ -70,23 +78,36 @@ def setup(logger):
 
     # Get a list of all the dirty virtual machines
     dirty_machines = pyvz.get_containers("galah-vm: dirty")
-    for i in dirty_machines:
-        self.logger.info("Destroying dirty VM with CTID %d.", i)
+    if dirty_machines:
+        logger.info("Destroying dirty VMs with CTIDs %s.", str(dirty_machines))
 
+    for i in dirty_machines:
         try:
             pyvz.extirpate_container(i)
         except SystemError:
-            self.logger.exception("Could not destroy dirty VM with CTID %d.", i)
+            logger.exception("Could not destroy dirty VM with CTID %d.", i)
 
 class Producer:
     def __init__(self, logger):
         self.logger = logger
+        self._last_low_machine_log = datetime.datetime.min
 
     def produce_vm(self):
         if containers.full():
             self.logger.info("MAX_MACHINES machines exist. Waiting...")
 
             exithelpers.wait_for_queue(containers)
+
+        # Check to see if we are low on virtual machines.
+        if (self._last_low_machine_log + config["LOW_MACHINE_PERIOD"] <
+                datetime.datetime.today() and
+                containers.qsize() < config["LOW_MACHINE_THRESHOLD"]):
+            self.logger.warning(
+                "VM cache is below LOW_MACHINE_THRESHOLD (%d). The current "
+                "number of VMs in the cache is %d.",
+                config["LOW_MACHINE_THRESHOLD"],
+                containers.qsize()
+            )
 
         self.logger.debug("Creating new VM.")
 

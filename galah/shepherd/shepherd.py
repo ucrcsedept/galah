@@ -90,7 +90,7 @@ def main():
 
     while True:
         # Wait until either the public or sheep socket has messages waiting
-        zmq.core.poll.select([public, sheep], [], [], timeout = 5)
+        zmq.select([public, sheep], [], [], timeout = 5)
 
         # Will grab all of the outstanding messages from the outside and place them
         # in the request queue
@@ -179,7 +179,7 @@ def main():
                 continue
 
             if sheep_message.type == "distress":
-                logger.warn("Received distress message.")
+                logger.warn("Received distress message. Sending bloot.")
                 router_send_json(
                     sheep, sheep_identity, FlockMessage("bloot", "").to_dict()
                 )
@@ -258,9 +258,7 @@ def main():
                 )
 
                 if not flock.sheep_finished(sheep_identity):
-                    # This can happen for a variety of uninteresting reasons and
-                    # is unlikely to be useful to a sysadmin.
-                    logger.debug(
+                    logger.info(
                         "Got result from sheep [%s] who was not processing "
                         "a test request.",
                         repr(sheep_identity)

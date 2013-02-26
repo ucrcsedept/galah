@@ -61,6 +61,8 @@ try:
 except (SystemExit):
     universal.exiting = True
 
+    print "Letting threads close... Don't spam Ctrl+C."
+
 # Better idea. Set linger on each socket appropriately. Make sure all the
 # threads shut down nicely here (but give an option to shut down immediately, a
 # nice sleep that resumes when Ctrl+C is pressed should do nicely) within some

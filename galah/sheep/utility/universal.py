@@ -50,6 +50,13 @@ environment = {
     ]
 }
 
+class ShepherdLost(Exception):
+    def __init__(self, current_request = None, result = None):
+        self.current_request = current_request
+        self.result = result
+
+        Exception.__init__(self)
+
 # Create a decorator to allow thread's run functions to handle exiting
 # exceptions.
 _log = logging.getLogger("galah.sheep.universal")
@@ -59,6 +66,16 @@ def handleExiting(zfunc):
             zfunc(*zargs, **zkwargs)
         except Exiting:
             pass
+        except ShepherdLost:
+            _log.warning(
+                "%s's thread aborted due with a ShepherdLost exception.",
+                threading.currentThread().name
+            )
+        except Exception:
+            _log.exception(
+                "%s's thread aborted with an exception.",
+                threading.currentThread().name
+            )
 
         _log.info("%s's thread exited" % threading.currentThread().name)
     return newFunc

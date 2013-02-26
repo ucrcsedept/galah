@@ -24,6 +24,13 @@
     {%- block includes %}{% endblock -%}
 </head>
 <body>
+{% with announcement = config["SYSTEM_ANNOUNCEMENT"] %}
+{% if announcement %}
+<div id="announcement" class="heading construction_lines">
+    {{ announcement }}
+</div>
+{% endif %}
+{% endwith %}
 <div id="container">
     <div id="header" class="heading">
         <span class="logo"><a href="/home">{{ config["ALIAS"] }}</a></span>

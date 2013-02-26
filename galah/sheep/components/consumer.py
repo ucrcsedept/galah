@@ -31,18 +31,11 @@ import datetime
 from galah.base.config import load_config
 config = load_config("sheep")
 
-class ShepherdLost(Exception):
-    def __init__(self, current_request = None, result = None):
-        self.current_request = current_request
-        self.result = result
-
-        Exception.__init__(self)
-
 @universal.handleExiting
 def run():
     try:
         _run()
-    except ShepherdLost as e:
+    except universal.ShepherdLost as e:
         if e.result:
             universal.orphaned_results.put(e.result)
 
@@ -100,7 +93,7 @@ def _run():
                 message = FlockMessage(message["type"], message["body"])
             except exithelpers.Timeout:
                 if not shepherd_blooted:
-                    raise ShepherdLost()
+                    raise universal.ShepherdLost()
 
                 logger.debug("Sending bleet.")
                 next_bleet_time = bleet()
@@ -166,7 +159,7 @@ def _run():
                             confirmation["type"], confirmation["body"]
                         )
                     except exithelpers.Timeout:
-                        raise ShepherdLost(result = result)
+                        raise universal.ShepherdLost(result = result)
 
                     logger.debug("Received message: %s", str(confirmation))
 
