@@ -27,6 +27,7 @@ from mongoengine import ValidationError
 from galah.sisyphus.api import send_task
 import shutil
 import os
+import math
 
 from galah.base.config import load_config
 config = load_config("web")
@@ -683,7 +684,7 @@ def assignment_info(current_user, id):
                 % (_assignment_to_str(assignment), attributes)
 
 @_api_call(("admin", "teacher"))
-def assignment_progress(current_user, id):
+def assignment_progress(current_user, id, show_distro = ""):
     assignment = _get_assignment(id, current_user)
 
     # Get a count of all students in this class
@@ -700,8 +701,34 @@ def assignment_progress(current_user, id):
         )
     )
 
-    return "%d out of %d students have submitted" % (total_students,
-                                                     len(submissions))
+    progress = "%d out of %d students have submitted" % (total_students,
+                                                         len(submissions))
+
+    if show_distro:
+        # Get all test results for the submissions
+        test_results = list(
+            TestResult.objects(
+                id__in = [i.test_results for i in submissions if i.test_results]
+            ).order_by(
+                "-score"
+            )
+        )
+
+        # Store distribution
+        distribution = {}
+        for result in test_results:
+            rounded_score = int(result.score)
+            if result.score in distribution:
+                distribution[rounded_score] += 1
+            else:
+                distribution[rounded_score] = 1
+
+        progress += "\n\n-- Grade Distribution (Points: # of students) --\n"
+        for score in distribution:
+            progress += "%d: %d\n" % (score, distribution[score])
+        
+
+    return progress
 
 @_api_call(("admin", "teacher"))
 def modify_assignment(current_user, id, name = "", due = "", for_class = "",
