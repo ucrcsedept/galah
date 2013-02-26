@@ -50,10 +50,6 @@ class PermissionError(UserError):
     def __init__(self, *args, **kwargs):
         UserError.__init__(self, *args, **kwargs)
 
-class UsageError(UserError):
-    def __init__(self, *args, **kwargs):
-        UserError.__init__(self, *args, **kwargs)
-
 class APICall(object):
     """Wraps an API call and handles basic permissions along with providing a
     simple interface to get meta data on the API call.
@@ -589,10 +585,10 @@ def unassign_teacher(current_user, email, drop_from):
 def unassign_teaching_assistant(current_user, email, drop_from):
     user = _get_user(email, current_user)
     if user.account_type != "teaching_assistant":
-        raise UsageError("unassign_teaching_assistant should be used to remove "
-                         "teaching assistants only. Please use "
-                         "unassign_teacher or drop_student to remove teachers "
-                         "and students, respectively.")
+        raise UserError("unassign_teaching_assistant should be used to remove "
+                        "teaching assistants only. Please use "
+                        "unassign_teacher or drop_student to remove teachers "
+                        "and students, respectively.")
     return drop_student(current_user, email, drop_from)
 
 @_api_call(("admin", "teacher", "teaching_assistant"))
