@@ -27,6 +27,7 @@ from mongoengine import ValidationError
 from galah.sisyphus.api import send_task
 import shutil
 import os
+import math
 
 from galah.base.config import load_config
 config = load_config("web")
@@ -316,11 +317,12 @@ def whoami(current_user):
 #     return result
 
 import galah.base.filemagic as filemagic
-@_api_call(("teacher", "admin"), takes_file = ("harness", "config_file"))
+@_api_call(("teaching_assistant", "teacher", "admin"),
+           takes_file = ("harness", "config_file"))
 def upload_harness(current_user, assignment, harness, config_file):
     assignment = _get_assignment(assignment, current_user)
 
-    if current_user.account_type == "teacher" and \
+    if current_user.account_type in ["teacher", "teaching_assistant"] and \
             assignment.for_class not in current_user.classes:
         raise PermissionError(
             "You can only upload harnesses for assignments in class you "
@@ -440,7 +442,7 @@ def modify_user(current_user, email, account_type):
     return "Success! %s has been retyped as a %s" \
                 % (old_user_string, account_type)
 
-@_api_call(("admin", "teacher"))
+@_api_call(("admin", "teacher", "teaching_assistant"))
 def find_user(current_user, email_contains = "", account_type = "",
               enrolled_in = "", max_results = "20"):
     max_results = int(max_results)
@@ -480,7 +482,7 @@ def find_user(current_user, email_contains = "", account_type = "",
     return "%d%s user(s) found matching query {%s}.\n\t%s" % \
             (len(matches), plus, query_description, result_string)
 
-@_api_call(("admin", "teacher"))
+@_api_call(("admin", "teacher", "teaching_assistant"))
 def user_info(current_user, email):
     user = _get_user(email, current_user)
 
@@ -501,7 +503,7 @@ def delete_user(current_user, email):
 
     return "Success! %s deleted." % _user_to_str(to_delete)
 
-@_api_call(("admin", "teacher"))
+@_api_call(("admin", "teacher", "teaching_assistant"))
 def find_class(current_user, name_contains = "", enrollee = ""):
     if not enrollee and current_user.account_type != "admin":
         query = {"id__in": current_user.classes}
@@ -524,13 +526,17 @@ def find_class(current_user, name_contains = "", enrollee = ""):
     return "%s teaching %d class(es) with '%s' in their name.\n\t%s" % \
             (instructor_string, len(matches), name_contains, result_string)
 
-@_api_call(("admin", "teacher"))
+@_api_call(("admin", "teacher", "teaching_assistant"))
 def enroll_student(current_user, email, enroll_in):
     user = _get_user(email, current_user)
 
     if current_user.account_type != "admin" and \
             user.account_type == "teacher":
         raise PermissionError("Only admins can assign teachers to classes.")
+    elif current_user.account_type not in ["admin", "teacher"] and \
+            user.account_type == "teaching_assistant":
+        raise PermissionError("Only admins and teachers can assign teaching "
+                              "assistants to classes.")
 
     the_class = _get_class(enroll_in)
 
@@ -546,11 +552,10 @@ def enroll_student(current_user, email, enroll_in):
         _user_to_str(user), _class_to_str(the_class)
     )
 
-@_api_call("admin")
-def assign_teacher(current_user, email, assign_to):
-    return enroll_student(current_user, email, assign_to)
+assign_teacher = enroll_student
+assign_teaching_assistant = enroll_student
 
-@_api_call(("admin", "teacher"))
+@_api_call(("admin", "teacher", "teaching_assistant"))
 def drop_student(current_user, email, drop_from):
     if current_user.account_type == "admin":
         the_class = _get_class(drop_from)
@@ -558,6 +563,14 @@ def drop_student(current_user, email, drop_from):
         the_class = _get_class(drop_from, current_user)
 
     user = _get_user(email, current_user)
+
+    if current_user.account_type != "admin" and \
+            user.account_type == "teacher":
+        raise PermissionError("Only admins can unassign teachers from classes.")
+    elif current_user.account_type not in ["admin", "teacher"] and \
+            user.account_type == "teaching_assistant":
+        raise PermissionError("Only admins and teachers can unassign teaching "
+                              "assistants from classes.")
 
     if the_class.id not in user.classes:
         raise UserError("%s is not enrolled in %s." %
@@ -571,11 +584,10 @@ def drop_student(current_user, email, drop_from):
         _user_to_str(user), _class_to_str(the_class)
     )
 
-@_api_call(("admin", "teacher"))
-def unassign_teacher(current_user, email, drop_from):
-    return drop_student(current_user, email, drop_from)
+unassign_teacher = drop_student
+unassign_teaching_assistant = drop_student
 
-@_api_call(("admin", "teacher"))
+@_api_call(("admin", "teacher", "teaching_assistant"))
 def class_info(for_class):
     the_class = _get_class(for_class)
 
@@ -632,7 +644,7 @@ def delete_class(to_delete):
         "task to complete." % _class_to_str(the_class)
     )
 
-@_api_call(("admin", "teacher"))
+@_api_call(("admin", "teacher", "teaching_assistant"))
 def create_assignment(current_user, name, due, for_class, due_cutoff = "",
                       hide_until = ""):
     # The attributes of the assignmnet we're creating
@@ -662,7 +674,7 @@ def create_assignment(current_user, name, due, for_class, due_cutoff = "",
 
     return "Success! %s created." % _assignment_to_str(new_assignment)
 
-@_api_call(("admin", "teacher"))
+@_api_call(("admin", "teacher", "teaching_assistant"))
 def assignment_info(current_user, id):
     assignment = _get_assignment(id, current_user)
 
@@ -682,7 +694,54 @@ def assignment_info(current_user, id):
     return "Properties of %s:\n\t%s" \
                 % (_assignment_to_str(assignment), attributes)
 
-@_api_call(("admin", "teacher"))
+@_api_call(("admin", "teacher", "teaching_assistant"))
+def assignment_progress(current_user, id, show_distro = ""):
+    assignment = _get_assignment(id, current_user)
+
+    # Get a count of all students in this class
+    total_students = User.objects(
+        account_type = "student",
+        classes = assignment.for_class
+    ).count()
+
+    # Get all submissions for this assignment
+    submissions = list(
+        Submission.objects(
+            assignment = assignment.id,
+            most_recent = True
+        )
+    )
+
+    progress = "%d out of %d students have submitted" % (total_students,
+                                                         len(submissions))
+
+    if show_distro:
+        # Get all test results for the submissions
+        test_results = list(
+            TestResult.objects(
+                id__in = [i.test_results for i in submissions if i.test_results]
+            ).order_by(
+                "-score"
+            )
+        )
+
+        # Store distribution
+        distribution = {}
+        for result in test_results:
+            rounded_score = int(result.score)
+            if result.score in distribution:
+                distribution[rounded_score] += 1
+            else:
+                distribution[rounded_score] = 1
+
+        progress += "\n\n-- Grade Distribution (Points: # of students) --\n"
+        for score in distribution:
+            progress += "%d: %d\n" % (score, distribution[score])
+        
+
+    return progress
+
+@_api_call(("admin", "teacher", "teaching_assistant"))
 def modify_assignment(current_user, id, name = "", due = "", for_class = "",
                       due_cutoff = "", hide_until = "",
                       allow_final_submission = ""):
@@ -796,7 +855,7 @@ def modify_assignment(current_user, id, name = "", due = "", for_class = "",
     return "Success! The following changes were applied to %s.\n\t%s" \
                 % (old_assignment_string, change_log_string)
 
-@_api_call(("admin", "teacher"))
+@_api_call(("admin", "teacher", "teaching_assistant"))
 def delete_assignment(current_user, id):
     to_delete = _get_assignment(id, current_user)
 
@@ -818,7 +877,7 @@ def delete_assignment(current_user, id):
         "task to complete." % _assignment_to_str(to_delete)
     )
 
-@_api_call(("admin", "teacher"))
+@_api_call(("admin", "teacher", "teaching_assistant"))
 def get_archive(current_user, assignment, email = ""):
     # tar_tasks imports galahweb because it wants access to the logger, to
     # prevent a circular dependency we won't load the module until we need it.
@@ -853,7 +912,7 @@ def get_archive(current_user, assignment, email = ""):
         }
     )
 
-@_api_call(("admin", "teacher"))
+@_api_call(("admin", "teacher", "teaching_assistant"))
 def get_csv(current_user, assignment):
     the_assignment = _get_assignment(assignment, current_user)
 
@@ -884,7 +943,6 @@ def get_csv(current_user, assignment):
             "X-Download-DefaultName": "assignment.csv"
         }
     )
-
 
 from types import FunctionType
 api_calls = dict((k, v) for k, v in globals().items() if isinstance(v, APICall))
