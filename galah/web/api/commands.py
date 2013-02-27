@@ -552,9 +552,8 @@ def enroll_student(current_user, email, enroll_in):
         _user_to_str(user), _class_to_str(the_class)
     )
 
-@_api_call("admin")
-def assign_teacher(current_user, email, assign_to):
-    return enroll_student(current_user, email, assign_to)
+assign_teacher = enroll_student
+assign_teaching_assistant = enroll_student
 
 @_api_call(("admin", "teacher", "teaching_assistant"))
 def drop_student(current_user, email, drop_from):
@@ -564,6 +563,14 @@ def drop_student(current_user, email, drop_from):
         the_class = _get_class(drop_from, current_user)
 
     user = _get_user(email, current_user)
+
+    if current_user.account_type != "admin" and \
+            user.account_type == "teacher":
+        raise PermissionError("Only admins can unassign teachers from classes.")
+    elif current_user.account_type not in ["admin", "teacher"] and \
+            user.account_type == "teaching_assistant":
+        raise PermissionError("Only admins and teachers can unassign teaching "
+                              "assistants from classes.")
 
     if the_class.id not in user.classes:
         raise UserError("%s is not enrolled in %s." %
@@ -577,19 +584,8 @@ def drop_student(current_user, email, drop_from):
         _user_to_str(user), _class_to_str(the_class)
     )
 
-@_api_call(("admin"))
-def unassign_teacher(current_user, email, drop_from):
-    return drop_student(current_user, email, drop_from)
-
-@_api_call(("admin", "teacher"))
-def unassign_teaching_assistant(current_user, email, drop_from):
-    user = _get_user(email, current_user)
-    if user.account_type != "teaching_assistant":
-        raise UserError("unassign_teaching_assistant should be used to remove "
-                        "teaching assistants only. Please use "
-                        "unassign_teacher or drop_student to remove teachers "
-                        "and students, respectively.")
-    return drop_student(current_user, email, drop_from)
+unassign_teacher = drop_student
+unassign_teaching_assistant = drop_student
 
 @_api_call(("admin", "teacher", "teaching_assistant"))
 def class_info(for_class):
