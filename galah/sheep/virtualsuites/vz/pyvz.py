@@ -16,8 +16,12 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with Galah.  If not, see <http://www.gnu.org/licenses/>.
 
-import subprocess, ConfigParser, sys, os
+import subprocess, ConfigParser, sys, os, datetime
 from galah.base.magic import memoize
+
+# Load Galah's configuration.
+from galah.base.config import load_config
+config = load_config("sheep/vz")
 
 vzctlPath = "/usr/sbin/vzctl"
 vzlistPath = "/usr/sbin/vzlist"
@@ -33,10 +37,22 @@ def check_call(*args, **kwargs):
     else:
         return 0
 
-def run_vzctl(params):
-    cmd = [vzctlPath] + params
+def run_vzctl(zparams, timeout = config["VZCTL_RETRY_TIMEOUT"]):
+    cmd = [vzctlPath] + zparams
 
-    check_call(cmd, stdout = nullFile, stderr = nullFile)
+    deadline = datetime.datetime.today() + timeout
+
+    while True:
+        return_value = subprocess.call(
+            cmd, stdout = nullFile, stderr = nullFile
+        )
+
+        if return_value == 9 and datetime.datetime.today() < deadline:
+            continue
+        elif return_value != 0:
+            raise SystemError((return_value, str(args[0])))
+        else:
+            return 0
 
 @memoize
 def find_container_directory(config_path = "/etc/vz/vz.conf"):

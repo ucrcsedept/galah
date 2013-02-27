@@ -47,6 +47,7 @@ defaults = {
     "sheep/vz/MAX_MACHINES": 2,
     "sheep/vz/LOW_MACHINE_THRESHOLD": 1,
     "sheep/vz/LOW_MACHINE_PERIOD": datetime.timedelta(minutes = 1),
+    "sheep/vz/VZCTL_RETRY_TIMEOUT": datetime.timedelta(seconds = 30),
     "sheep/vz/CALL_MKDIR": True,
     "sheep/vz/VM_TESTABLES_DIRECTORY": "/tmp/testables/",
     "sheep/vz/VM_HARNESS_DIRECTORY": "/tmp/harness/",
