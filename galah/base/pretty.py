@@ -50,6 +50,9 @@ def pretty_list(the_list, conjunction = "and", none_string = "nothing"):
 
     the_list = list(the_list)
 
+    # Replace underscores with spaces to make coherent sentences.
+    the_list[:] = [i.replace("_", " ") for i in the_list]
+
     if len(the_list) == 0:
         return none_string
     elif len(the_list) == 1:

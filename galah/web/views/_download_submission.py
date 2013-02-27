@@ -35,7 +35,7 @@ logger = \
     GalahWebAdapter(logging.getLogger("galah.web.views.download_submission"))
 
 @app.route("/assignments/<assignment_id>/<submission_id>/download.tar.gz")
-@account_type_required(("student", "teacher"))
+@account_type_required(("student", "teacher", "teaching_assistant"))
 def download_submission(assignment_id, submission_id):
     # Figure out which assignment the user asked for.
     try:

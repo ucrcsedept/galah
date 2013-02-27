@@ -36,7 +36,7 @@ logger = \
     GalahWebAdapter(logging.getLogger("galah.web.views.upload_submissions"))
 
 @app.route("/assignments/<assignment_id>/resubmit/<submission_id>")
-@account_type_required(("student", "teacher"))
+@account_type_required(("student", "teacher", "teaching_assistant"))
 def resubmit_submission(assignment_id, submission_id):
     # Figure out which assignment the submission belongs to.
     try:
