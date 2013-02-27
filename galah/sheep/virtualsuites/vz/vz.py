@@ -109,6 +109,8 @@ class Producer:
                 containers.qsize()
             )
 
+            self._last_low_machine_log = datetime.datetime.today()
+
         self.logger.debug("Creating new VM.")
 
         try:
