@@ -22,7 +22,7 @@ import os
 import datetime
 from bson import ObjectId
 
-from galah.db.models import Submission, CSV, TestResult
+from galah.db.models import Submission, CSV, TestResult, User, Assignment
 
 # Set up configuration and logging
 from galah.base.config import load_config
@@ -63,10 +63,21 @@ def _create_assignment_csv(csv_id, requester, assignment):
 
     temp_directory = csv_file = None
     try:
+        assn = Assignment.objects.get(id = ObjectId(assignment))
+
+        # Grab all student users for this class.
+        users = list(
+            User.objects(
+                account_type = "student",
+                classes = assn.for_class
+            )
+        )
+
         # Form the query
         query = {
             "assignment": ObjectId(assignment),
-            "most_recent": True
+            "most_recent": True,
+            "user__in": [i.id for i in users]
         }
 
         # Grab the most recent submissions from each user.

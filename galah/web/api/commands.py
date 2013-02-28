@@ -702,18 +702,19 @@ def assignment_progress(current_user, id, show_distro = ""):
     total_students = User.objects(
         account_type = "student",
         classes = assignment.for_class
-    ).count()
+    )
 
     # Get all submissions for this assignment
     submissions = list(
         Submission.objects(
             assignment = assignment.id,
-            most_recent = True
+            most_recent = True,
+            user__in = [i.id for i in total_students]
         )
     )
 
-    progress = "%d out of %d students have submitted" % (total_students,
-                                                         len(submissions))
+    progress = "%d out of %d students have submitted" % (len(submissions),
+                                                         total_students.count())
 
     if show_distro:
         # Get all test results for the submissions

@@ -46,7 +46,7 @@ logger = \
     GalahWebAdapter(logging.getLogger("galah.web.views.upload_submissions"))
 
 @app.route("/assignments/<assignment_id>/upload", methods = ["POST"])
-@account_type_required(("student", "teacher"))
+@account_type_required(("student", "teacher", "teaching_assistant"))
 def upload_submission(assignment_id):
     # Figure out which assignment the user asked for.
     try:

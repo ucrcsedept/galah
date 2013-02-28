@@ -52,7 +52,7 @@ def isoformat(datetime):
 app.jinja_env.filters['isoformat'] = isoformat
 
 @app.route("/assignments/<assignment_id>/")
-@account_type_required(("student", "teacher"))
+@account_type_required(("student", "teacher", "teaching_assistant"))
 def view_assignment(assignment_id):
     simple_archive_form = SimpleArchiveForm()
 

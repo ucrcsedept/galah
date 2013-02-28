@@ -30,7 +30,7 @@ logger = \
     GalahWebAdapter(logging.getLogger("galah.web.views.browse_assignments"))
 
 @app.route("/assignments")
-@account_type_required(("student", "teacher"))
+@account_type_required(("student", "teacher", "teaching_assistant"))
 def browse_assignments():
     # Grab all the current user's classes
     classes = Class.objects(id__in = current_user.classes).only("name")
