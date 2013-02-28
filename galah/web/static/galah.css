@@ -294,6 +294,10 @@ a {
     background-color: #f5f5f5;
 }
 
+.test_results_message {
+    width: 93%;
+}
+
 .test_results_message p {
     margin-top: 5px;
     margin-bottom: 5px;
