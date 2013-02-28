@@ -80,10 +80,13 @@ def upload_submission(assignment_id):
     form = SimpleArchiveForm()
     if not form.validate_on_submit():
         logger.info(
-            "Submission rejected due to internal validation problem. Try again."
+            "Submission rejected due to internal validation problem."
         )
 
-        flash("The files you passed in were invalid.", category = "error")
+        flash(
+            "Submission rejected due to internal validation problem. Try "
+            "again.", category = "error"
+        )
 
         return redirect(redirect_to)
 
