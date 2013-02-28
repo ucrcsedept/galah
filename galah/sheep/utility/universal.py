@@ -68,7 +68,7 @@ def handleExiting(zfunc):
             pass
         except ShepherdLost:
             _log.warning(
-                "%s's thread aborted due with a ShepherdLost exception.",
+                "%s's thread aborted with a ShepherdLost exception.",
                 threading.currentThread().name
             )
         except Exception:
