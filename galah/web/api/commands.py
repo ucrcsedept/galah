@@ -729,7 +729,7 @@ def assignment_progress(current_user, id, show_distro = ""):
         # Store distribution
         distribution = {}
         for result in test_results:
-            rounded_score = int(result.score)
+            rounded_score = 0 if result.score is None else int(result.score)
             if result.score in distribution:
                 distribution[rounded_score] += 1
             else:
