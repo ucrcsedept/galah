@@ -26,6 +26,8 @@ defaults = {
     "global/HARNESS_DIRECTORY": "/var/local/galah/web/harness/",
     "global/MONGODB": "galah",
     "global/SISYPHUS_ADDRESS": "ipc:///tmp/sisyphus.sock",
+    "global/EMAIL_VALIDATION_REGEX":
+        "^[_a-z0-9-]+(\.[_a-z0-9-]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,4})$",
     "web/ALIAS": "Galah",
     "web/DEBUG": True,
     "web/SECRET_KEY": "Very Secure Key",

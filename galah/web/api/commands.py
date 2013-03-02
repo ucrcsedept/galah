@@ -409,6 +409,8 @@ def create_user(email, password = "", account_type = "student"):
         new_user.save(force_insert = True)
     except OperationError:
         raise UserError("A user with that email already exists.")
+    except ValidationError:
+        raise UserError("Invalid email address.")
 
     return "Success! %s created." % _user_to_str(new_user)
 

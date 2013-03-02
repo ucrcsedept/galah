@@ -20,6 +20,11 @@
 from flask import request, url_for, render_template
 from flask.ext.wtf import Form, HiddenField
 from galah.web.util import is_url_on_site, GalahWebAdapter
+
+# Load up the configuration to get email validation regular expression
+from galah.base.config import load_config
+config = load_config("web")
+
 import logging
 
 logger = GalahWebAdapter(logging.getLogger("galah.web.views.login"))
@@ -46,7 +51,9 @@ from flask.ext.wtf import Form, TextField, PasswordField, validators
 from galah.db.models import User
 
 class LoginForm(RedirectForm):
-    email = TextField("Email", [validators.Required(), validators.Email()])
+    email = TextField("Email",
+                      [validators.Required(),
+                       validators.regexp(config["EMAIL_VALIDATION_REGEX"])])
     password = PasswordField("Password", [validators.Required()])
 
 # The actual view
