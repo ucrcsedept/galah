@@ -14,7 +14,7 @@
 		    // Toggles its own siblings so user can hide all results.
 		    $(this).siblings().toggle("fast");
 		    var toggle_arrow = $(this).find(".detail_prompt");
-		    console.log($(toggle_arrow).text());
+	            $(".detail_prompt").not(toggle_arrow).text("▸");
 		    if ($(toggle_arrow).text() === "▸") {
 			$(toggle_arrow).text("▾");
 		    } else {
