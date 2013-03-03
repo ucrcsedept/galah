@@ -24,6 +24,7 @@ from galah.db.models import *
 import json
 from collections import namedtuple
 from mongoengine import ValidationError
+from subprocess import CalledProcessError
 from galah.sisyphus.api import send_task
 import shutil
 import os
@@ -375,9 +376,13 @@ def upload_harness(current_user, assignment, harness, config_file):
         except:
             harness.delete()
             raise
+    except CalledProcessError:
+        raise UserError("Unable to uncompress test harness. "
+                        "Are you sure it has been compressed properly?")
     except:
         shutil.rmtree(harness_directory_path)
-        raise
+        raise UserError("Failed to save test harness. "
+                        "Does the harness path exist?")
 
     return _harness_to_str(harness) + " succesfully created"
 
