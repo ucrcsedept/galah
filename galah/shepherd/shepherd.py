@@ -24,7 +24,7 @@ from galah.base.zmqhelpers import router_send_json, router_recv_json
 from flockmanager import FlockManager
 from galah.db.models import Submission, Assignment, TestHarness, TestResult
 from bson.objectid import ObjectId
-from bson.errors import InvalidId
+from bson.errors import InvalidId, InvalidDocument
 import datetime
 
 # Load Galah's configuration.
@@ -235,7 +235,15 @@ def main():
                     submission = Submission.objects.get(id = submission_id)
 
                     test_result = TestResult.from_dict(sheep_message.body)
-                    test_result.save()
+                    try:
+                        test_result.save()
+                    except InvalidDocument:
+                        logger.warn(
+                            "Test result is too large for the database.",
+                            exc_info = True
+                        )
+                        test_result = TestResult(failed = True)
+                        test_result.save()
 
                     submission.test_results = test_result.id
                     submission.save()
