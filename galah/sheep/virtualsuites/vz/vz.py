@@ -31,19 +31,12 @@ import datetime
 from galah.base.config import load_config
 config = load_config("sheep/vz")
 
-containers = Queue.Queue(maxsize = config["MAX_MACHINES"])
+containers = VMPool(maxsize = config["MAX_MACHINES"])
 
 # Performs one time setup for the entire module. Cannot be a member function of
 # producer because it needs to be called once at startup, and the producer class
 # would not have been made yet.
 def setup(logger):
-    if config["MAX_MACHINES"] == 0:
-        logger.warning(
-            "MAX_MACHINES is 0. Infinitely many virtual machines will be "
-            "created. If this is not what you want (which it probably isn't), "
-            "stop this sheep and edit the configuration file."
-        )
-
     # Get a list of all of the clean virtual machines that already exist
     clean_machines = pyvz.get_containers("galah-vm: clean")
 
