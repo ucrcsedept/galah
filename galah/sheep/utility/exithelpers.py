@@ -17,25 +17,27 @@
 # along with Galah.  If not, see <http://www.gnu.org/licenses/>.
 
 import universal, Queue, time, zmq, copy, time
+from galah.sheep.virtualsuites.vz.vmpool import VMPool
 from zmq.utils import jsonapi
+import datetime
 
 class Timeout(Exception):
     def __init__(self, *args, **kwargs):
         Exception.__init__(self, *args, **kwargs)
 
 
-def enqueue(queue, item, poll_timeout = 5):
+def enqueue(queue, item, poll_timeout = datetime.timedelta(seconds = 5)):
     while not universal.exiting:
         try:
             queue.put(item, timeout = poll_timeout)
             break
-        except Queue.Full:
+        except VMPool.Timeout:
             pass
 
     if universal.exiting:
         raise universal.Exiting()
  
-def dequeue(queue, poll_timeout = 5):
+def dequeue(queue, key, poll_timeout = datetime.timedelta(seconds = 5)):
     """
     Gets an item from a queue. Similar to enqueue.
 
@@ -43,8 +45,8 @@ def dequeue(queue, poll_timeout = 5):
 
     while not universal.exiting:
         try:
-            return queue.get(timeout = poll_timeout)
-        except Queue.Empty:
+            return queue.get(timeout = poll_timeout, key = key)
+        except VMPool.Timeout:
             pass
 
     raise universal.Exiting()
