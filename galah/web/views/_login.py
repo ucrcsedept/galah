@@ -99,7 +99,9 @@ def login():
             )
 
             return render_template(
-                "login.html", form = form, oauth_enabled = oauth_enabled
+                "login.html", form = form, oauth_enabled = oauth_enabled,
+                google_login_heading = app.config["GOOGLE_LOGIN_HEADING"],
+                google_login_caption = app.config["GOOGLE_LOGIN_CAPTION"]
             )
 
         # Check if the entered password is correct
