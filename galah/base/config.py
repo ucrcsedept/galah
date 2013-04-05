@@ -37,10 +37,15 @@ defaults = {
     "web/SOURCE_HOST": "https://github.com/galah-group/galah",
     "web/REPORT_ERRORS_TO": None,
     "web/MAX_CONTENT_LENGTH": None,
+    "web/CAS_LOGIN_CAPTION": "Login with CAS",
+    "web/CAS_LOGIN_HEADING":
+        "Log in through your school's authentication service by clicking the "
+        "button below.",
     "web/GOOGLE_LOGIN_HEADING":
         "If you have a Google account, please log in with it by clicking the "
-        "the button below.",
+        "button below.",
     "web/GOOGLE_LOGIN_CAPTION": "Login with Google",
+    "web/SCHOOL_EMAIL_SUFFIX": "ucr.edu",
     "sisyphus/TEACHER_ARCHIVE_LIFETIME": datetime.timedelta(minutes = 2),
     "sisyphus/TEACHER_CSV_LIFETIME": datetime.timedelta(minutes = 2),
     "sheep/NCONSUMERS": 1,

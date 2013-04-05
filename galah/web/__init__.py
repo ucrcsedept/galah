@@ -36,6 +36,10 @@ oauth_enabled = bool(
     app.config.get("GOOGLE_APICLIENT_SECRET")
 )
 
+cas_enabled = bool(
+    app.config.get("CAS_SERVER_URL")
+)
+
 import mongoengine
 mongoengine.connect(app.config["MONGODB"])
 
