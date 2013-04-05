@@ -31,7 +31,8 @@ setup(
         "requests>=1.0.3",
         "google-api-python-client>=1.0",
         "simple-pbkdf2>=1.0",
-        "pyzmq>=2.2.0"
+        "pyzmq>=2.2.0",
+        "caslib>=0.31"
     ],
 
     package_data = {
