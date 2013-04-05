@@ -15,9 +15,23 @@
             <div class="heading directions">
                 {{ google_login_heading }}
             </div>
-            <a href="/login/?type=rmail"><input type="button" value="{{ google_login_caption }}"></a>
+            <a href="/login/?type=google">
+	      <button>{{ google_login_caption }}</button>
+	    </a>
         </div>
     </div>
+    {% endif %}
+    {% if cas_enabled %}
+    <div class="login_block">
+        <div class="login_button">
+            <div class="heading directions">
+                {{ cas_login_heading }}
+            </div>
+            <a href="/login/?type=cas">
+	      <button>{{ cas_login_caption }}</button>
+	    </a>
+        </div>
+    </div>    
     {% endif %}
     <div class="login_block">
         <form method="post">

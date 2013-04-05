@@ -57,7 +57,7 @@ class LoginForm(RedirectForm):
     password = PasswordField("Password", [validators.Required()])
 
 # The actual view
-from galah.web import app, oauth_enabled
+from galah.web import app, oauth_enabled, cas_enabled
 from galah.base.crypto.passcrypt import check_seal, deserialize_seal
 from galah.db.models import User
 from flask.ext.login import login_user
@@ -66,6 +66,9 @@ from flask import redirect, url_for, flash, request
 
 # Google OAuth2
 from oauth2client.client import OAuth2WebServerFlow
+
+# CAS
+from caslib import CASServer, CASService
 
 # Google OAuth2 flow object to get user's email.
 if oauth_enabled:
@@ -76,9 +79,24 @@ if oauth_enabled:
         redirect_uri = app.config["HOST_URL"] + "/oauth2callback"
     )
 
+# CAS Service and Server to validate user's credentials.
+if cas_enabled:
+    cas_server = CASServer(app.config["CAS_SERVER_URL"])
+    cas_service = CASService(app.config["HOST_URL"])
+
 @app.route("/login/", methods = ["GET", "POST"])
 def login():
     form = LoginForm()
+
+    # Authentication details to be passed to the rendering engine.
+    authentication_details = {
+        "cas_enabled": cas_enabled,
+        "cas_login_caption": app.config["CAS_LOGIN_CAPTION"],
+        "cas_login_heading": app.config["CAS_LOGIN_HEADING"],
+        "oauth_enabled": oauth_enabled,
+        "google_login_caption": app.config["GOOGLE_LOGIN_CAPTION"],
+        "google_login_heading": app.config["GOOGLE_LOGIN_HEADING"]
+    }   
 
     # If the user's input isn't immediately incorrect (validate_on_submit() will
     # not check if the email and password combo is valid, only that it could be
@@ -99,9 +117,7 @@ def login():
             )
 
             return render_template(
-                "login.html", form = form, oauth_enabled = oauth_enabled,
-                google_login_heading = app.config["GOOGLE_LOGIN_HEADING"],
-                google_login_caption = app.config["GOOGLE_LOGIN_CAPTION"]
+                "login.html", form = form, **authentication_details
             )
 
         # Check if the entered password is correct
@@ -122,18 +138,25 @@ def login():
             )
 
             return redirect(form.redirect_target or url_for("browse_assignments"))
-    elif oauth_enabled and request.args.get("type") == "rmail":
+    elif oauth_enabled and request.args.get("type") == "google":
         # Login using Google OAuth2
         # Step 1 of two-factor authentication: redirect to AUTH url
         auth_uri = flow.step1_get_authorize_url()
         return redirect(auth_uri)
+    elif cas_enabled and request.args.get("type") == "cas":
+        # Login using CAS
+        # Step 1 of CAS dance: redirect to authentication url
+        auth_uri = cas_server.login(cas_service)
+        return redirect(auth_uri)
+    elif cas_enabled and request.args.get("ticket") is not None:
+        # Since CAS Authentication doesn't support redirect_uri arguments, 
+        # the ticket will be sent the login function so let's handle it here.
+        cas_validate(request.args.get("ticket"))
 
     return render_template(
         "login.html",
         form = form,
-        oauth_enabled = oauth_enabled,
-        google_login_heading = app.config["GOOGLE_LOGIN_HEADING"],
-        google_login_caption = app.config["GOOGLE_LOGIN_CAPTION"]
+        **authentication_details
     )
 
 @app.route("/oauth2callback/")
@@ -167,6 +190,7 @@ def authenticate_user():
         except User.DoesNotExist:
             user = None
 
+
         if not user:
             flash("A Galah account does not exist for this email.", "error")
 
@@ -189,3 +213,44 @@ def authenticate_user():
         logger.info("User %s failed to authenticate with OAuth2.", email)
 
     return redirect(url_for("login"))
+
+def cas_validate(ticket = None):
+    """
+    Validate user credentials using ticket provided by CAS login.
+
+    """
+    if ticket is None:
+        flash("Sorry, an error occurred while signing in with CAS", "error")
+
+        logger.error("Attempting to validate with CAS without a ticket")
+        return redirect(url_for("home"))
+        
+
+    email = None
+    try:
+        username = cas_server.validate(cas_service, ticket)
+        email = username + "@" + app.config["SCHOOL_EMAIL_SUFFIX"]
+    except InvalidTicketError:
+        flash("Sorry we couldn't validate your %s username" % \
+                  app.config["SCHOOL_EMAIL_SUFFIX"], "error")
+
+        logger.info("Unable to validate cas ticket")
+
+    if email is not None:
+        # Find the user with the given email
+        try:
+            user = FlaskUser(User.objects.get(email = email))
+            login_user(user)
+
+            logger.info(
+                "User %s has succesfully logged in via CAS.", email
+            )
+        except User.DoesNotExist:
+            flash("A Galah account does not exist for this email.", "error")
+
+            logger.info(
+                "User %s has attempted to log in via CAS but an account "
+                "does not exist for them.", email
+            )
+
+    return redirect(url_for("home"))
