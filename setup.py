@@ -32,7 +32,7 @@ setup(
         "google-api-python-client>=1.0",
         "simple-pbkdf2>=1.0",
         "pyzmq>=2.2.0",
-        "caslib>=0.31"
+        "caslib>=0.3.1"
     ],
 
     package_data = {
