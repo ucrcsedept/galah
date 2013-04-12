@@ -185,10 +185,12 @@
 							  {%- endif -%}
 							  {{- i.name -}}
 							</div>
-							{% if i.message %}
-							<div class="test_results_message">
-								{{ i.message | markdown }}
-							</div>
+							{% if i.message and (i.message | length) < 5000 %}
+							  <div class="test_results_message">
+							    {{ i.message | markdown }}
+							  </div>
+							{% elif i.message  %}
+							  <div style="font-style: italic">Details not available</div>
 							{% endif %}
 							{% if i.parts | length %}
 							  <section class="parts">
