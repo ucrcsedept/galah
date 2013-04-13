@@ -32,8 +32,9 @@ class Producer:
 		return 0
 
 class Consumer:
-    def __init__(self, logger):
+    def __init__(self, logger, thread):
         self.logger = logger
+        self.thread = thread
 
     def prepare_machine(self):
         self.logger.debug("prepare machine called. Doing nothing.")
