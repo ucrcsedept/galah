@@ -952,6 +952,20 @@ def get_csv(current_user, assignment):
         }
     )
 
+@_api_call(("admin", "teacher", "teaching_assistant"))
+def rerun_harness(current_user, assignment):
+    the_assignment = _get_assignment(assignment, current_user)
+
+    send_task(
+        config["SISYPHUS_ADDRESS"],
+        "rerun_test_harness",
+        str(the_assignment.id)
+    )
+
+    return "Rerunning test harnesses on submissions for %s" % \
+        the_assignment.name
+
+
 from types import FunctionType
 api_calls = dict((k, v) for k, v in globals().items() if isinstance(v, APICall))
 
