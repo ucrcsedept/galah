@@ -16,9 +16,9 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with Galah.  If not, see <http://www.gnu.org/licenses/>.
 
-import galah.sheep.utility.exithelpers as exithelpers
 from galah.sheep.utility.testrequest import PreparedTestRequest
 from vmpool import VMPool
+import exithelpers
 import pyvz
 import time
 import Queue
