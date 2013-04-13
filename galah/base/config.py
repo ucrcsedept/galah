@@ -28,6 +28,9 @@ defaults = {
     "global/SISYPHUS_ADDRESS": "ipc:///tmp/sisyphus.sock",
     "global/EMAIL_VALIDATION_REGEX":
         "^[_a-z0-9-]+(\.[_a-z0-9-]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,4})$",
+    "global/PROFILING_ENABLED": False,
+    "global/PROFILING_DUMP_INTERVAL": datetime.timedelta(seconds = 30),
+    "global/PROFILING_DUMP_DIRECTORY": "/tmp/",
     "web/ALIAS": "Galah",
     "web/DEBUG": True,
     "web/SECRET_KEY": "Very Secure Key",

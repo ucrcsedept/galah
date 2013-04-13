@@ -47,4 +47,26 @@ mongoengine.connect(app.config["MONGODB"])
 from auth import login_manager
 login_manager.setup_app(app)
 
+# Enable profiling
+if app.config["PROFILING_ENABLED"]:
+    import cProfile
+    pr = cProfile.Profile()
+    pr.enable()
+
+    import datetime
+    import tempfile
+    import os
+    @app.before_request
+    def dump_profile_data():
+        if datetime.datetime.today() - dump_profile_data.last_dump > \
+                app.config["PROFILING_DUMP_INTERVAL"]:
+            pr.dump_stats(dump_profile_data.dump_filepath)
+            dump_profile_data.last_dump = datetime.datetime.today()
+    dump_profile_data.last_dump = datetime.datetime.today()
+    file_descriptor, dump_profile_data.dump_filepath = tempfile.mkstemp(
+        prefix = "cprof",
+        dir = app.config["PROFILING_DUMP_DIRECTORY"]
+    )
+    os.close(file_descriptor)
+
 import views
