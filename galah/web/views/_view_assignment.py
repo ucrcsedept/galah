@@ -90,10 +90,9 @@ def view_assignment(assignment_id):
     )
 
     # Match test results to submissions
-    for i in submissions:
-        for j in test_results:
-            if i.test_results == j.id:
-                i.test_results_obj = j
+    submissions_by_test_result = dict((i.test_results, i) for i in submissions)
+    for i in test_results:
+        submissions_by_test_result[i.id].test_results_obj = i
 
     # Current time to be compared to submission test_request_timestamp
     now = datetime.datetime.now()
