@@ -85,12 +85,14 @@
 					<div>{{ i(class_ = "simple_file_input") }}</div>
 					{% endfor %}
 				</div>
+				{# Disabled for now because it doesn't do anything.
 				{% if assignment.allow_final_submission %}
-				<div style="margin-bottom: 10px">
-					{{ simple_archive_form.marked_as_final() }}
-					{{ simple_archive_form.marked_as_final.label }}
-				</div>
+				  <div style="margin-bottom: 10px">
+				    {{ simple_archive_form.marked_as_final() }}
+				    {{ simple_archive_form.marked_as_final.label }}
+				  </div>
 				{% endif %}
+				#}
 				<input id="add_field" onclick="addFileField()" type="button" value="Add More Files">
 				<input id="submit_archive" type="submit" value="Upload">
 			</div>
