@@ -300,8 +300,8 @@ class Consumer:
             try:
                 return json.loads(results)
             except ValueError:
-                self.logger.exception(
-                    "Could not parse results from test harness."
+                self.logger.warning(
+                    "Bad results from test harness %s." % results
                 )
                 return None
         finally:
