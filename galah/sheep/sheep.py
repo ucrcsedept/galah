@@ -47,8 +47,8 @@ maintainer = threading.Thread(target = components.maintainer.run,
                               name = "maintainer")
 maintainer.start()
 
-# Wait until we recieve a SIGINT (a hook was added by universal.py that changes
-# exiting to True when a SIGINT is recieved)
+# Wait until we receive a SIGINT (a hook was added by universal.py that changes
+# exiting to True when a SIGINT is received)
 from galah.sheep.utility.exithelpers import exitGracefully
 import signal
 signal.signal(signal.SIGINT, exitGracefully)

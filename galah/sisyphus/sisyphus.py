@@ -111,7 +111,7 @@ def main():
 
             continue
 
-        logger.info("Recieved request for task %s.", task.name)
+        logger.info("Received request for task %s.", task.name)
 
         # Check if this is a recognized command.
         if task.name not in task_list.keys():
