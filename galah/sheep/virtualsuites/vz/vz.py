@@ -300,6 +300,9 @@ class Consumer:
             try:
                 return json.loads(results)
             except ValueError:
+                self.logger.exception(
+                    "Could not parse results from test harness."
+                )
                 return None
         finally:
             self.logger.debug("Destroying VM with CTID %d" % container_id)
