@@ -24,7 +24,6 @@ setup(
         "Flask>=0.8", 
         "Flask-Login>=0.1.3", 
         "Flask-WTF>=0.6",
-        "Flask-Markdown>=0.3",
         "WTForms>=1.0.1",
         "mongoengine>=0.6.9",
         "decorator>=3.4.0",
