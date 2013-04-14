@@ -49,6 +49,8 @@ defaults = {
         "button below.",
     "web/GOOGLE_LOGIN_CAPTION": "Login with Google",
     "web/SCHOOL_EMAIL_SUFFIX": "ucr.edu",
+    "web/MARKDOWN_ENABLED": False,
+    "web/MARKDOWN_JS_SRC": None,
     "sisyphus/TEACHER_ARCHIVE_LIFETIME": datetime.timedelta(minutes = 2),
     "sisyphus/TEACHER_CSV_LIFETIME": datetime.timedelta(minutes = 2),
     "sheep/NCONSUMERS": 1,
