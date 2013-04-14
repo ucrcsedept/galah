@@ -192,7 +192,7 @@ def authenticate_user():
 
 
         if not user:
-            flash("A Galah account does not exist for this email.", "error")
+            flash("A Galah account does not exist for %s." % email, "error")
 
             logger.info(
                 "User %s has attempted to log in via OAuth2 but an account "
@@ -246,7 +246,7 @@ def cas_validate(ticket = None):
                 "User %s has succesfully logged in via CAS.", email
             )
         except User.DoesNotExist:
-            flash("A Galah account does not exist for this email.", "error")
+            flash("A Galah account does not exist for %s." % email, "error")
 
             logger.info(
                 "User %s has attempted to log in via CAS but an account "
