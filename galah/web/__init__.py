@@ -17,9 +17,7 @@
 # along with Galah.  If not, see <http://www.gnu.org/licenses/>.
 
 from flask import Flask
-from flask.ext.markdown import Markdown
 app = Flask("galah.web")
-Markdown(app)
 
 # Hack to work around the destruction of error handlers by Flask's deferred
 # processing.
