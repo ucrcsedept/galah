@@ -1,5 +1,6 @@
 import datetime
 from galah.sheep.virtualsuites.vz.vmpool import VMPool
+import galah.sheep.utility.universal as universal
 
 def enqueue(queue, item, poll_timeout = datetime.timedelta(seconds = 5)):
     while not universal.exiting:
