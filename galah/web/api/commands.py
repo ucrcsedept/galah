@@ -217,7 +217,7 @@ def _get_class(query, instructor = None):
 
     query_dict = {"name__icontains": query}
     if instructor:
-        query_dict["id__in": instructor.classes]
+        query_dict["id__in"] = instructor.classes
 
     matches = list(Class.objects(**query_dict))
 
