@@ -2,56 +2,56 @@
 {% block title %}{{ assignment.name }}{% endblock %}
 {% block path %}&rarr; <a href="/assignments">assignments</a> &rarr; <a href="/assignments/{{ assignment.id }}">{{ assignment.name }}</a>{% endblock %}
 {% block includes %}
-        {% if wait_and_refresh %}
+		{% if wait_and_refresh %}
 	  <meta http-equiv="refresh" content="10">
 	{% endif %}
 	<script type="text/javascript">
 	$(function() {
 		$("#email").focus()
-	        $(".test_results").on("click", ".total", function() {
-	            // Hides all other opened test results.
-	            $(".total").not(this).siblings().hide("fast");
-		    // Toggles its own siblings so user can hide all results.
-		    $(this).siblings().toggle("fast");
-		    var toggle_arrow = $(this).find(".detail_prompt");
-	            $(".detail_prompt").not(toggle_arrow).text("▸");
-		    if ($(toggle_arrow).text() === "▸") {
+			$(".test_results").on("click", ".total", function() {
+				// Hides all other opened test results.
+				$(".total").not(this).siblings().hide("fast");
+			// Toggles its own siblings so user can hide all results.
+			$(this).siblings().toggle("fast");
+			var toggle_arrow = $(this).find(".detail_prompt");
+				$(".detail_prompt").not(toggle_arrow).text("▸");
+			if ($(toggle_arrow).text() === "▸") {
 			$(toggle_arrow).text("▾");
-		    } else {
+			} else {
 			$(toggle_arrow).text("▸");
-		    }
-		    
-		});
-
-	        $(".parts_detail.active").each(function() {
-		    // Show all parts details where the score is not 100% by default.
-		    $(this).parent().siblings(".parts").show();
-	        });
-
-	        $(".expandable_parts").click(function() {
-		    // Toggle showing parts details.
-	            var parts_detail = $(this).find(".parts_detail");
-		    if ($(parts_detail).hasClass("active")) {
-			$(parts_detail).text("▸");
-		    } else {
-			$(parts_detail).text("▾");
-		    }
-
-		    $(parts_detail).toggleClass("active");
-		    $(this).find(".parts").slideToggle();
-		});
-
-	        $("form").on("click", "#submit_archive", function() {
-		    var files_added = 0; 
-		    $("#file_input_container").children().each(function() {
-			if ($(this).children("input").val() != '') {
-			    ++files_added;
 			}
-		    });
-		    if (files_added > 0) {
+			
+		});
+
+			$(".parts_detail.active").each(function() {
+			// Show all parts details where the score is not 100% by default.
+			$(this).parent().siblings(".parts").show();
+			});
+
+			$(".expandable_parts").click(function() {
+			// Toggle showing parts details.
+				var parts_detail = $(this).find(".parts_detail");
+			if ($(parts_detail).hasClass("active")) {
+			$(parts_detail).text("▸");
+			} else {
+			$(parts_detail).text("▾");
+			}
+
+			$(parts_detail).toggleClass("active");
+			$(this).find(".parts").slideToggle();
+		});
+
+			$("form").on("click", "#submit_archive", function() {
+			var files_added = 0; 
+			$("#file_input_container").children().each(function() {
+			if ($(this).children("input").val() != '') {
+				++files_added;
+			}
+			});
+			if (files_added > 0) {
 			$(this).attr("disabled", "disabled");
 			$("form").submit();
-		    }
+			}
 		});
 	})
 	function addFileField() {
@@ -63,7 +63,7 @@
 		input.attr("id", "archive-" + new_suffix)
 		input.attr("name", "archive-" + new_suffix)
 
-	        $(input).val('');
+			$(input).val('');
 		new_file.appendTo("#file_input_container")
 	}
 	</script>
@@ -104,26 +104,26 @@
 	</div>
 	{% endif %}
 	<div id="submissions">
-	        {% from "macros.html" import status_class %}
+			{% from "macros.html" import status_class %}
 		{% for submission in submissions %}
 		{% if submission.id in new_submissions %}
 		<div class="submission attention">
 		{% else %}
 		<div id="{{ submission.timestamp | isoformat }}" class="submission">
 		{% endif %}
-		        <div class="submission_header"> 
+				<div class="submission_header"> 
 			  <span class="submission_time"> 
-			    Submission on {{ submission.timestamp_pretty }} 
+				Submission on {{ submission.timestamp_pretty }} 
 			  </span> 
 			  <span class="status {{ status_class (submission.status) }}"> 
-			    {{ submission.status }} 
+				{{ submission.status }} 
 			  </span> 
 			</div> 
 			{% if "Failed" in submission.status %}
 			  <div class="context_message">
-			    The test harness crashed when running your code.
-			    This can mean a number of different things,
-			    but the most likely reason for this is that your code did something the test harness did not expect to happen.
+				The test harness crashed when running your code.
+				This can mean a number of different things,
+				but the most likely reason for this is that your code did something the test harness did not expect to happen.
 			  </div>
 			{% endif %}
 			{% if submission.uploaded_filenames %}
@@ -146,13 +146,13 @@
 				<table class="test_results">
 					<tr class="total heading">
 						<td style="font-weight: bold">
-					          <span class="detail_prompt">▸</span>
+							  <span class="detail_prompt">▸</span>
 						  {%- if submission.test_results_obj.max_score > 0 -%}
-						    {{ "%.3g / %.3g" % (submission.test_results_obj.score, submission.test_results_obj.max_score) }}
+							{{ "%.3g / %.3g" % (submission.test_results_obj.score, submission.test_results_obj.max_score) }}
 						  {%- elif submission.test_results_obj.score < 0 -%}
-						    <span class="negative_score">{{ "%.3g" % (submission.test_results_obj.score) }}</span>
+							<span class="negative_score">{{ "%.3g" % (submission.test_results_obj.score) }}</span>
 						  {%- else -%}
-						    <span class="passed">✓</span>
+							<span class="passed">✓</span>
 						  {%- endif -%}
 						</td>
 						<td>
@@ -161,51 +161,53 @@
 					</tr>
 					{% for i in submission.test_results_obj.tests %}
 					  {%- if i.parts | length -%}
-					    <tr class="expandable_parts">
+						<tr class="expandable_parts">
 					  {%- else -%}
-					    <tr>
+						<tr>
 					  {%- endif -%}
 						<td class="heading test_results_score">
 						  {% if i.max_score > 0 %}
-						    {{ "%.3g / %.3g" % (i.score, i.max_score) }}
+							{{ "%.3g / %.3g" % (i.score, i.max_score) }}
 						  {% elif i.score < 0  %}
-						    <span class="negative_score">{{ "%.3g" % (i.score) }}</span>
+							<span class="negative_score">{{ "%.3g" % (i.score) }}</span>
 						  {% else %}
-						    <span class="passed">✓</span>
+							<span class="passed">✓</span>
 						  {% endif %}
 						</td>
 						<td>
 							<div class="heading test_name">
 							  {%- if i.parts | length -%}
-                                                            {%- if i.score == i.max_score -%}
-							      <small class="detail_prompt parts_detail">▸</small>
-							    {%- else -%}
-							      <small class="detail_prompt parts_detail active">▾</small>
-							    {%- endif -%}
+															{%- if i.score == i.max_score -%}
+								  <small class="detail_prompt parts_detail">▸</small>
+								{%- else -%}
+								  <small class="detail_prompt parts_detail active">▾</small>
+								{%- endif -%}
 							  {%- endif -%}
 							  {{- i.name -}}
 							</div>
-							{% if i.message %}
-							<div class="test_results_message">
-								{{ i.message | markdown }}
-							</div>
+							{% if i.message and (i.message | length) < 5000 %}
+								<div class="test_results_message">
+									{{ i.message | markdown }}
+								</div>
+							{% elif i.message %}
+								<div style="font-style: italic">Details not available (content too large)</div>
 							{% endif %}
 							{% if i.parts | length %}
 							  <section class="parts">
-							    {% for j in i.parts  %}
-							      <div class="part">
+								{% for j in i.parts  %}
+								  <div class="part">
 								<span class="parts_score heading">
 								  {% if j[2] > 0 %}
-								    {{ "%.3g / %.3g" % (j[1], j[2]) }}
+									{{ "%.3g / %.3g" % (j[1], j[2]) }}
 								  {% elif j[1] < 0 %}
-								    <span class="negative_score">{{ "%.3g" % (j[1]) }}</span>
+									<span class="negative_score">{{ "%.3g" % (j[1]) }}</span>
 								  {% else %}
-								    <span class="passed">✓</span>
+									<span class="passed">✓</span>
 								  {% endif %}
 								</span>
 								<span class="parts_name heading">{{ j[0] }}</span>
-							      </div>
-							    {% endfor %}
+								  </div>
+								{% endfor %}
 							  </section>
 							{% endif %}
 						</td>
