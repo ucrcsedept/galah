@@ -231,7 +231,7 @@ def _get_class(query, instructor = None):
 
     query_dict = {"name__icontains": query}
     if instructor:
-        query_dict["id__in"] = instructor.classes
+        query_dict["id__in": instructor.classes]
 
     matches = list(Class.objects(**query_dict))
 
@@ -908,7 +908,8 @@ def list_submissions(current_user, assn_id, user_id):
     submissions = list(
         Submission.objects(
             assignment = the_assignment.id,
-            user = the_user.email
+            user = the_user.email,
+            test_results__exists = True
         ).order_by(
             "-timestamp"
         )
@@ -922,7 +923,7 @@ def list_submissions(current_user, assn_id, user_id):
     )
 
     submission_list = "%d scored submissions found from %s to %s" % \
-        (len(test_results), _user_to_str(the_user),
+        (len(submissions), _user_to_str(the_user),
          _assignment_to_str(the_assignment))
 
     for submission, result in zip(submissions, test_results):
@@ -931,6 +932,7 @@ def list_submissions(current_user, assn_id, user_id):
 
     return submission_list
     
+
 
 @_api_call(("admin", "teacher", "teaching_assistant"))
 def get_archive(current_user, assignment, email = ""):
