@@ -58,8 +58,12 @@ def resubmit_submission(assignment_id, submission_id):
         )
 
     # Recheck if the assignment's cutoff date has passed.
+    today = datetime.datetime.today()
+    deadline = current_user.personal_deadline
     if assignment.due_cutoff and \
-            assignment.due_cutoff < datetime.datetime.today():
+            assignment.due_cutoff < today and \
+            (str(assignment_id) not in deadline or 
+             deadline[str(assignment_id)] < datetime.datetime.today):
         logger.info("Submission rejected, cutoff date has already passed.")
 
         return craft_response(

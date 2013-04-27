@@ -964,6 +964,25 @@ def change_submission_grade(current_user, assignment, user, new_score,
         (_submission_to_str(the_submission), float(new_score))
 
 @_api_call(("admin", "teacher", "teaching_assistant"))
+def modify_user_deadline(current_user, assignment, user, new_date):
+    the_assignment = _get_assignment(assignment, current_user)
+    the_user = _get_user(user, current_user)
+
+    if current_user.account_type != "admin" and \
+            the_assignment.for_class not in current_user.classes:
+        raise PermissionError(
+            "You can only modify assignments for classes you teach."
+        )
+
+    # Mongo only stores Dictionary keys as strings, so we need to convert.
+    the_user.personal_deadline[str(the_assignment.id)] = _to_datetime(new_date)
+    the_user.save()
+
+    return "Successfully modified the deadline of %s for %s to %s" % \
+        (_user_to_str(the_user), _assignment_to_str(the_assignment),
+         new_date)
+
+@_api_call(("admin", "teacher", "teaching_assistant"))
 def get_archive(current_user, assignment, email = ""):
     # tar_tasks imports galahweb because it wants access to the logger, to
     # prevent a circular dependency we won't load the module until we need it.
@@ -1029,6 +1048,20 @@ def get_csv(current_user, assignment):
             "X-Download-DefaultName": "assignment.csv"
         }
     )
+
+@_api_call(("admin", "teacher", "teaching_assistant"))
+def rerun_harness(current_user, assignment):
+    the_assignment = _get_assignment(assignment, current_user)
+
+    send_task(
+        config["SISYPHUS_ADDRESS"],
+        "rerun_test_harness",
+        str(the_assignment.id)
+    )
+
+    return "Rerunning test harnesses on submissions for %s" % \
+        the_assignment.name
+
 
 from types import FunctionType
 api_calls = dict((k, v) for k, v in globals().items() if isinstance(v, APICall))
