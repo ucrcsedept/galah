@@ -153,6 +153,20 @@ def _user_to_str(user):
     return "User [email = %s, account_type = %s]" % \
             (user.email, user.account_type)
 
+def _get_submission(id, current_user):
+    try:
+        return Submission.objects.get(id = id)
+    except Submission.DoesNotExist:
+        raise UserError("Submission %s does not exist." % id)
+
+def _submission_to_str(submission):
+    return "Submission [id = %s, user = %s, date = %s]" % \
+        (submission.id, submission.user, str(submission.timestamp))
+
+def _test_result_to_str(test_result):
+    return "Test Result [id = %s, score = %.3g/%.3g]" % \
+        (test_result.id, test_result.score, test_result.max_score)
+
 def _get_assignment(query, current_user):
     # Check if class/assignment syntax was used.
     if "/" in query:
@@ -884,6 +898,39 @@ def delete_assignment(current_user, id):
         "%s has been queued for deletion. Please allow a few minutes for the "
         "task to complete." % _assignment_to_str(to_delete)
     )
+
+@_api_call(("admin", "teacher", "teaching_assistant"))
+def list_submissions(current_user, assn_id, user_id):
+    the_assignment = _get_assignment(assn_id, current_user)
+    the_user = _get_user(user_id, current_user)
+
+    # Get all the submissions from this user
+    submissions = list(
+        Submission.objects(
+            assignment = the_assignment.id,
+            user = the_user.email
+        ).order_by(
+            "-timestamp"
+        )
+    )
+
+    # Get all score for each submission for context
+    test_results = list(
+        TestResult.objects(
+            id__in = [i.test_results for i in submissions if i.test_results]
+        )
+    )
+
+    submission_list = "%d scored submissions found from %s to %s" % \
+        (len(test_results), _user_to_str(the_user),
+         _assignment_to_str(the_assignment))
+
+    for submission, result in zip(submissions, test_results):
+        submission_list += "\n\t%s: %s" % \
+            (_submission_to_str(submission), _test_result_to_str(result))
+
+    return submission_list
+    
 
 @_api_call(("admin", "teacher", "teaching_assistant"))
 def get_archive(current_user, assignment, email = ""):
