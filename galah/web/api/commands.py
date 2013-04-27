@@ -933,7 +933,35 @@ def list_submissions(current_user, assn_id, user_id):
 
     return submission_list
     
+@_api_call(("admin", "teacher", "teaching_assistant"))
+def change_submission_grade(current_user, assignment, user, new_score,
+                            submission = ""):
+    the_assignment = _get_assignment(assignment, current_user)
 
+    if current_user.account_type != "admin" and \
+            the_assignment.for_class not in current_user.classes:
+        raise PermissionError(
+            "You can only modify submissions for classes you teach."
+        )
+
+    if not submission:
+        the_submission = Submission.objects.get(
+            user = user,
+            assignment = the_assignment.id,
+            most_recent = True
+        )
+    else:
+        the_submission = _get_submission(submission, current_user)
+
+    test_result = TestResult.objects.get(
+        id = the_submission.test_results
+    )
+
+    test_result.score = float(new_score)
+    test_result.save()
+
+    return "Successfully changed the score of %s to %.3g" % \
+        (_submission_to_str(the_submission), float(new_score))
 
 @_api_call(("admin", "teacher", "teaching_assistant"))
 def get_archive(current_user, assignment, email = ""):
