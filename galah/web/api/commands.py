@@ -921,6 +921,7 @@ def list_submissions(current_user, assn_id, user_id):
             id__in = [i.test_results for i in submissions if i.test_results]
         )
     )
+    test_results.reverse()
 
     submission_list = "%d scored submissions found from %s to %s" % \
         (len(submissions), _user_to_str(the_user),
