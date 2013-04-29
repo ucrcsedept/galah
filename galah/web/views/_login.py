@@ -1,20 +1,20 @@
-# Copyright 2012-2013 John Sullivan
+# Copyright 2012-2013 Galah Group LLC
 # Copyright 2012-2013 Other contributers as noted in the CONTRIBUTERS file
 #
 # This file is part of Galah.
 #
-# Galah is free software: you can redistribute it and/or modify
-# it under the terms of the GNU Affero General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
+# You can redistribute Galah and/or modify it under the terms of
+# the Galah Group General Public License as published by
+# Galah Group LLC, either version 1 of the License, or
 # (at your option) any later version.
 #
 # Galah is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU Affero General Public License for more details.
+# Galah Group General Public License for more details.
 #
-# You should have received a copy of the GNU Affero General Public License
-# along with Galah.  If not, see <http://www.gnu.org/licenses/>.
+# You should have received a copy of the Galah Group General Public License
+# along with Galah.  If not, see <http://www.galahgroup.com/licenses>.
 
 ## Create the base form ##
 from flask import request, url_for, render_template
@@ -96,7 +96,7 @@ def login():
         "oauth_enabled": oauth_enabled,
         "google_login_caption": app.config["GOOGLE_LOGIN_CAPTION"],
         "google_login_heading": app.config["GOOGLE_LOGIN_HEADING"]
-    }   
+    }
 
     # If the user's input isn't immediately incorrect (validate_on_submit() will
     # not check if the email and password combo is valid, only that it could be
@@ -149,7 +149,7 @@ def login():
         auth_uri = cas_server.login(cas_service)
         return redirect(auth_uri)
     elif cas_enabled and request.args.get("ticket") is not None:
-        # Since CAS Authentication doesn't support redirect_uri arguments, 
+        # Since CAS Authentication doesn't support redirect_uri arguments,
         # the ticket will be sent the login function so let's handle it here.
         cas_validate(request.args.get("ticket"))
 
@@ -224,7 +224,7 @@ def cas_validate(ticket = None):
 
         logger.error("Attempting to validate with CAS without a ticket")
         return redirect(url_for("home"))
-        
+
 
     email = None
     try:

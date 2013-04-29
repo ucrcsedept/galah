@@ -1,20 +1,20 @@
-# Copyright 2012-2013 John Sullivan
+# Copyright 2012-2013 Galah Group LLC
 # Copyright 2012-2013 Other contributers as noted in the CONTRIBUTERS file
 #
 # This file is part of Galah.
 #
-# Galah is free software: you can redistribute it and/or modify
-# it under the terms of the GNU Affero General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
+# You can redistribute Galah and/or modify it under the terms of
+# the Galah Group General Public License as published by
+# Galah Group LLC, either version 1 of the License, or
 # (at your option) any later version.
 #
 # Galah is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU Affero General Public License for more details.
+# Galah Group General Public License for more details.
 #
-# You should have received a copy of the GNU Affero General Public License
-# along with Galah.  If not, see <http://www.gnu.org/licenses/>.
+# You should have received a copy of the Galah Group General Public License
+# along with Galah.  If not, see <http://www.galahgroup.com/licenses>.
 
 from galah.web import app
 from flask.ext.login import current_user
@@ -34,7 +34,7 @@ logger = \
 def browse_assignments():
     # Grab all the current user's classes
     classes = Class.objects(id__in = current_user.classes).only("name")
-    
+
     # Get the current time so we don't have to do it over and over again.
     now = datetime.datetime.today()
 
@@ -78,7 +78,7 @@ def browse_assignments():
                 "Assignment with id %s references non-existant class with id "
                 "%s." % (str(i.id, i.for_class))
             )
-            
+
             i.class_name = "DNE"
 
         # Figure out the status messages that we want to display to the user.

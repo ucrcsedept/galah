@@ -1,20 +1,20 @@
-# Copyright 2012-2013 John Sullivan
+# Copyright 2012-2013 Galah Group LLC
 # Copyright 2012-2013 Other contributers as noted in the CONTRIBUTERS file
 #
 # This file is part of Galah.
 #
-# Galah is free software: you can redistribute it and/or modify
-# it under the terms of the GNU Affero General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
+# You can redistribute Galah and/or modify it under the terms of
+# the Galah Group General Public License as published by
+# Galah Group LLC, either version 1 of the License, or
 # (at your option) any later version.
 #
 # Galah is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU Affero General Public License for more details.
+# Galah Group General Public License for more details.
 #
-# You should have received a copy of the GNU Affero General Public License
-# along with Galah.  If not, see <http://www.gnu.org/licenses/>.
+# You should have received a copy of the Galah Group General Public License
+# along with Galah.  If not, see <http://www.galahgroup.com/licenses>.
 
 from flask import Response, request
 from flask.exceptions import JSONBadRequest
@@ -39,7 +39,7 @@ def get_many(dictionary, *args):
 def api_login():
     def success(the_user):
         login_user(the_user)
-        
+
         return Response(
             response = "Successfully logged in.",
             headers = {"X-CallSuccess": "True"}
@@ -95,7 +95,7 @@ def api_login():
         return success(user)
     elif access_token and not oauth_enabled:
         logger.warning("Attempted login via OAuth2 but OAuth2 is not configured.")
-        
+
         return failure()
 
     # If the user is trying to authenticate through Galah...
@@ -125,7 +125,7 @@ def api_login():
             )
 
             return failure()
-    
+
     logger.warning("Malformed request.")
 
     return failure()
@@ -162,7 +162,7 @@ def api_call():
             # Don't let the user insert their own current_user argument
             if "current_user" in request_data:
                 raise UserError("You cannot fool the all-knowing Galah.")
-                
+
             # Resolve the name of the API call and retrieve the actual
             # APICall object we need.
             api_name = request_data["api_name"]
@@ -228,7 +228,7 @@ def api_call():
         )
     except Exception as e:
         logger.exception("Exception occured while processing API request.")
-        
+
         return Response(
             response =
                 "An internal server error occurred processing your request.",
