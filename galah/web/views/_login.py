@@ -1,20 +1,20 @@
-# Copyright 2012-2013 John Sullivan
-# Copyright 2012-2013 Other contributors as noted in the CONTRIBUTORS file
+# Copyright 2012-2013 Galah Group LLC
+# Copyright 2012-2013 Other contributers as noted in the CONTRIBUTERS file
 #
 # This file is part of Galah.
 #
-# Galah is free software: you can redistribute it and/or modify
-# it under the terms of the GNU Affero General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
+# You can redistribute Galah and/or modify it under the terms of
+# the Galah Group General Public License as published by
+# Galah Group LLC, either version 1 of the License, or
 # (at your option) any later version.
 #
 # Galah is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU Affero General Public License for more details.
+# Galah Group General Public License for more details.
 #
-# You should have received a copy of the GNU Affero General Public License
-# along with Galah.  If not, see <http://www.gnu.org/licenses/>.
+# You should have received a copy of the Galah Group General Public License
+# along with Galah.  If not, see <http://www.galahgroup.com/licenses>.
 
 ## Create the base form ##
 from flask import request, url_for, render_template
@@ -83,6 +83,16 @@ if oauth_enabled:
 def login():
     form = LoginForm()
 
+    # Authentication details to be passed to the rendering engine.
+    authentication_details = {
+        "cas_enabled": cas_enabled,
+        "cas_login_caption": app.config["CAS_LOGIN_CAPTION"],
+        "cas_login_heading": app.config["CAS_LOGIN_HEADING"],
+        "oauth_enabled": oauth_enabled,
+        "google_login_caption": app.config["GOOGLE_LOGIN_CAPTION"],
+        "google_login_heading": app.config["GOOGLE_LOGIN_HEADING"]
+    }
+
     # If the user's input isn't immediately incorrect (validate_on_submit() will
     # not check if the email and password combo is valid, only that it could be
     # valid)
@@ -128,6 +138,15 @@ def login():
         # Step 1 of two-factor authentication: redirect to AUTH url
         auth_uri = flow.step1_get_authorize_url()
         return redirect(auth_uri)
+    elif cas_enabled and request.args.get("type") == "cas":
+        # Login using CAS
+        # Step 1 of CAS dance: redirect to authentication url
+        auth_uri = cas_server.login(cas_service)
+        return redirect(auth_uri)
+    elif cas_enabled and request.args.get("ticket") is not None:
+        # Since CAS Authentication doesn't support redirect_uri arguments,
+        # the ticket will be sent the login function so let's handle it here.
+        cas_validate(request.args.get("ticket"))
 
     return render_template(
         "login.html",
@@ -190,3 +209,44 @@ def authenticate_user():
         logger.info("User %s failed to authenticate with OAuth2.", email)
 
     return redirect(url_for("login"))
+
+def cas_validate(ticket = None):
+    """
+    Validate user credentials using ticket provided by CAS login.
+
+    """
+    if ticket is None:
+        flash("Sorry, an error occurred while signing in with CAS", "error")
+
+        logger.error("Attempting to validate with CAS without a ticket")
+        return redirect(url_for("home"))
+
+
+    email = None
+    try:
+        username = cas_server.validate(cas_service, ticket)
+        email = username + "@" + app.config["SCHOOL_EMAIL_SUFFIX"]
+    except InvalidTicketError:
+        flash("Sorry we couldn't validate your %s username" % \
+                  app.config["SCHOOL_EMAIL_SUFFIX"], "error")
+
+        logger.info("Unable to validate cas ticket")
+
+    if email is not None:
+        # Find the user with the given email
+        try:
+            user = FlaskUser(User.objects.get(email = email))
+            login_user(user)
+
+            logger.info(
+                "User %s has succesfully logged in via CAS.", email
+            )
+        except User.DoesNotExist:
+            flash("A Galah account does not exist for %s." % email, "error")
+
+            logger.info(
+                "User %s has attempted to log in via CAS but an account "
+                "does not exist for them.", email
+            )
+
+    return redirect(url_for("home"))

@@ -16,30 +16,31 @@
 # You should have received a copy of the Galah Group General Public License
 # along with Galah.  If not, see <http://www.galahgroup.com/licenses>.
 
-import mongoengine
+import datetime
+from galah.sheep.virtualsuites.vz.vmpool import VMPool
+import galah.sheep.utility.universal as universal
 
-# If were importing models from another component of galah the users shouldn't
-# (and can't) be loaded.
-try:
-    import users
-    from users import User
+def enqueue(queue, item, poll_timeout = datetime.timedelta(seconds = 5)):
+    while not universal.exiting:
+        try:
+            queue.put(item, timeout = poll_timeout)
+            break
+        except VMPool.Timeout:
+            pass
 
-    import invitations
-    from invitations import Invitation
-except ImportError:
-    pass
+    if universal.exiting:
+        raise universal.Exiting()
 
-import classes
-from classes import Class
+def dequeue(queue, key, poll_timeout = datetime.timedelta(seconds = 5)):
+    """
+    Gets an item from a queue. Similar to enqueue.
 
-import assignments
-from assignments import Assignment, TestHarness
+    """
 
-import submissions
-from submissions import Submission, TestResult
+    while not universal.exiting:
+        try:
+            return queue.get(timeout = poll_timeout, key = key)
+        except VMPool.Timeout:
+            pass
 
-import archives
-from archives import Archive
-
-import csv
-from csv import CSV
+    raise universal.Exiting()

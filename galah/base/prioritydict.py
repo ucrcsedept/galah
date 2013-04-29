@@ -1,20 +1,20 @@
-# Copyright 2012 John Sullivan
-# Copyright 2012 Other contributors as noted in the CONTRIBUTORS file
+# Copyright 2012-2013 Galah Group LLC
+# Copyright 2012-2013 Other contributers as noted in the CONTRIBUTERS file
 #
 # This file is part of Galah.
 #
-# Galah is free software: you can redistribute it and/or modify
-# it under the terms of the GNU Affero General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
+# You can redistribute Galah and/or modify it under the terms of
+# the Galah Group General Public License as published by
+# Galah Group LLC, either version 1 of the License, or
 # (at your option) any later version.
 #
 # Galah is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU Affero General Public License for more details.
+# Galah Group General Public License for more details.
 #
-# You should have received a copy of the GNU Affero General Public License
-# along with Galah.  If not, see <http://www.gnu.org/licenses/>.
+# You should have received a copy of the Galah Group General Public License
+# along with Galah.  If not, see <http://www.galahgroup.com/licenses>.
 
 # Snippet below derived from code published by Matteo Dell'Amico and published
 # under the unlicense.
@@ -41,7 +41,7 @@ class PriorityDict(dict):
     priority, and 'pop_smallest' also removes it.
 
     The 'sorted_iter' method provides a destructive sorted iterator.
-    """    
+    """
 
     def __init__(self, *args, **kwargs):
         super(PriorityDict, self).__init__(*args, **kwargs)
@@ -59,7 +59,7 @@ class PriorityDict(dict):
         Raises IndexError if the object is empty.
 
         """
-        
+
         heap = self._heap
         v, k = heap[0]
         while k not in self or self[k] != v:
@@ -75,7 +75,7 @@ class PriorityDict(dict):
         Raises IndexError if the object is empty.
 
         """
-        
+
         heap = self._heap
         v, k = heappop(heap)
         while k not in self or self[k] != v:
@@ -86,9 +86,9 @@ class PriorityDict(dict):
     def __setitem__(self, key, val):
         # We are not going to remove the previous value from the heap,
         # since this would have a cost O(n).
-        
+
         super(PriorityDict, self).__setitem__(key, val)
-        
+
         if len(self._heap) < 2 * len(self):
             heappush(self._heap, (val, key))
         else:
@@ -106,7 +106,7 @@ class PriorityDict(dict):
         # Reimplementing dict.update is tricky -- see e.g.
         # http://mail.python.org/pipermail/python-ideas/2007-May/000744.html
         # We just rebuild the heap from scratch after passing to super.
-        
+
         super(PriorityDict, self).update(*args, **kwargs)
         self._rebuild_heap()
 
@@ -115,6 +115,6 @@ class PriorityDict(dict):
 
         Beware: this will destroy elements as they are returned.
         """
-        
+
         while self:
             yield self.pop_smallest()
