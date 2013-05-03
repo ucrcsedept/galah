@@ -29,6 +29,7 @@ class User(Document):
     account_type = StringField(choices = ["student", "teaching_assistant",
                                           "teacher", "admin"], required = True)
     classes = ListField(ObjectIdField())
+    personal_deadline = MapField(DateTimeField())
     
     meta = {
         "indexes": ["email", "classes"],

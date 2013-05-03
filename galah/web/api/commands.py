@@ -153,6 +153,20 @@ def _user_to_str(user):
     return "User [email = %s, account_type = %s]" % \
             (user.email, user.account_type)
 
+def _get_submission(id, current_user):
+    try:
+        return Submission.objects.get(id = id)
+    except Submission.DoesNotExist:
+        raise UserError("Submission %s does not exist." % id)
+
+def _submission_to_str(submission):
+    return "Submission [id = %s, user = %s, date = %s]" % \
+        (submission.id, submission.user, str(submission.timestamp))
+
+def _test_result_to_str(test_result):
+    return "Test Result [id = %s, score = %.3g/%.3g]" % \
+        (test_result.id, test_result.score, test_result.max_score)
+
 def _get_assignment(query, current_user):
     # Check if class/assignment syntax was used.
     if "/" in query:
@@ -217,7 +231,7 @@ def _get_class(query, instructor = None):
 
     query_dict = {"name__icontains": query}
     if instructor:
-        query_dict["id__in"] = instructor.classes
+        query_dict["id__in": instructor.classes]
 
     matches = list(Class.objects(**query_dict))
 
@@ -886,6 +900,89 @@ def delete_assignment(current_user, id):
     )
 
 @_api_call(("admin", "teacher", "teaching_assistant"))
+def list_submissions(current_user, assn_id, user_id):
+    the_assignment = _get_assignment(assn_id, current_user)
+    the_user = _get_user(user_id, current_user)
+
+    # Get all the submissions from this user
+    submissions = list(
+        Submission.objects(
+            assignment = the_assignment.id,
+            user = the_user.email,
+            test_results__exists = True
+        ).order_by(
+            "-timestamp"
+        )
+    )
+
+    # Get all score for each submission for context
+    test_results = list(
+        TestResult.objects(
+            id__in = [i.test_results for i in submissions if i.test_results]
+        )
+    )
+    test_results.reverse()
+
+    submission_list = "%d scored submissions found from %s to %s" % \
+        (len(submissions), _user_to_str(the_user),
+         _assignment_to_str(the_assignment))
+
+    for submission, result in zip(submissions, test_results):
+        submission_list += "\n\t%s: %s" % \
+            (_submission_to_str(submission), _test_result_to_str(result))
+
+    return submission_list
+    
+@_api_call(("admin", "teacher", "teaching_assistant"))
+def change_submission_grade(current_user, assignment, user, new_score,
+                            submission = ""):
+    the_assignment = _get_assignment(assignment, current_user)
+
+    if current_user.account_type != "admin" and \
+            the_assignment.for_class not in current_user.classes:
+        raise PermissionError(
+            "You can only modify submissions for classes you teach."
+        )
+
+    if not submission:
+        the_submission = Submission.objects.get(
+            user = user,
+            assignment = the_assignment.id,
+            most_recent = True
+        )
+    else:
+        the_submission = _get_submission(submission, current_user)
+
+    test_result = TestResult.objects.get(
+        id = the_submission.test_results
+    )
+
+    test_result.score = float(new_score)
+    test_result.save()
+
+    return "Successfully changed the score of %s to %.3g" % \
+        (_submission_to_str(the_submission), float(new_score))
+
+@_api_call(("admin", "teacher", "teaching_assistant"))
+def modify_user_deadline(current_user, assignment, user, new_date):
+    the_assignment = _get_assignment(assignment, current_user)
+    the_user = _get_user(user, current_user)
+
+    if current_user.account_type != "admin" and \
+            the_assignment.for_class not in current_user.classes:
+        raise PermissionError(
+            "You can only modify assignments for classes you teach."
+        )
+
+    # Mongo only stores Dictionary keys as strings, so we need to convert.
+    the_user.personal_deadline[str(the_assignment.id)] = _to_datetime(new_date)
+    the_user.save()
+
+    return "Successfully modified the deadline of %s for %s to %s" % \
+        (_user_to_str(the_user), _assignment_to_str(the_assignment),
+         new_date)
+
+@_api_call(("admin", "teacher", "teaching_assistant"))
 def get_archive(current_user, assignment, email = ""):
     # tar_tasks imports galahweb because it wants access to the logger, to
     # prevent a circular dependency we won't load the module until we need it.
@@ -951,6 +1048,20 @@ def get_csv(current_user, assignment):
             "X-Download-DefaultName": "assignment.csv"
         }
     )
+
+@_api_call(("admin", "teacher", "teaching_assistant"))
+def rerun_harness(current_user, assignment):
+    the_assignment = _get_assignment(assignment, current_user)
+
+    send_task(
+        config["SISYPHUS_ADDRESS"],
+        "rerun_test_harness",
+        str(the_assignment.id)
+    )
+
+    return "Rerunning test harnesses on submissions for %s" % \
+        the_assignment.name
+
 
 from types import FunctionType
 api_calls = dict((k, v) for k, v in globals().items() if isinstance(v, APICall))

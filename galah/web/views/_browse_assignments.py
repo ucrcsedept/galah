@@ -19,6 +19,7 @@
 from galah.web import app
 from flask.ext.login import current_user
 from galah.web.auth import account_type_required
+from bson.objectid import ObjectId
 from galah.db.models import Class, Assignment, Submission
 from flask import render_template, request, abort
 import datetime
@@ -44,10 +45,20 @@ def browse_assignments():
             (Q(hide_until = None) | Q(hide_until__lt = now))
         ).only("name", "due", "due_cutoff", "for_class"))
     else:
+        # Figure out which assignments the users have personal due date
+        # extensions for first.
+        due_date_exceptions = []
+        for i in current_user.personal_deadline.keys():
+            deadline = current_user.personal_deadline[i]
+            if deadline > now - datetime.timedelta(weeks = 1):
+                due_date_exceptions.append(ObjectId(i))
+                
+
         assignments = list(Assignment.objects(
             Q(for_class__in = current_user.classes) &
             (Q(due__gt = now - datetime.timedelta(weeks = 1)) |
-            Q(due_cutoff__gt = now - datetime.timedelta(weeks = 1))) &
+             Q(due_cutoff__gt = now - datetime.timedelta(weeks = 1)) |
+             Q(id__in = due_date_exceptions)) &
             (Q(hide_until = None) | Q(hide_until__lt = now))
         ).only("name", "due", "due_cutoff", "for_class"))
 
@@ -80,6 +91,10 @@ def browse_assignments():
             )
             
             i.class_name = "DNE"
+
+        # Adjust due and due_cutoff if user has a personal deadline.
+        if str(i.id) in current_user.personal_deadline:
+            i.due_cutoff = current_user.personal_deadline[str(i.id)]
 
         # Figure out the status messages that we want to display to the user.
         submitted = next((j for j in submissions if j.assignment == i.id), None)
