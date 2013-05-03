@@ -22,6 +22,7 @@ from galah.web.auth import account_type_required
 from bson.objectid import ObjectId
 from bson.errors import InvalidId
 from flask import abort, request, flash, redirect, url_for
+from flask.ext.login import current_user
 from galah.db.models import Submission, Assignment, TestResult
 from galah.shepherd.api import send_test_request
 from galah.web.util import is_url_on_site, GalahWebAdapter
@@ -62,7 +63,7 @@ def resubmit_submission(assignment_id, submission_id):
     deadline = current_user.personal_deadline
     if assignment.due_cutoff and \
             assignment.due_cutoff < today and \
-            (str(assignment_id) not in deadline or 
+            (str(assignment_id) not in deadline or
              deadline[str(assignment_id)] < datetime.datetime.today):
         logger.info("Submission rejected, cutoff date has already passed.")
 
