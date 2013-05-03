@@ -20,6 +20,7 @@ import shutil
 import subprocess
 import os
 import datetime
+import os.path
 from bson import ObjectId
 
 from galah.db.models import Submission, CSV, TestResult, User, Assignment
@@ -84,7 +85,7 @@ def _create_assignment_csv(csv_id, requester, assignment):
         submissions = list(Submission.objects(**query))
 
         # Create the actual csv file.
-        csv_file = open(config["CSV_DIRECTORY"] + str(csv_id), "w")
+        csv_file = open(os.path.join(config["CSV_DIRECTORY"], str(csv_id)), "w")
 
         for i in submissions:
             score = "None"
@@ -97,7 +98,7 @@ def _create_assignment_csv(csv_id, requester, assignment):
 
         csv_file.close()
 
-        new_csv.file_location = config["CSV_DIRECTORY"] + str(csv_id)
+        new_csv.file_location = os.path.join(config["CSV_DIRECTORY"] + str(csv_id))
 
         new_csv.expires = \
             datetime.datetime.today() + config["TEACHER_CSV_LIFETIME"]
@@ -105,7 +106,7 @@ def _create_assignment_csv(csv_id, requester, assignment):
         new_csv.save(force_insert = True)
     except Exception as e:
         new_csv.file_location = None
-        os.remove(config["CSV_DIRECTORY"] + str(csv_id))
+        os.remove(os.path.join(config["CSV_DIRECTORY"] + str(csv_id)))
 
         new_csv.error_string = str(e)
         new_csv.save(force_insert = True)
