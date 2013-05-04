@@ -258,22 +258,31 @@ def _harness_to_str(test_harness):
 import datetime
 def _to_datetime(time):
     try:
-        return datetime.datetime(time)
+        time = datetime.datetime(time)
     except TypeError:
         pass
 
     try:
-        return datetime.datetime.strptime(time, "%m/%d/%Y %H:%M:%S")
+        time = datetime.datetime.strptime(time, "%m/%d/%Y %H:%M:%S")
     except (OverflowError, ValueError):
         raise UserError(
             "Could not convert %s into a time object." % repr(time)
         )
+
+    # Make sure time object can be converted back into a string for later
+    # usage
+    _datetime_to_str(time)
+    return time
 
 def _datetime_to_str(time):
     try:
         return datetime.datetime.strftime(time, "%m/%d/%Y %H:%M:%S")
     except TypeError:
         return "None"
+    except ValueError:
+        raise UserError(
+            "Could not convert time object back into a string."
+        )
 
 ## Below are the actual API calls ##
 @_api_call()
