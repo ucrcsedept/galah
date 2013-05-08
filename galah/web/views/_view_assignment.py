@@ -68,7 +68,8 @@ def view_assignment(assignment_id):
     try:
         assignment = Assignment.objects.get(id = id)
         deadline = current_user.personal_deadline
-        assignment.due_cutoff = deadline[str(assignment_id)]
+        if str(assignment_id) in deadline:
+            assignment.due_cutoff = deadline[str(assignment_id)]
     except Assignment.DoesNotExist:
         logger.info("Non-extant ID requested.")
 
