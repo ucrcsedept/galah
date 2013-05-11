@@ -40,7 +40,7 @@ import logging
 from galah.base.config import load_config
 config = load_config("web")
 
-logger = GalahWebAdapter(logging.getLogger("galah.web.views.view_assignment"))
+logger = GalahWebAdapter(logging.getLogger("galah.web.views.view_snapshot"))
 
 # Custom filter to output submission timestamp in ISO format
 def isoformat(datetime):
@@ -51,9 +51,9 @@ def isoformat(datetime):
 
 app.jinja_env.filters['isoformat'] = isoformat
 
-@app.route("/assignments/<assignment_id>/")
-@account_type_required(("student", "teacher", "teaching_assistant"))
-def view_assignment(assignment_id):
+@app.route("/assignments/<assignment_id>/snapshot/<student_email>")
+@account_type_required(("teacher", "teaching_assistant"))
+def view_snapshot(assignment_id, student_email):
     simple_archive_form = SimpleArchiveForm()
 
     # Convert the assignment in the URL into an ObjectId
@@ -75,36 +75,22 @@ def view_assignment(assignment_id):
 
         abort(404)
 
+    # Retrieve the student
+    try:
+        student = User.objects.get(email = student_email)
+    except User.DoesNotExist:
+        logger.info("Non-extant Student ID requested.")
+
     # Get all of the submissions for this assignment
     submissions = list(
         Submission.objects(
-            user = current_user.id,
+            user = student.id,
             assignment = id
         ).order_by(
             "-most_recent",
             "-timestamp"
         )
     )
-
-    # Get student submissions if being viewed as teacher
-    student_submissions = []
-    students = []
-    if current_user.account_type in ["teacher", "teaching_assistant"]:
-        students = list(
-            User.objects(
-                classes = assignment.for_class,
-                account_type = "student"
-            ).order_by(
-                "-email"
-            )
-        )
-
-        student_submissions = list(
-            Submission.objects(
-                user__in = [i.email for i in students],
-                most_recent = True
-            )
-        )
 
     test_results = list(
         TestResult.objects(
@@ -155,9 +141,7 @@ def view_assignment(assignment_id):
         simple_archive_form = simple_archive_form,
         wait_and_refresh = wait_and_refresh,
         new_submissions = [v for k, v in get_flashed_messages(with_categories = True) if k == "new_submission"],
-        view_as_teacher = (current_user.account_type in ["teacher",
-                                                         "teaching_assistant"]),
-        students = students,
-        student_submissions = student_submissions,
+        view_snapshot = True,
+        student = student,
         enumerate = enumerate
     )
