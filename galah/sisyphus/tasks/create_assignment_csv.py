@@ -98,7 +98,7 @@ def _create_assignment_csv(csv_id, requester, assignment):
 
         csv_file.close()
 
-        new_csv.file_location = os.path.join(config["CSV_DIRECTORY"] + str(csv_id))
+        new_csv.file_location = os.path.join(config["CSV_DIRECTORY"], str(csv_id))
 
         new_csv.expires = \
             datetime.datetime.today() + config["TEACHER_CSV_LIFETIME"]
@@ -106,7 +106,7 @@ def _create_assignment_csv(csv_id, requester, assignment):
         new_csv.save(force_insert = True)
     except Exception as e:
         new_csv.file_location = None
-        os.remove(os.path.join(config["CSV_DIRECTORY"] + str(csv_id)))
+        os.remove(os.path.join(config["CSV_DIRECTORY"], str(csv_id)))
 
         new_csv.error_string = str(e)
         new_csv.save(force_insert = True)

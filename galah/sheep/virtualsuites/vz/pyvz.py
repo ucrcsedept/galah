@@ -33,7 +33,7 @@ def check_call(*args, **kwargs):
 
     returnValue = subprocess.call(*args, **kwargs)
     if returnValue != 0:
-        raise SystemError((returnValue, str(args[0])))
+        raise SystemError((return_value, str(zparams[0])))
     else:
         return 0
 
