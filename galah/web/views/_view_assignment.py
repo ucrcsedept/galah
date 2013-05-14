@@ -102,6 +102,7 @@ def view_assignment(assignment_id):
         student_submissions = list(
             Submission.objects(
                 user__in = [i.email for i in students],
+                assignment = assignment_id,
                 most_recent = True
             )
         )
