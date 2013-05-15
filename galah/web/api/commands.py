@@ -766,7 +766,8 @@ def assignment_progress(current_user, id, show_distro = ""):
                 distribution[rounded_score] = 1
 
         progress += "\n\n-- Grade Distribution (Points: # of students) --\n"
-        for score in distribution:
+        sorted_scores = sorted(distribution.keys())
+        for score in sorted_scores:
             progress += "%d: %d\n" % (score, distribution[score])
         
 
