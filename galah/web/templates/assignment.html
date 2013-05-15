@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {%- block title -%}
-{%- if view_snapshot -%}{{ student.email }}'s{%- endif -%}{{ assignment.name }}
+{%- if view_snapshot -%}{{ student.email }}'s&nbsp;{%- endif -%}{{ assignment.name }}
 {%- endblock -%}
 {%- block path -%}
 	&rarr; <a href="/assignments">assignments</a>
