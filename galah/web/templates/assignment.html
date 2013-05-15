@@ -1,9 +1,17 @@
 {% extends "base.html" %}
-{% block title %}{{ assignment.name }}{% endblock %}
-{% block path %}&rarr; <a href="/assignments">assignments</a> &rarr; <a href="/assignments/{{ assignment.id }}">{{ assignment.name }}</a>{% endblock %}
+{%- block title -%}
+{%- if view_snapshot -%}{{ student.email }}'s{%- endif -%}{{ assignment.name }}
+{%- endblock -%}
+{%- block path -%}
+	&rarr; <a href="/assignments">assignments</a>
+	&rarr; <a href="/assignments/{{ assignment.id }}">{{ assignment.name }}</a>
+	{%- if view_snapshot -%}
+		&rarr; <a href="/assignments/{{ assignment.id }}/snapshot/{{ student.id }}">{{ student.email }}'s submissions</a>
+	{%- endif -%}
+{%- endblock -%}
 {% block includes %}
-		{% if wait_and_refresh %}
-	  <meta http-equiv="refresh" content="10">
+	{% if wait_and_refresh %}
+		<meta http-equiv="refresh" content="10">
 	{% endif %}
 	<script type="text/javascript">
 	$(function() {
@@ -36,7 +44,7 @@
 			} else {
 			$(parts_detail).text("▾");
 			}
-
+	
 			$(parts_detail).toggleClass("active");
 			$(this).find(".parts").slideToggle();
 		});
@@ -69,6 +77,9 @@
 	</script>
 {% endblock %}
 {% block content %}
+	{%- if view_as_teacher -%}
+		{% include "assignment_stats.html" %}	
+	{% endif %}
 	{% if not assignment.due_cutoff or now < assignment.due_cutoff %}
 	<div class="tab" id="upload_archive">
 		<h2>Upload a Submission</h2>

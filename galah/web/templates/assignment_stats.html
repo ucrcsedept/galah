@@ -1,0 +1,26 @@
+<div class="stats tab">
+	<h2>Overall student progress</h2>
+		{%- if assignment.test_harness -%}
+			{%- if student_submissions -%}
+				<h3 class="students_submitted">
+					So far, {{ student_submissions | length }} out of {{ students | length }} students have made a submission for this assignment.
+				</h3>
+				{% set finals = student_submissions | groupby("test_type") %}
+				<h3 class="students_submitted">
+					Out of those, {{ finals[0][1] | length }} out of {{ students | length }} students have made their final submission for this assignment.
+				</h3>
+			{%- else -%}
+				There are no submissions for this assignment yet.
+			{%- endif -%}
+		{%- else -%}
+			You cannot view overall progress for an assignment without a test harness. Please use the API Client to upload a test harness so students can get their submissions tested.
+		{%- endif -%}
+</div>
+<div class="stats tab">
+	<h2>Select an enrolled student below to see their progress in detail.</h2>
+	<div style="text-align: center">
+		{% for i in student_submissions %}
+			<a href="snapshot/{{ i.user }}" class="button big">{{ i.user }}</a>
+		{% endfor %}
+	</div>
+</div>
