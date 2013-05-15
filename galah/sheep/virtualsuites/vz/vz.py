@@ -293,7 +293,7 @@ class Consumer:
 
                 self.logger.debug("Test results received %s.", results)
             except socket.timeout:
-                self.logger.debug("Bootstrapper timed out")
+                self.logger.info("Bootstrapper timed out")
 
                 return None
 
