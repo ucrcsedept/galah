@@ -1,3 +1,24 @@
+{%- block includes -%}
+	<script type="text/javascript" src="/static/typeahead.min.js"></script>
+	<script type="text/javascript">
+	$(function() {
+		$("#studentSearch").typeahead({
+			name: "student_submissions",
+			local: [
+				{%- for i in students %}
+					"{{ i.email }}",
+				{%- endfor -%}
+			]
+		});
+
+		$("#studentSearch").on("typeahead:selected", function() {
+			var student = $(this).val();
+			// Redirect to student snapshot page.
+			window.location.href = "snapshot/" + student;
+		});
+	});
+	</script>
+{%- endblock -%}
 <div class="stats tab">
 	<h2>Overall student progress</h2>
 		{%- if assignment.test_harness -%}
@@ -16,11 +37,7 @@
 			You cannot view overall progress for an assignment without a test harness. Please use the API Client to upload a test harness so students can get their submissions tested.
 		{%- endif -%}
 </div>
-<div class="stats tab">
-	<h2>Select an enrolled student below to see their progress in detail.</h2>
-	<div style="text-align: center">
-		{% for i in student_submissions %}
-			<a href="snapshot/{{ i.user }}" class="button big">{{ i.user }}</a>
-		{% endfor %}
-	</div>
+<div class="stats tab students_submitted">
+	<h2>Search for specific students to see their progress in detail</h2>
+	<input id="studentSearch" class="typeahead" type="text" />
 </div>

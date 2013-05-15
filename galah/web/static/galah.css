@@ -461,3 +461,27 @@ span.disabled {
     color: #666;
     text-decoration: line-through;
 }
+
+/* Assignment Stats */
+#studentSearch {
+    border: 1px solid #333;
+    background-color: #F3F3F3 !important;
+    padding: 0.2em;
+    font-size: 14pt;
+    width: 312px;
+}
+
+.tt-dropdown-menu {
+    position: relative !important;
+    border: 1px solid #333;
+}
+
+.tt-is-under-cursor {
+    color: white;
+    background: #2d6cc0;
+}
+
+.tt-suggestion p {
+    margin: 0;
+    padding: 10px;
+}
