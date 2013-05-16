@@ -1,5 +1,5 @@
 # Copyright 2012 John Sullivan
-# Copyright 2012 Other contributers as noted in the CONTRIBUTERS file
+# Copyright 2012 Other contributors as noted in the CONTRIBUTORS file
 #
 # This file is part of Galah.
 #
