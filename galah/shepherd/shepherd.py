@@ -65,6 +65,10 @@ def match_found(flock_manager, sheep_identity, request):
     assignment = Assignment.objects.get(id = submission.assignment)
     test_harness = TestHarness.objects.get(id = assignment.test_harness)
 
+    # Apply any personal deadlines to the assignment object.
+    user = User.get(email = submission.user)
+    assignmnet.apply_personal_deadlines(user)
+
     data = {
         "assignment": assignment.to_dict(),
         "submission": submission.to_dict(),
