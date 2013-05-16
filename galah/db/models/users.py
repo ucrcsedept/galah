@@ -34,7 +34,7 @@ class User(Document):
     personal_deadline = MapField(DateTimeField())
 
     # The individual due date
-    personal_duedata = MapField(DateTimeField())
+    personal_due_date = MapField(DateTimeField())
 
     meta = {
         "indexes": ["email", "classes"],
