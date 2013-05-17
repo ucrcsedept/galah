@@ -152,7 +152,7 @@
 			  <a href="resubmit/{{ submission.id }}"><input type="button" value="Resubmit"></a>
 			</div>
 			{% endif %}
-			{% if submission.test_results and submission.test_results_obj and submission.test_results_obj.score is not none %}
+			{% if submission.test_results and submission.test_results_obj and submission.test_results_obj.score is not none and loop.index < 4 %}
 			<div>
 				<table class="test_results">
 					<tr class="total heading">
@@ -196,12 +196,10 @@
 							  {%- endif -%}
 							  {{- i.name -}}
 							</div>
-							{% if i.message and (i.message | length) < 5000 and loop.counter < 4 %}
+							{% if i.message and (i.message | length) < 5000 %}
 								<div class="test_results_message">
 									{{ i.message | markdown }}
 								</div>
-							{% elif i.message and (i.message | length) < 5000 %}
-								<div style="font-style: italic">Only feedback from the first 3 submissions are displayed.</div>
 							{% elif i.message %}
 								<div style="font-style: italic">Details not available (content too large)</div>
 							{% endif %}
@@ -228,6 +226,8 @@
 					{% endfor %}
 				</table>
 			</div>
+			{% elif submission.test_results and submission.test_results_obj and submission.test_results_obj.score is not none %}
+				<div style="font-style: italic">Only the latest 3 submission's results are shown.</div>
 			{% endif %}
 			</div>
 			{% endif %}
