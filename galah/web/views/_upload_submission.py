@@ -67,15 +67,19 @@ def upload_submission(assignment_id):
             assignment_id = assignment_id
         )
 
+    assignment.apply_personal_deadlines(current_user)
+
     # Check if the assignment's cutoff date has passed
     if assignment.due_cutoff and \
             assignment.due_cutoff < datetime.datetime.today():
         logger.info("Submission rejected, cutoff date has already passed.")
 
-        return craft_response(
-            error = "The cutoff date has already passed, your submission was "
-                    "not accepted."
+        flash(
+            "The cutoff date has already passed, your submission was not "
+            "accepted.", category = "error"
         )
+
+        return redirect(redirect_to)
 
     form = SimpleArchiveForm()
     if not form.validate_on_submit():
