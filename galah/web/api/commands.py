@@ -990,9 +990,6 @@ def modify_user_deadline(current_user, assignment, user, new_due_date = "",
             "specified."
         )
 
-    new_cutoff_date = _to_datetime(new_cutoff_date)
-    new_due_date = _to_datetime(new_due_date)
-
     change_descriptions = []
 
     if new_cutoff_date:
@@ -1001,17 +998,19 @@ def modify_user_deadline(current_user, assignment, user, new_due_date = "",
 
         change_descriptions.append(
             "Set personal cutoff date to %s." %
-                (_datetime_to_str(new_cutoff_date), )
+                (new_cutoff_date)
         )
 
     if new_due_date:
-        the_user.personal_duedate[str(the_assignment.id)] = \
+        the_user.personal_due_date[str(the_assignment.id)] = \
             _to_datetime(new_due_date)
 
         change_descriptions.append(
             "Set personal due date to %s." %
-                (_datetime_to_str(new_due_date))
+                (new_due_date)
         )
+
+    the_user.save()
 
     return (
         "Successfully modified personal deadlines of %s for %s.\n\t%s" % (
