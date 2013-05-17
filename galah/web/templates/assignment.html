@@ -196,10 +196,12 @@
 							  {%- endif -%}
 							  {{- i.name -}}
 							</div>
-							{% if i.message and (i.message | length) < 5000 and loop.counter0 < 3 %}
+							{% if i.message and (i.message | length) < 5000 and loop.counter < 4 %}
 								<div class="test_results_message">
 									{{ i.message | markdown }}
 								</div>
+							{% elif i.message and (i.message | length) < 5000 %}
+								<div style="font-style: italic">Only feedback from the first 3 submissions are displayed.</div>
 							{% elif i.message %}
 								<div style="font-style: italic">Details not available (content too large)</div>
 							{% endif %}
