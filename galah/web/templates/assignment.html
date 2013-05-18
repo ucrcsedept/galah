@@ -28,7 +28,7 @@
 			} else {
 			$(toggle_arrow).text("▸");
 			}
-			
+
 		});
 
 			$(".parts_detail.active").each(function() {
@@ -44,13 +44,13 @@
 			} else {
 			$(parts_detail).text("▾");
 			}
-	
+
 			$(parts_detail).toggleClass("active");
 			$(this).find(".parts").slideToggle();
 		});
 
 			$("form").on("click", "#submit_archive", function() {
-			var files_added = 0; 
+			var files_added = 0;
 			$("#file_input_container").children().each(function() {
 			if ($(this).children("input").val() != '') {
 				++files_added;
@@ -78,7 +78,7 @@
 {% endblock %}
 {% block content %}
 	{%- if view_as_teacher -%}
-		{% include "assignment_stats.html" %}	
+		{% include "assignment_stats.html" %}
 	{% endif %}
 	{% if not assignment.due_cutoff or now < assignment.due_cutoff %}
 	<div class="tab" id="upload_archive">
@@ -122,14 +122,14 @@
 		{% else %}
 		<div id="{{ submission.timestamp | isoformat }}" class="submission">
 		{% endif %}
-				<div class="submission_header"> 
-			  <span class="submission_time"> 
-				Submission on {{ submission.timestamp_pretty }} 
-			  </span> 
-			  <span class="status {{ status_class (submission.status) }}"> 
-				{{ submission.status }} 
-			  </span> 
-			</div> 
+				<div class="submission_header">
+			  <span class="submission_time">
+				Submission on {{ submission.timestamp_pretty }}
+			  </span>
+			  <span class="status {{ status_class (submission.status) }}">
+				{{ submission.status }}
+			  </span>
+			</div>
 			{% if "Failed" in submission.status %}
 			  <div class="context_message">
 				The test harness crashed when running your code.
@@ -152,7 +152,7 @@
 			  <a href="resubmit/{{ submission.id }}"><input type="button" value="Resubmit"></a>
 			</div>
 			{% endif %}
-			{% if submission.test_results and submission.test_results_obj and submission.test_results_obj.score is not none %}
+			{% if submission.test_results and submission.test_results_obj and submission.test_results_obj.score is not none and loop.index < 4 %}
 			<div>
 				<table class="test_results">
 					<tr class="total heading">
@@ -226,6 +226,8 @@
 					{% endfor %}
 				</table>
 			</div>
+			{% elif submission.test_results and submission.test_results_obj and submission.test_results_obj.score is not none %}
+				<div style="font-style: italic">Only the latest 3 submission's results are shown.</div>
 			{% endif %}
 			</div>
 			{% endif %}
