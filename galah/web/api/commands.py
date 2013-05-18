@@ -994,7 +994,7 @@ def modify_user_deadline(current_user, assignment, user, new_date):
 
 @_api_call(("admin", "teacher", "teaching_assistant"))
 def get_archive(current_user, assignment, email = ""):
-    # tar_tasks imports galahweb because it wants access to the logger, to
+    # zip_tasks imports galahweb because it wants access to the logger, to
     # prevent a circular dependency we won't load the module until we need it.
     the_assignment = _get_assignment(assignment, current_user)
 
@@ -1012,7 +1012,7 @@ def get_archive(current_user, assignment, email = ""):
     # if off to the heavy lifter to do it for us.
     send_task(
         config["SISYPHUS_ADDRESS"],
-        "tar_bulk_submissions",
+        "zip_bulk_submissions",
         str(task_id),
         current_user.email,
         str(the_assignment.id),
@@ -1023,7 +1023,7 @@ def get_archive(current_user, assignment, email = ""):
         "Your archive is being created.",
         {
             "X-Download": "archives/" + str(task_id),
-            "X-Download-DefaultName": "submissions.tar.gz"
+            "X-Download-DefaultName": "submissions.zip"
         }
     )
 

@@ -17,6 +17,7 @@
 # along with Galah.  If not, see <http://www.gnu.org/licenses/>.
 
 import tempfile
+import zipfile
 import os
 import subprocess
 
@@ -79,3 +80,18 @@ def uncompress(compressed_file, dest_dir = None):
 		os.remove(tempfile_path)
 
 	return dest_dir
+
+# Adapted from http://stackoverflow.com/a/1855118: How to Zip a Directory
+def zipdir(path, archive_file):
+	os.remove(archive_file)
+
+	which_files = []
+	os.chdir(path)
+	dirname, subdirs, files = os.walk('.').next()
+	which_files = subdirs + files
+
+	subprocess.check_call(
+		[
+			"zip", "-r", archive_file, "-q"
+		] + which_files
+	)

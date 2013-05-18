@@ -24,6 +24,7 @@ import datetime
 from bson import ObjectId
 
 from galah.db.models import Submission, Archive
+from galah.base.filemagic import zipdir
 
 # Set up configuration and logging
 from galah.base.config import load_config
@@ -32,7 +33,7 @@ config = load_config("sisyphus")
 import logging
 logger = logging.getLogger("galah.sisyphus.tar_bulk_submissions")
 
-def _tar_bulk_submissions(archive_id, requester, assignment, email = ""):
+def _zip_bulk_submissions(archive_id, requester, assignment, email = ""):
     archive_id = ObjectId(archive_id)
 
     archive_file = temp_directory = ""
@@ -133,16 +134,11 @@ def _tar_bulk_submissions(archive_id, requester, assignment, email = ""):
 
         # Create the actual archive file.
         # TODO: Create it in galah's /var/ directory
-        file_descriptor, archive_file = tempfile.mkstemp(suffix = ".tar.gz")
+        file_descriptor, archive_file = tempfile.mkstemp(suffix = ".zip")
         os.close(file_descriptor)
 
-        # Run tar and do the actual archiving. Will block until it's finished.
-        subprocess.check_call(
-            [
-                "tar", "--dereference", "--create", "--gzip", "--directory",
-                temp_directory, "--file", archive_file
-            ] + submission_map.keys()
-        )
+        # Run zip and do the actual archiving. Will block until it's finished.
+        zipdir(temp_directory, archive_file)
 
         new_archive.file_location = archive_file
 

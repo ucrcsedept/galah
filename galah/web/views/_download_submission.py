@@ -19,6 +19,7 @@
 from galah.web import app
 from galah.web.auth import account_type_required
 from galah.db.models import Assignment, Submission, Archive
+from galah.base.filemagic import zipdir
 from bson.objectid import ObjectId
 from bson.errors import InvalidId
 from flask import send_file, abort
@@ -34,7 +35,7 @@ import sys
 logger = \
     GalahWebAdapter(logging.getLogger("galah.web.views.download_submission"))
 
-@app.route("/assignments/<assignment_id>/<submission_id>/download.tar.gz")
+@app.route("/assignments/<assignment_id>/<submission_id>/download.zip")
 @account_type_required(("student", "teacher", "teaching_assistant"))
 def download_submission(assignment_id, submission_id):
     # Figure out which assignment the user asked for.
@@ -86,20 +87,14 @@ def download_submission(assignment_id, submission_id):
     try:
         # Create the actual archive file.
         # TODO: Create it in galah's /var/ directory
-        archive_fd, archive_file_name = tempfile.mkstemp(suffix = ".tgz")
+        archive_fd, archive_file_name = tempfile.mkstemp(suffix = ".zip")
 
         # Close the file because we won't actually do any writing to it,
         # rather tar will.
         os.close(archive_fd)
 
-        # Run tar and do the actual archiving. Will block until it's finished.
-        subprocess.check_call(
-            [
-                "tar", "--dereference", "--create", "--gzip", "--directory",
-                submission.getFilePath(),
-                "--file", archive_file_name
-            ] + submission.uploaded_filenames
-        )
+        # Run zip and do the actual archiving. Will block until it's finished.
+        zipdir(submission.getFilePath(), archive_file_name)
 
         new_archive.file_location = archive_file_name
 
