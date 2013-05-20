@@ -756,6 +756,9 @@ def assignment_progress(current_user, id, show_distro = ""):
             )
         )
 
+        # Get count of ungraded submissions
+        failed_submissions = [i for i in submissions if not i.test_results]
+
         # Store distribution
         distribution = {}
         for result in test_results:
@@ -766,6 +769,8 @@ def assignment_progress(current_user, id, show_distro = ""):
                 distribution[rounded_score] = 1
 
         progress += "\n\n-- Grade Distribution (Points: # of students) --\n"
+        progress += "0 (due to ungraded submissions): %d\n" % \
+            len(failed_submissions)
         sorted_scores = sorted(distribution.keys())
         for score in sorted_scores:
             progress += "%d: %d\n" % (score, distribution[score])
