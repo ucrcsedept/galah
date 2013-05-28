@@ -50,7 +50,7 @@ def run_vzctl(zparams, timeout = config["VZCTL_RETRY_TIMEOUT"]):
         if return_value == 9 and datetime.datetime.today() < deadline:
             continue
         elif return_value != 0:
-            raise SystemError((return_value, str(args[0])))
+            raise SystemError((return_value, str(zparams[0])))
         else:
             return 0
 
