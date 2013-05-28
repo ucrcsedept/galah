@@ -295,7 +295,7 @@ class Consumer:
                     results.append(received)
                 results = "".join(results)
 
-                self.logger.debug("Test results recieved %s.", results)
+                self.logger.debug("Test results received %s.", results)
             except socket.timeout:
                 self.logger.debug("Bootstrapper timed out")
 

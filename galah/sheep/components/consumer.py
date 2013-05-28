@@ -49,7 +49,7 @@ def _run():
     virtual_suite = get_virtual_suite(config["VIRTUAL_SUITE"])
     consumer = virtual_suite.Consumer(logger)
 
-    # Set up the socket to send/recieve messages to/from the shepherd
+    # Set up the socket to send/receive messages to/from the shepherd
     shepherd = universal.context.socket(zmq.DEALER)
     shepherd.linger = 0
     shepherd.connect(config["shepherd/SHEEP_SOCKET"])
@@ -121,7 +121,7 @@ def _run():
                 shepherd.send_json(identification.to_dict())
 
             elif message.type == "request":
-                # Recieved test request from the shepherd
+                # Received test request from the shepherd
                 logger.info("Test request received, running tests.")
                 logger.debug("Test request: %s", str(message))
                 result = consumer.run_test(machine_id, message.body)

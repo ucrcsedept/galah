@@ -51,7 +51,7 @@ def dequeue(queue, poll_timeout = 5):
 
 def recv_json(socket, timeout = None, ignore_exiting = False):
     """
-    Recieves JSON from a socket. Assumes socket is set to timeout properly.
+    Receives JSON from a socket. Assumes socket is set to timeout properly.
     Raises universal.Exiting if program is exiting, or zmq.ZMQError if
     timed out.
 
@@ -73,7 +73,7 @@ def recv_json(socket, timeout = None, ignore_exiting = False):
             # Decode the json in the innermost frame
             msg[-1] = jsonapi.loads(msg[-1])
 
-            # If only one frame was recieved simply return that frame
+            # If only one frame was received simply return that frame
             if len(msg) == 1: msg = msg[0]
 
             return msg
