@@ -325,6 +325,11 @@ a {
     cursor: pointer;
 }
 
+.total.disabled {
+    cursor: default;
+    background-color: #e4e4e4;
+}
+
 /* Hierarchical Headings */
 h1, h2, h3, h4 { font-family: Helvetica, "Helvetica Neue", Arial, sans-serif; }
 
