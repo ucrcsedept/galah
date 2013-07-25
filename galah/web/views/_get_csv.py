@@ -32,12 +32,17 @@ logger = GalahWebAdapter(logging.getLogger("galah.web.views.get_csv"))
 @app.route("/reports/csv/<csv_id>")
 def get_csv(csv_id):
     csv = None
+    print csv_id
     try:
+        print ObjectId(csv_id)
         csv = CSV.objects.get(id = ObjectId(csv_id))
+        print csv
     except InvalidId:
         logger.info("Invalid ID requested.")
 
         abort(500)
+    except CSV.DoesNotExist:
+        pass
 
     # If we can't find the CSV file return a 404 error.
     if csv is None:
