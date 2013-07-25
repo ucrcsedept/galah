@@ -1097,6 +1097,38 @@ def get_csv(current_user, assignment):
     )
 
 @_api_call(("admin", "teacher", "teaching_assistant"))
+def get_gradebook(current_user, the_class, fill=0):
+    if current_user.account_type == "admin":
+        the_class = _get_class(the_class)
+    else:
+        the_class = _get_class(the_class, current_user)
+
+    if current_user.account_type != "admin" and \
+            the_class not in current_user.classes:
+        raise PermissionError(
+            "You can only get information about classes you teach."
+        )
+
+    task_id = ObjectId()
+
+    send_task(
+        config["SISYPHUS_ADDRESS"],
+        "create_gradebook_csv",
+        str(task_id),
+        current_user.email,
+        str(the_class.id),
+        int(fill)
+    )
+
+    return (
+        "The CSV gradebook for this class is being created.",
+        {
+            "X-Download": "reports/csv/" + str(task_id),
+            "X-Download-DefaultName": "gradebook.csv"
+        }
+    )
+
+@_api_call(("admin", "teacher", "teaching_assistant"))
 def rerun_harness(current_user, assignment):
     the_assignment = _get_assignment(assignment, current_user)
 
