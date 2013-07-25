@@ -23,7 +23,7 @@ import os
 import datetime
 from bson import ObjectId
 
-from galah.db.models import Submission, Archive
+from galah.db.models import Archive, Assignment, Submission, User
 from galah.base.filemagic import zipdir
 
 # Set up configuration and logging
@@ -75,6 +75,14 @@ def _zip_bulk_submissions(archive_id, requester, assignment, email = ""):
         # the submission in the system).
         if email:
             query["user"] = email
+        else:
+            # Otherwise, we need to be careful not to get teacher/TA submissions.
+            assn = Assignment.objects.get(id = ObjectId(assignment))
+            students = User.objects(
+                account_type="student",
+                classes = assn.for_class
+            )
+            query["user__in"] = [i.id for i in students]
 
         # Grab all the submissions
         submissions = list(Submission.objects(**query))
