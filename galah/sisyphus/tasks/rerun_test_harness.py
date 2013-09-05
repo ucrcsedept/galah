@@ -16,6 +16,7 @@
 # You should have received a copy of the Galah Group General Public License
 # along with Galah.  If not, see <http://www.galahgroup.com/licenses>.
 
+import sleep
 import datetime
 from bson import ObjectId
 
@@ -59,6 +60,8 @@ def _rerun_test_harness(assignment):
             i.save()
             logger.info("Sent test request to shepherd for %s" % str(i.id))
             send_test_request(shepherd_config["PUBLIC_SOCKET"], i.id)
+
+            time.sleep(30)
     except Exception as e:
         logger.error(str(e))
 
