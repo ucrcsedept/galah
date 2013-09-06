@@ -25,7 +25,10 @@ class SubTestResult(EmbeddedDocument):
     message = StringField()
     parts = ListField(ListField())
 
-    def validate(self):
+    def validate(self, clean = True):
+        if clean:
+            self.clean()
+
         for i in self.parts:
             if len(i) != 3:
                 raise ValidationError("Every item in parts must have length 3.")

@@ -17,7 +17,6 @@
 # along with Galah.  If not, see <http://www.gnu.org/licenses/>.
 
 from flask import Response, request
-from flask.exceptions import JSONBadRequest
 import flask
 from galah.web import app, oauth_enabled
 from flask.ext.login import current_user
@@ -135,17 +134,9 @@ def api_call():
     try:
         request_data = None
 
-        try:
-            request_data = request.json
-        except JSONBadRequest:
+        request_data = request.get_json(silent = True, cache = False, force = True)
+        if request_data is False:
             raise UserError("Request's JSON was poorly formed.")
-
-        if request_data is None:
-            request_data = flask.json.loads(request.form["request"])
-
-        if request_data is None:
-            raise UserError("No recognizable request data sent.")
-
 
         # The top level object must be either a non-empty list or a dictionary
         # with an api_call key. They will have similar information either way

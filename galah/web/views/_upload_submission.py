@@ -165,7 +165,7 @@ def upload_submission(assignment_id):
         send_test_request(config["PUBLIC_SOCKET"], new_submission.id)
 
     # Communicate to the next page what submission was just added.
-    flash(new_submission.id, category = "new_submission")
+    flash(str(new_submission.id), category = "new_submission")
 
     flash(
         "Successfully uploaded %s %s." %

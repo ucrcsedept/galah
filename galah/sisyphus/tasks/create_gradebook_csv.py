@@ -24,7 +24,11 @@ import os.path
 from bson import ObjectId
 
 from galah.db.models import Assignment, Class, CSV, Submission, TestResult, User
-from collections import OrderedDict
+
+try:
+    from collections import OrderedDict
+except ImportError:
+    from ordereddict import OrderedDict
 
 # Set up configuration and logging
 from galah.base.config import load_config

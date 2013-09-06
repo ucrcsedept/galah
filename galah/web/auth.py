@@ -28,14 +28,14 @@ def FlaskUser(user):
     user.is_active = methodize(lambda self: True)
     user.is_authenticated = methodize(lambda self: True)
     user.is_anonymous = methodize(lambda self: False)
-    user.get_id = methodize(lambda self: self.id)
+    user.get_id = methodize(lambda self: unicode(self.email))
     
     return user
 
 # All users must have an account_type variable in order for the 
 # account_type_required decorator to work
-from flask.ext.login import AnonymousUser
-class Anonymous(AnonymousUser):
+from flask.ext.login import AnonymousUserMixin
+class Anonymous(AnonymousUserMixin):
     account_type = None
     email = "unknown"
 

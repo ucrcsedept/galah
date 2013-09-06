@@ -18,7 +18,8 @@
 
 ## Create the base form ##
 from flask import request, url_for, render_template
-from flask.ext.wtf import Form, HiddenField
+from flask.ext.wtf import Form
+from wtforms.fields import HiddenField
 from galah.web.util import is_url_on_site, GalahWebAdapter
 
 # Load up the configuration to get email validation regular expression
@@ -47,7 +48,9 @@ class RedirectForm(Form):
 
 ## Create the login form ##
 from flask import redirect
-from flask.ext.wtf import Form, TextField, PasswordField, validators
+from flask.ext.wtf import Form
+from wtforms.fields import TextField, PasswordField
+import wtforms.validators as validators
 from galah.db.models import User
 
 class LoginForm(RedirectForm):

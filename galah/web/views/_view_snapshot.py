@@ -17,7 +17,9 @@
 # along with Galah.  If not, see <http://www.gnu.org/licenses/>.
 
 ## Create the form that takes simple archives ##
-from flask.ext.wtf import Form, FieldList, FileField, validators, BooleanField
+from flask.ext.wtf import Form
+from wtforms.fields import FieldList, FileField, BooleanField
+import wtforms.validators as validators
 
 class SimpleArchiveForm(Form):
     archive = FieldList(FileField("Archive"), min_entries = 3)

@@ -16,7 +16,7 @@
 # You should have received a copy of the Galah Group General Public License
 # along with Galah.  If not, see <http://www.galahgroup.com/licenses>.
 
-import sleep
+import time
 import datetime
 from bson import ObjectId
 
