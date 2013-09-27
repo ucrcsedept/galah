@@ -38,7 +38,7 @@ def get_many(dictionary, *args):
 def api_login():
     def success(the_user):
         login_user(the_user)
-        
+
         return Response(
             response = "Successfully logged in.",
             headers = {"X-CallSuccess": "True"}
@@ -94,7 +94,7 @@ def api_login():
         return success(user)
     elif access_token and not oauth_enabled:
         logger.warning("Attempted login via OAuth2 but OAuth2 is not configured.")
-        
+
         return failure()
 
     # If the user is trying to authenticate through Galah...
@@ -124,7 +124,7 @@ def api_login():
             )
 
             return failure()
-    
+
     logger.warning("Malformed request.")
 
     return failure()
@@ -153,7 +153,7 @@ def api_call():
             # Don't let the user insert their own current_user argument
             if "current_user" in request_data:
                 raise UserError("You cannot fool the all-knowing Galah.")
-                
+
             # Resolve the name of the API call and retrieve the actual
             # APICall object we need.
             api_name = request_data["api_name"]
@@ -184,10 +184,13 @@ def api_call():
 
             api_kwargs[k] = v
 
-        logger.info(
-            "API call %s with args=%s and kwargs=%s",
-            api_name, str(api_args), str(api_kwargs)
-        )
+        if api_call.sensitive:
+            logger.info("API call %s [sensitive args]", api_name)
+        else:
+            logger.info(
+                "API call %s with args=%s and kwargs=%s",
+                api_name, str(api_args), str(api_kwargs)
+            )
 
         call_result = api_call(current_user, *api_args, **api_kwargs)
 
@@ -219,7 +222,7 @@ def api_call():
         )
     except Exception as e:
         logger.exception("Exception occured while processing API request.")
-        
+
         return Response(
             response =
                 "An internal server error occurred processing your request.",

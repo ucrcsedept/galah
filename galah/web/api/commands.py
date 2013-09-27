@@ -58,10 +58,12 @@ class APICall(object):
     """
 
     __slots__ = (
-        "wrapped_function", "allowed", "argspec", "name", "takes_file"
+        "wrapped_function", "allowed", "argspec", "name", "takes_file",
+        "sensitive"
     )
 
-    def __init__(self, wrapped_function, allowed = None, takes_file = None):
+    def __init__(self, wrapped_function, allowed = None, takes_file = None,
+            sensitive = False):
         #: The raw function we are wrapping that performs the actual logic.
         self.wrapped_function = wrapped_function
 
@@ -75,6 +77,9 @@ class APICall(object):
 
         #: The name of the wrapped function.
         self.name = wrapped_function.func_name
+
+        #: Whether it's ok to log the arguments of this call.
+        self.sensitive = sensitive
 
         self.takes_file = takes_file if takes_file else []
 
@@ -125,7 +130,7 @@ class APICall(object):
 
 from decorator import decorator
 
-def _api_call(allowed = None, takes_file = None):
+def _api_call(allowed = None, takes_file = None, sensitive = False):
     """Decorator that wraps a function with the :class: APICall class."""
 
     if isinstance(allowed, basestring):
@@ -135,7 +140,7 @@ def _api_call(allowed = None, takes_file = None):
         takes_file = (takes_file, )
 
     def inner(func):
-        return APICall(func, allowed, takes_file)
+        return APICall(func, allowed, takes_file, sensitive = sensitive)
 
     return inner
 
@@ -423,7 +428,7 @@ def get_oauth2_keys():
 
 from galah.base.crypto.passcrypt import serialize_seal, seal
 from mongoengine import OperationError
-@_api_call("admin")
+@_api_call("admin", sensitive = True)
 def create_user(email, password = "", account_type = "student"):
     new_user = User(
         email = email,
@@ -442,9 +447,13 @@ def create_user(email, password = "", account_type = "student"):
 
     return "Success! %s created." % _user_to_str(new_user)
 
-@_api_call("admin")
+@_api_call(sensitive = True)
 def reset_password(current_user, email, new_password = ""):
     the_user = _get_user(email, current_user)
+
+    if current_user.account_type != "admin" and \
+            current_user.email != the_user.email:
+        raise UserError("Only admins can set other user's password.")
 
     if new_password:
         the_user.seal = serialize_seal(seal(new_password))
