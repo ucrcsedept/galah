@@ -65,7 +65,7 @@ class Assignment(Document):
             "test_harness": str(self.test_harness)
         }
 
-    def validate(self):
+    def validate(self, clean = True):
         if self.due_cutoff and self.due > self.due_cutoff:
             raise ValidationError("due cannot be later than due_cutoff")
 
