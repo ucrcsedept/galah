@@ -134,9 +134,17 @@ def api_call():
     try:
         request_data = None
 
-        request_data = request.get_json(silent = True, cache = False, force = True)
+        request_data = request.get_json(silent = True, cache = False)
         if request_data is False:
             raise UserError("Request's JSON was poorly formed.")
+
+        # The API Client will embed the JSON data in a file field if
+        # a file is also being uploaded.
+        if request_data is None:
+            request_data = flask.json.loads(request.form["request"])
+
+        if request_data is None:
+            raise UserError("No recognizable request data sent.")
 
         # The top level object must be either a non-empty list or a dictionary
         # with an api_call key. They will have similar information either way
