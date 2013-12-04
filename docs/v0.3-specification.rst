@@ -13,17 +13,17 @@ High-Level Goals
 
 The primary goal of this sprint is to make development on Galah as simple as possible. We have been stuck in a deadlocked state for a long time partially because Galah is difficult to develop for right now. Specific problems include...
 
- 1. Setting up Galah on a new computer is a long, manual process.
- #. No automated tests exist to ensure changes do not break anything serious.
- #. The code base is very large and not entirely well-organized right now.
- #. There is so much to do it's hard to decide what to focus energy on.
- #. We don't have much manpower.
+1. Setting up Galah on a new computer is a long, manual process.
+#. No automated tests exist to ensure changes do not break anything serious.
+#. The code base is very large and not entirely well-organized right now.
+#. There is so much to do it's hard to decide what to focus energy on.
+#. We don't have much manpower.
 
 Not all of this can be fixed, and indeed some of these problems are inherent in any software project of moderate size and complexity. But I believe that if we fix a few of them, development will feel significantly less than an uphill ride on a unicycle. Specifically, I would like the following high-level goals to be accomplished through this sprint.
 
- 1. Galah should be able to be automatically installed.
- #. Galah should have automated tests ranging from unit tests where appropriate to high-level system tests.
- #. Galah should have a more clearly defined structure.
+1. Galah should be able to be automatically installed.
+#. Galah should have automated tests ranging from unit tests where appropriate to high-level system tests.
+#. Galah should have a more clearly defined structure.
 
 I have what I hope is a well-defined plan to accomplish each of these goals...
 
@@ -83,8 +83,8 @@ To make testing straightforward and maintainable, I propose expanding the logic 
 
 Notice that there is no mention of any databases and the details of how things are stored are completely abstracted away. This should allow the controllers to be much more straightforward, and testing the models will become a much less daunting task. There are also a couple other things worth noting about the above code:
 
- * Every function has a ``current_user`` parameter. This is because the models should be who performs the security checks, not the controllers as there are multiple controllers and we don't want a user to be able to, for example, add a user through the web interface but not be able to through the API Client.
- * No MongoEngine or MongoDB specific types are referenced. For example, ``User.ID`` is used rather than ``ObjectID``. This should help prevent reliance on a particular database since we plan to support multiple in the future, and should make the model a truly swappable layer.
+* Every function has a ``current_user`` parameter. This is because the models should be who performs the security checks, not the controllers as there are multiple controllers and we don't want a user to be able to, for example, add a user through the web interface but not be able to through the API Client.
+* No MongoEngine or MongoDB specific types are referenced. For example, ``User.ID`` is used rather than ``ObjectID``. This should help prevent reliance on a particular database since we plan to support multiple in the future, and should make the model a truly swappable layer.
 
 The controllers will likely still be tied in pretty closely to the views, but that's not something I'm overly worried about. I don't think there's a need to expand the functionality of the views as I don't see a great benefit there.
 
