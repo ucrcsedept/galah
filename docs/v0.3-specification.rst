@@ -88,13 +88,17 @@ Notice that there is no mention of any databases and the details of how things a
 
 The controllers will likely still be tied in pretty closely to the views, but that's not something I'm overly worried about. I don't think there's a need to expand the functionality of the views as I don't see a great benefit there.
 
+Redis
+~~~~~
+
+The Shepherd+ZeroMQ combo has been a consistent bottleneck during development, and I believe it will prove to be difficult to deal with when creating the core described above, and when creating the installation scripts. Rather than deal with this, we should replace the Shepherd with Redis. This should be a straightforward change and will require minimal changing of code (and we'll be able to get rid of the entire shepherd component and the ZeroMQ dependency).
+
 Specific Testing
 ~~~~~~~~~~~~~~~~
 
 With the structural changes above in place, unit testing the core code should be straightforward. It might be awkward at times because we will have to use some functions to ensure that other functions are working correctly (testing if ``add_user`` works with ``lookup_user`` for example), but should be very doable.
 
 Unit testing the controllers and views will probably have to be done in a smoke-test fashion. So the controllers would simply be called and we'd check to see if any errors occurred. Writing more powerful tests would probably be a waste of time because they'd be tied too closely to the exact implementation of the controllers and views which are subject to rapid change.
-
 
 Conclusion
 ----------
