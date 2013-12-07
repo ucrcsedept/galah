@@ -19,7 +19,7 @@ The primary goal of this sprint is to make development on Galah as simple as pos
 #. There is so much to do it's hard to decide what to focus energy on.
 #. We don't have much manpower.
 
-Not all of this can be fixed, and indeed some of these problems are inherent in any software project of moderate size and complexity. But I believe that if we fix a few of them, development will feel significantly less than an uphill ride on a unicycle. Specifically, I would like the following high-level goals to be accomplished through this sprint.
+Not all of this can be fixed, and indeed some of these problems are inherent in any software project of moderate size and complexity. But I believe that if we fix a few of them, development won't feel like an uphill unicycle ride. Specifically, I would like the following high-level goals to be accomplished through this sprint.
 
 1. Galah should be able to be automatically installed.
 #. Galah should have automated tests ranging from unit tests where appropriate to high-level system tests.
