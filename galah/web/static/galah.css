@@ -416,7 +416,8 @@ h3 {
 
 .login_block .fields > .heading > .error { color: red; }
 
-.login_block .fields > input {
+.login_block .fields > input,
+.login_block .fields > button {
     border: 1px solid #333;
     background-color: #F3F3F3;
     margin-bottom: 15px;
@@ -427,7 +428,8 @@ h3 {
 
 .login_button { text-align: center; }
 
-.login_button input {
+.login_button input,
+.login_button button {
     width: 85%;
     padding: 7px 0px;
 }

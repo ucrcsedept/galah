@@ -13,6 +13,32 @@
 	{% if wait_and_refresh %}
 		<meta http-equiv="refresh" content="10">
 	{% endif %}
+	{% if markdown_enabled %}
+	  {# Include markdown script #}
+	  <script type="text/javascript" src="{{ markdown_src }}"></script>
+	  <script type="text/javascript">
+	    // Set up rules to render markdown as HTML on click
+            $(function() {
+		// Render at least the very first markdown comment.
+		// We remove the marked_down class afterwards so we don't
+		// double markdown for some reason.
+		var first_result = $(".marked_down:first");
+		first_result.html(marked(first_result.text()));
+		first_result.removeClass("marked_down");
+
+		$(".total").click(function() {
+	            // Find all marked_down children in this specific table.
+		    var results = $(this).parent().find(".marked_down");
+		    if (results.length) {
+			$(results).each(function() {
+			    $(this).html(marked($(this).text()));
+			    $(this).removeClass("marked_down");
+			});
+		    }
+		});
+	    });
+	  </script>
+	{% endif %}
 	<script type="text/javascript">
 	$(function() {
 		$("#email").focus()

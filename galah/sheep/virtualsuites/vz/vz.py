@@ -16,8 +16,9 @@
 # You should have received a copy of the Galah Group General Public License
 # along with Galah.  If not, see <http://www.galahgroup.com/licenses>.
 
-import galah.sheep.utility.exithelpers as exithelpers
 from galah.sheep.utility.testrequest import PreparedTestRequest
+from vmpool import VMPool
+import exithelpers
 import pyvz
 import time
 import Queue
@@ -31,19 +32,12 @@ import datetime
 from galah.base.config import load_config
 config = load_config("sheep/vz")
 
-containers = Queue.Queue(maxsize = config["MAX_MACHINES"])
+containers = VMPool(max_size = config["MAX_MACHINES"])
 
 # Performs one time setup for the entire module. Cannot be a member function of
 # producer because it needs to be called once at startup, and the producer class
 # would not have been made yet.
 def setup(logger):
-    if config["MAX_MACHINES"] == 0:
-        logger.warning(
-            "MAX_MACHINES is 0. Infinitely many virtual machines will be "
-            "created. If this is not what you want (which it probably isn't), "
-            "stop this sheep and edit the configuration file."
-        )
-
     # Get a list of all of the clean virtual machines that already exist
     clean_machines = pyvz.get_containers("galah-vm: clean")
 
@@ -55,8 +49,8 @@ def setup(logger):
         reused_machines.append(m)
 
         try:
-            containers.put_nowait(m)
-        except Queue.Full:
+            containers.put(m, timeout = datetime.timedelta(seconds = 0))
+        except VMPool.Timeout:
             break
 
     if reused_machines:
@@ -101,12 +95,12 @@ class Producer:
         # Check to see if we are low on virtual machines.
         if (self._last_low_machine_log + config["LOW_MACHINE_PERIOD"] <
                 datetime.datetime.today() and
-                containers.qsize() < config["LOW_MACHINE_THRESHOLD"]):
+                len(containers) < config["LOW_MACHINE_THRESHOLD"]):
             self.logger.warning(
                 "VM cache is below LOW_MACHINE_THRESHOLD (%d). The current "
                 "number of VMs in the cache is %d.",
                 config["LOW_MACHINE_THRESHOLD"],
-                containers.qsize()
+                len(containers)
             )
 
             self._last_low_machine_log = datetime.datetime.today()
@@ -161,11 +155,12 @@ class Producer:
         return id
 
 class Consumer:
-    def __init__(self, logger):
+    def __init__(self, logger, thread):
         self.logger = logger
+        self.thread = thread
 
     def prepare_machine(self):
-        return exithelpers.dequeue(containers)
+        return exithelpers.dequeue(containers, self.thread)
 
     def run_test(self, container_id, test_request):
         self.logger.debug("Running test with VM with CTID %d.", container_id)
@@ -180,6 +175,7 @@ class Consumer:
 
             try:
                 pyvz.extirpate_container(container_id)
+                containers.destroy(key = self.thread)
             except SystemError:
                 self.logger.exception("Could not destroy VM with CTID %d.", container_id)
 
@@ -297,7 +293,7 @@ class Consumer:
 
                 self.logger.debug("Test results received %s.", results)
             except socket.timeout:
-                self.logger.debug("Bootstrapper timed out")
+                self.logger.info("Bootstrapper timed out")
 
                 return None
 
@@ -311,6 +307,7 @@ class Consumer:
 
             try:
                 pyvz.extirpate_container(container_id)
+                containers.destroy(key = self.thread)
             except SystemError:
                 self.logger.critical(
                     "Could not destroy container with container_id %s.", str(container_id)

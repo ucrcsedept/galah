@@ -17,9 +17,7 @@
 # along with Galah.  If not, see <http://www.galahgroup.com/licenses>.
 
 from flask import Flask
-from flask.ext.markdown import Markdown
 app = Flask("galah.web")
-Markdown(app)
 
 # Hack to work around the destruction of error handlers by Flask's deferred
 # processing.
@@ -36,11 +34,37 @@ oauth_enabled = bool(
     app.config.get("GOOGLE_APICLIENT_SECRET")
 )
 
+cas_enabled = bool(
+    app.config.get("CAS_SERVER_URL")
+)
+
 import mongoengine
 mongoengine.connect(app.config["MONGODB"])
 
 # Plug the auth system into our app
 from auth import login_manager
 login_manager.setup_app(app)
+
+# Enable profiling
+if app.config["PROFILING_ENABLED"]:
+    import cProfile
+    pr = cProfile.Profile()
+    pr.enable()
+
+    import datetime
+    import tempfile
+    import os
+    @app.before_request
+    def dump_profile_data():
+        if datetime.datetime.today() - dump_profile_data.last_dump > \
+                app.config["PROFILING_DUMP_INTERVAL"]:
+            pr.dump_stats(dump_profile_data.dump_filepath)
+            dump_profile_data.last_dump = datetime.datetime.today()
+    dump_profile_data.last_dump = datetime.datetime.today()
+    file_descriptor, dump_profile_data.dump_filepath = tempfile.mkstemp(
+        prefix = "cprof",
+        dir = app.config["PROFILING_DUMP_DIRECTORY"]
+    )
+    os.close(file_descriptor)
 
 import views

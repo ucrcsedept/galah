@@ -5,7 +5,8 @@
 Galah is an automated grading system geared towards processing computer
 programming assignments.
 
-Professors are responsible for creating test harnesses for their assignments.
+Professors are responsible for creating test harnesses for their assignments (and
+we made [some tools that should help](https://github.com/galah-group/galah-interact-python)).
 Aside from that Galah does the rest of the work: running those tests inside of
 secure Virtual Machines, consolodating results into a database, and providing an
 interface for the students and teachers to see the results of the testing.

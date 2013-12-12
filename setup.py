@@ -24,14 +24,14 @@ setup(
         "Flask>=0.8", 
         "Flask-Login>=0.1.3", 
         "Flask-WTF>=0.6",
-        "Flask-Markdown>=0.3",
         "WTForms>=1.0.1",
         "mongoengine>=0.6.9",
         "decorator>=3.4.0",
         "requests>=1.0.3",
         "google-api-python-client>=1.0",
         "simple-pbkdf2>=1.0",
-        "pyzmq>=2.2.0"
+        "pyzmq>=2.2.0",
+        "caslib>=0.3.1"
     ],
 
     package_data = {

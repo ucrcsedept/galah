@@ -28,6 +28,9 @@ defaults = {
     "global/SISYPHUS_ADDRESS": "ipc:///tmp/sisyphus.sock",
     "global/EMAIL_VALIDATION_REGEX":
         "^[_a-z0-9-]+(\.[_a-z0-9-]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,4})$",
+    "global/PROFILING_ENABLED": False,
+    "global/PROFILING_DUMP_INTERVAL": datetime.timedelta(seconds = 30),
+    "global/PROFILING_DUMP_DIRECTORY": "/tmp/",
     "web/ALIAS": "Galah",
     "web/DEBUG": True,
     "web/SECRET_KEY": "Very Secure Key",
@@ -37,10 +40,17 @@ defaults = {
     "web/SOURCE_HOST": "https://github.com/galah-group/galah",
     "web/REPORT_ERRORS_TO": None,
     "web/MAX_CONTENT_LENGTH": None,
+    "web/CAS_LOGIN_CAPTION": "Login with CAS",
+    "web/CAS_LOGIN_HEADING":
+        "Log in through your school's authentication service by clicking the "
+        "button below.",
     "web/GOOGLE_LOGIN_HEADING":
         "If you have a Google account, please log in with it by clicking the "
-        "the button below.",
+        "button below.",
     "web/GOOGLE_LOGIN_CAPTION": "Login with Google",
+    "web/SCHOOL_EMAIL_SUFFIX": "ucr.edu",
+    "web/MARKDOWN_ENABLED": False,
+    "web/MARKDOWN_JS_SRC": None,
     "sisyphus/TEACHER_ARCHIVE_LIFETIME": datetime.timedelta(minutes = 2),
     "sisyphus/TEACHER_CSV_LIFETIME": datetime.timedelta(minutes = 2),
     "sheep/NCONSUMERS": 1,

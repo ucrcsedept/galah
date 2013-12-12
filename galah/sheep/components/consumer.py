@@ -47,7 +47,7 @@ def _run():
 
     # Initialize the correct consumer suite.
     virtual_suite = get_virtual_suite(config["VIRTUAL_SUITE"])
-    consumer = virtual_suite.Consumer(logger)
+    consumer = virtual_suite.Consumer(logger, threading.currentThread())
 
     # Set up the socket to send/receive messages to/from the shepherd
     shepherd = universal.context.socket(zmq.DEALER)

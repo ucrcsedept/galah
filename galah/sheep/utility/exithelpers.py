@@ -18,36 +18,11 @@
 
 import universal, Queue, time, zmq, copy, time
 from zmq.utils import jsonapi
+import datetime
 
 class Timeout(Exception):
     def __init__(self, *args, **kwargs):
         Exception.__init__(self, *args, **kwargs)
-
-
-def enqueue(queue, item, poll_timeout = 5):
-    while not universal.exiting:
-        try:
-            queue.put(item, timeout = poll_timeout)
-            break
-        except Queue.Full:
-            pass
-
-    if universal.exiting:
-        raise universal.Exiting()
- 
-def dequeue(queue, poll_timeout = 5):
-    """
-    Gets an item from a queue. Similar to enqueue.
-
-    """
-
-    while not universal.exiting:
-        try:
-            return queue.get(timeout = poll_timeout)
-        except Queue.Empty:
-            pass
-
-    raise universal.Exiting()
 
 def recv_json(socket, timeout = None, ignore_exiting = False):
     """

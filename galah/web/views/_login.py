@@ -60,7 +60,7 @@ class LoginForm(RedirectForm):
     password = PasswordField("Password", [validators.Required()])
 
 # The actual view
-from galah.web import app, oauth_enabled
+from galah.web import app, oauth_enabled, cas_enabled
 from galah.base.crypto.passcrypt import check_seal, deserialize_seal
 from galah.db.models import User
 from flask.ext.login import login_user
@@ -70,6 +70,9 @@ from flask import redirect, url_for, flash, request
 # Google OAuth2
 from oauth2client.client import OAuth2WebServerFlow
 
+# CAS
+from caslib import CASServer, CASService
+
 # Google OAuth2 flow object to get user's email.
 if oauth_enabled:
     flow = OAuth2WebServerFlow(
@@ -78,6 +81,11 @@ if oauth_enabled:
         scope = "https://www.googleapis.com/auth/userinfo.email",
         redirect_uri = app.config["HOST_URL"] + "/oauth2callback"
     )
+
+# CAS Service and Server to validate user's credentials.
+if cas_enabled:
+    cas_server = CASServer(app.config["CAS_SERVER_URL"])
+    cas_service = CASService(app.config["HOST_URL"])
 
 @app.route("/login/", methods = ["GET", "POST"])
 def login():
@@ -112,7 +120,7 @@ def login():
             )
 
             return render_template(
-                "login.html", form = form, oauth_enabled = oauth_enabled
+                "login.html", form = form, **authentication_details
             )
 
         # Check if the entered password is correct
@@ -133,7 +141,7 @@ def login():
             )
 
             return redirect(form.redirect_target or url_for("browse_assignments"))
-    elif oauth_enabled and request.args.get("type") == "rmail":
+    elif oauth_enabled and request.args.get("type") == "google":
         # Login using Google OAuth2
         # Step 1 of two-factor authentication: redirect to AUTH url
         auth_uri = flow.step1_get_authorize_url()
@@ -151,9 +159,7 @@ def login():
     return render_template(
         "login.html",
         form = form,
-        oauth_enabled = oauth_enabled,
-        google_login_heading = app.config["GOOGLE_LOGIN_HEADING"],
-        google_login_caption = app.config["GOOGLE_LOGIN_CAPTION"]
+        **authentication_details
     )
 
 @app.route("/oauth2callback/")
@@ -187,8 +193,9 @@ def authenticate_user():
         except User.DoesNotExist:
             user = None
 
+
         if not user:
-            flash("A Galah account does not exist for this email.", "error")
+            flash("A Galah account does not exist for %s." % email, "error")
 
             logger.info(
                 "User %s has attempted to log in via OAuth2 but an account "
