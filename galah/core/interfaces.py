@@ -1,8 +1,27 @@
 def user_lookup(current_user, handle, _hints = None):
     """
-    :param handle: The handle of the user to look up.
+    Quickly looks up information on a specific user.
 
-    :returns: A User object or ``None`` if user was found.
+    :param handle: The user's *exact* handle.
+    :type handle: unicode
+
+    :returns: A User object or ``None`` if no user was found.
+
+    """
+
+    pass
+
+def user_multilookup(current_user, handles, _hints = None):
+    """
+    Quickly looks up information on a list of users.
+
+    :param handles: A list of users' handles (must be exact like in
+        user_lookup()).
+    :type handles: list of unicode objects
+
+    :returns: A list of User objects in no defined ordering. Any user that was
+        not found will not appear in the list. If no users were found an empty
+        list is returned.
 
     """
 
@@ -23,12 +42,43 @@ def user_find(current_user, handle_starts_with = None, role = None,
     pass
 
 def user_create(current_user, new_user, _hints = None):
+    """
+    Creates a new user in the database. Raises an exception if user with the
+    same handle exists.
+
+    :param new_user: The user to add.
+    :type new_user: User
+
+    :returns: None
+
+    """
+
     pass
 
 def user_update(current_user, updated_user, _hints = None):
+    """
+    Updates a user object in the database.
+
+    :param updated_user: The user object containing the updated values.
+    :type update_user: User
+
+    :returns: None
+
+    """
+
     pass
 
 def user_delete(current_user, handle, _hints = None):
+    """
+    Deletes a user object in the database.
+
+    :param handle: The handle of the user to delete.
+    :type handle: unicode
+
+    :returns: None
+
+    """
+
     pass
 
 ###############################################################################
@@ -36,7 +86,30 @@ def user_delete(current_user, handle, _hints = None):
 ###############################################################################
 
 def class_lookup(current_user, class_id, _hints = None):
+    """
+    Quickly looks up information on a particular class.
+
+    :param class_id: The ID of the class to lookup.
+    :type class_id: Class.ID
+
+    :returns: A Class or None if no matching class was found.
+
+    """
+
     pass
+
+def class_multilookup(current_user, class_ids, _hints = None):
+    """
+    Quickly looks up information on a number of different classes.
+
+    :param class_ids: A list of class ids (must be exact like in
+        user_lookup()).
+
+    :returns: A list of Class objects in no defined ordering. Any class that
+        was not found will not appear in the list. If no classes were found an
+        empty list is returned.
+
+    """
 
 def class_find(current_user, term, handle_starts_width, _hints = None):
     pass
@@ -99,9 +172,6 @@ def testrequest_pop(current_user, _hints = None):
 def testrequest_create(current_user, new_testrequest, _hints = None):
     pass
 
-def testrequest_update(current_user, updated_testrequest, _hints = None):
-    pass
-
 def testrequest_delete(current_user, testrequest_id, _hints = None):
     pass
 
@@ -123,4 +193,20 @@ def testresult_update(current_user, updated_testresult, _hints = None):
     pass
 
 def testresult_delete(current_user, testresult_id, _hints = None):
+    pass
+
+###############################################################################
+########################## TASKS ##############################################
+###############################################################################
+
+def task_lookup(current_user, task_id, _hints = None):
+    pass
+
+def task_create(current_user, new_task, _hints = None):
+    pass
+
+def task_pop(current_user, action, _hints = None):
+    pass
+
+def task_delete(current_user, task_id, _hints = None):
     pass
