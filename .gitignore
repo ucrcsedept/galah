@@ -40,3 +40,6 @@ nosetests.xml
 # Sublime
 *.sublime-project
 *.sublime-workspace
+
+# Vagrant
+.vagrant/
