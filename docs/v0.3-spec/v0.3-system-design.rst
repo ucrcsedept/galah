@@ -1,0 +1,70 @@
+Version 0.3 Cluster Design
+==========================
+
+About this Document
+-------------------
+
+This document describes the role of each distributed component of Galah and how it interacts with the rest of the system using Redis. The intended audience of this document is system administrators and developers.
+
+Brief Description of Components
+-------------------------------
+
+There are 5 components of Galah.
+
+1. **testrunner**: Consumes test requests and virtual machines. Produces test results.
+#. **vmfactory**: Produces virtual machines. Destroys used/dirty virtual machines.
+#. **taskrunner**: Consumes tasks. Produces task results.
+#. **webserver**: Provides front-end HTTP services. Interfaces with outside world via WSGI.
+#. **overseer**: Optional component that monitors queues and tries to automatically repair the system after critical failures (namely entire machines crashing and not coming back). Can run as a daemon or script.
+
+These components communicate through Redis and the persistent data store (ex: MongoDB or PostgreSQL). The components are designed to be started and monitored by a system such as `supervisord <http://supervisord.org/>`, though they are very flexible so you can choose how to manage the processes yourself.
+
+testrunner
+~~~~~~~~~~
+
+*Formerly known as sheep-consumer.*
+
+The testrunner performs the automated grading for the system. Any number of testrunner's may exist in the cluster.
+
+Below is pseudo-code that shows roughly how the testrunner operates.
+
+.. code-block:: python
+
+    while True:
+        # Get a test request and a VM that we can use. They will be grabbed
+        # together, atomically. They will also be moved into slots that
+        # will tell the rest of the system that this testrunner is handling
+        # them, which allows recovery if a failure occurs.
+        request, vm = galah.core.testrequest_vm_grab(TESTRUNNER_ID)
+
+        # Perform the testing
+        results = do_tests(test_request, vm)
+
+        # Push the results into the database
+        galah.core.testresult_create(TESTRUNNER_ID, result)
+
+        # Alert the rest of the system that we are done with this test request
+        # so that if we crash later it isn't rerun.
+        galah.core.testrequest_finish(TESTRUNNER_ID, request)
+
+        # Mark the VM for destruction
+        galah.core.vm_destroy(TESTRUNNER_ID, vm)
+
+vmfactory
+~~~~~~~~~
+
+*Formerly known as sheep-producer.*
+
+The vmfactory will create and destroy virtual machines as needed. It will also ensure that the queue of virtual machines does not get desynchronized from reality (which could happen if a VM shuts down without being consumed).
+
+Currently, only virtual machines created with OpenVZ are supported. Therefore a pair of Redis queues exist (one for clean VM's, one for dirty VM's) for each machine that has a vmfactory on it.
+
+Below is pseudo-code that shows roughly how the vmfactory operates.
+
+.. code-block:: python
+
+    while True:
+        # Go through the queue of clean VM's and check if each is a healthy
+        # VM (but only if a configurable amount of time has passed).
+        if should_check_again(current_time):
+            galah.core.vm_
