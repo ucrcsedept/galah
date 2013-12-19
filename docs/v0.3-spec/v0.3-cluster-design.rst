@@ -1,0 +1,183 @@
+Version 0.3 Cluster Design
+==========================
+
+About this Document
+-------------------
+
+This document describes the role of each distributed component of Galah and how they interact with each other.
+
+The intended audience of this document is system administrators and developers.
+
+Components of Galah
+-------------------
+
+There are 4 components of Galah.
+
+1. **testrunner**: Consumes test requests and virtual machines. Produces test results.
+#. **vmfactory**: Produces virtual machines. Destroys used/dirty virtual machines.
+#. **webapp**: Provides interface to end-users.
+#. **taskrunner**: Consumes tasks (general long-running jobs from other components). Produces task results.
+
+These components communicate through Redis and the persistent data store (ex: MongoDB or PostgreSQL). The components are designed to be started and monitored by a system such as `supervisord <http://supervisord.org/>`_, though they are very flexible so you can choose how to manage the processes yourself.
+
+testrunner
+~~~~~~~~~~
+
+*Formerly known as galah-sheep-consumer.*
+
+The testrunner performs the automated grading for the system. Any number of testrunners may exist in the cluster and you should set up as many as your infrastructure can handle.
+
+Below is pseudo-code that shows roughly how the testrunner operates.
+
+.. code-block:: python
+
+    while True:
+        # Determine if this testrunner crashed and has been restarted. If it
+        # has, the test request it was processing will be added back into the
+        # queue (if there is not a test request associated with it already) and
+        # the VM it was using will be queued for deletion.
+        if galah.core.testrunner_repair(TESTRUNNER_ID):
+            log.warning("testrunner failed to complete testrequest.")
+
+        # Block until we can get a test request and a VM that we can use. They
+        # will be grabbed together, atomically. They will also be moved into
+        # slots that will tell the rest of the system that this testrunner is
+        # handling them, which allows recovery if a failure occurs.
+        request, vm = galah.core.testrunner_grab(TESTRUNNER_ID)
+
+        # Perform the testing. Two kinds of failures are generally expected
+        # here.
+        try:
+            results = do_tests(test_request, vm)
+        except BadVM:
+            # If the virtual machine is bad, just put the test request back
+            # into the queue and mark the vm for deletion.
+            log.warning("Bad virtual machine detected.")
+            galah.core.testresult_fail(TESTRUNNER_ID)
+            continue
+        except FilesNotFound:
+            # If the submission's files can't be found something strange is
+            # happening so we'll kill the test request and make a failed
+            # testresult.
+            log.warning("Submission content not found.")
+            galah.core.testresult_create(
+                TESTRUNNER_ID,
+                TestResult(
+                    request,
+                    failed = "Submission content not found on testrunner."
+                )
+            )
+            galah.core.testresult_fail(TESTRUNNER_ID,
+                recycle_testrequest = False)
+            continue
+
+        # Push the results into the database
+        galah.core.testresult_create(TESTRUNNER_ID, result)
+
+        # Mark the test request as successfully completed and queue the vm for
+        # deletion. This clears the slots that the testrunner and the overseer
+        # use to detect failures.
+        galah.core.testrunner_finish(TESTRUNNER_ID)
+
+vmfactory
+~~~~~~~~~
+
+*Formerly known as galah-sheep-producer.*
+
+The vmfactory will create and destroy virtual machines as needed.
+
+Currently, only virtual machines created with OpenVZ are supported. Therefore a pair of Redis queues exist (one for clean VM's, one for dirty VM's) for each machine that has a vmfactory on it, and each machine can have at most one vmfactory running.
+
+Below is pseudo-code that shows roughly how the vmfactory operates.
+
+.. code-block:: python
+
+    while True:
+        # This will check if the VM factory crashed and will add any dirty VM
+        # or clean VM to the deletion queue if they are associated with this
+        # VM factory.
+        if galah.core.vmfactory_repair(VMFACTORY_ID):
+            log.warning("vmfactory crashed.")
+
+        # This will block until either a dirty VM has been queued for deletion
+        # or the number of clean VM's is less than the desired number. It will
+        # then return either a dirty VM or some information that will be used
+        # to create the clean VM. This vmfactory will also be associated with
+        # clean or dirty VM to aid in crash recovery.
+        dirty_vm, clean_vm = galah.core.vmfactory_grab(VMFACTORY_ID)
+
+        if dirty_vm is not None:
+            destroy_vm(dirty_vm)
+        elif clean_vm is not None:
+            new_vm = create_vm(clean_vm)
+
+        # Mark the dirty or clean VM as successfully deleted/created and
+        # disassociate it from this vmfactory.
+        galah.core.vmfactory_finish_dirty(VMFACTORY_ID)
+
+webapp
+~~~~~~
+
+*Formerly known as galah-web.*
+
+The webapp is responsible for all end-user interaction. The webapp implements the extremely popular `WSGI <http://wsgi.readthedocs.org/en/latest/what.html>`_ interface and can thusly be hosted by the majority of web server applications such as Apache, Nginx, and Passenger.
+
+The webapp is stateless and it is therefore acceptable to load balance between different webapp instances in whatever way is most convenient to your installation.
+
+The webapp is the most complex component of Galah in terms of the various actions it can perform. Following are brief descriptions of how the most important actions are done.
+
+Submitting
+..........
+
+Below is pseudo-code that describes what occurs when a student submits an assignment.
+
+.. code-block:: python
+
+    # Save the submitted files to the configured location on the file system.
+    # This location should be accessible to all of the testrunners in the
+    # cluster.
+    location = submitted_files.save(CONFIGURED_LOCATION)
+
+    # Create a new submission in the database
+    submission_id = galah.core.submission_create(
+        current_user,
+        Submission(
+            current_user,
+            current_assignment,
+            location,
+            current_timestamp
+        )
+    )
+
+    # Create a new test request in Redis associated with the submission
+    galah.core.testrequest_create(current_user, submission_id)
+
+taskrunner
+~~~~~~~~~~
+
+The taskrunner performs general tasks that other components want to complete asynchronously. The taskrunner is used mostly by the webapp instances to offload work that may take a long time to complete (creating large archives for example) so they can continue providing snappy feedback to the end-users.
+
+Below is pseudo-code that shows roughly how the taskrunner operates.
+
+.. code-block:: python
+
+    while True:
+        # This will check if this taskrunner crashed and add any uncompleted
+        # task back into the task queue.
+        if galah.core.taskrunner_repair(TASKRUNNER_ID):
+            log.warning("taskrunner crashed while processing task.")
+
+        # Block until we can grab a new task. The task will be associated with
+        # this taskrunner so that recovery is possible if we crash. Rate
+        # limiting of certain tasks is handled automatically by this function.
+        task = galah.core.taskrunner_grab(TASKRUNNER_ID)
+
+        # Perform whatever is needed
+        result = do_task(task)
+
+        # If this task has a result, add it to Redis.
+        if result is not None:
+            galah.core.taskresult_create(TASKRUNNER_ID, result)
+
+        # Mark the task as completed and disassociate it with this taskrunner
+        galah.core.taskrunner_finish(TASKRUNNER_ID)
