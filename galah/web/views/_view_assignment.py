@@ -156,14 +156,11 @@ def view_assignment(assignment_id):
         simple_archive_form = simple_archive_form,
         wait_and_refresh = wait_and_refresh,
         new_submissions = [v for k, v in get_flashed_messages(with_categories = True) if k == "new_submission"],
-<<<<<<< HEAD
         view_as_teacher = (current_user.account_type in ["teacher",
                                                          "teaching_assistant"]),
         students = students,
         student_submissions = student_submissions,
-=======
         markdown_enabled = config["MARKDOWN_ENABLED"],
         markdown_src = config["MARKDOWN_JS_SRC"],
->>>>>>> v0.2dev
         enumerate = enumerate
     )
