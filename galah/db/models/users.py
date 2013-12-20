@@ -30,6 +30,12 @@ class User(Document):
                                           "teacher", "admin"], required = True)
     classes = ListField(ObjectIdField())
 
+    # The individual cutoff date
+    personal_deadline = MapField(DateTimeField())
+
+    # The individual due date
+    personal_due_date = MapField(DateTimeField())
+
     meta = {
         "indexes": ["email", "classes"],
         "allow_inheritance": False
