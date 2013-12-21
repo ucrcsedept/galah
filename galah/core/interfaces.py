@@ -111,6 +111,8 @@ def class_multilookup(current_user, class_ids, _hints = None):
 
     """
 
+    pass
+
 def class_find(current_user, term, handle_starts_width, _hints = None):
     pass
 

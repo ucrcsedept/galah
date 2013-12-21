@@ -1,0 +1,25 @@
+## IMPORTANT!
+## This configuration is only appropriate for use in development.
+
+# Listen on an INET socket only
+bind_ip = 127.0.0.1
+port = 27017
+nounixsocket = true
+
+# Run in daemon mode and set sensible defaults. Don't change the pidfilepath
+# or logpath options without also changing them within the mongod init file.
+fork = true
+pidfilepath = /var/run/mongodb/mongodb.pid
+logpath = /var/log/mongodb/mongodb.log
+dbpath =/var/lib/mongodb
+
+# We don't care very much about durability because this is a configuration
+# meant to be used only for development.
+journal = false
+
+# Disable the HTTP interface (Defaults to port+1000)
+nohttpinterface = true
+
+# Get MongoDB to only use a small amount of disk space
+noprealloc = true
+smallfiles = true

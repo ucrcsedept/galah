@@ -1,0 +1,16 @@
+Vagrant.configure("2") do |config|
+  # Every Vagrant virtual environment requires a box to build off of.
+  config.vm.box = "legion-image"
+
+  # This URL should be updated when the boxes are available from Galah Group
+  # servers.
+  # config.vm.box_url = "http://domain.com/path/to/above.box"
+
+  config.vm.network "private_network", ip: "10.189.0.2"
+
+  # Provision the VM with our Ansible playbook.
+  config.vm.provision "ansible" do |ansible|
+    ansible.playbook = "playbook.yml"
+    ansible.sudo = true
+  end
+end
