@@ -24,7 +24,7 @@ import datetime
 from bson import ObjectId
 
 from galah.db.models import Archive, Assignment, Submission, User
-from galah.base.filemagic import zipdir
+from galah.base.filemagic import zipfile
 
 # Set up configuration and logging
 from galah.base.config import load_config
