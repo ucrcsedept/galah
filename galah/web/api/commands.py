@@ -1039,6 +1039,65 @@ def modify_user_deadline(current_user, assignment, user, new_due_date = "",
     )
 
 @_api_call(("admin", "teacher", "teaching_assistant"))
+def reset_user_deadline(current_user, assignment, user = ""):
+    the_assignment = _get_assignment(assignment, current_user)
+
+    if current_user.account_type != "admin" and \
+            the_assignment.for_class not in current_user.classes:
+        raise PermissionError(
+            "You can only modify assignments for classes you teach."
+        )    
+
+    # Get the set of users that need to be reset.
+    # If user is defined, only this user will be reset.
+    users = []
+    change_descriptions = []
+    if bool(user):
+        users.append(_get_user(user, current_user))
+    else:
+        users = list(
+            User.objects(
+                account_type = "student",
+                classes = the_assignment.for_class
+            )
+        )
+
+    assn_id = str(the_assignment.id)
+    due_date = the_assignment.due
+    due_string = _datetime_to_str(due_date)
+    deadline = the_assignment.due_cutoff
+    deadline_string = _datetime_to_str(deadline)
+    for i in users:
+        i.personal_due_date[assn_id] = due_date
+
+        # Only set the cutoff date if the assignment has one.
+        # Otherwise, remove the entry for this assignment if one exists.
+        if deadline is not None:
+            i.personal_deadline[assn_id] = deadline
+        elif assn_id in i.personal_deadline:
+            i.personal_deadline.pop(assn_id, None)
+
+        change_descriptions.append(
+            "Set personal due date for %s to %s." %
+                (_user_to_str(i), due_string)
+        )
+        change_descriptions.append(
+            "Set personal cutoff date for %s to %s." %
+                (_user_to_str(i), deadline_string)
+        )
+        i.save()
+
+    return (
+        "Successfully modified personal deadlines of %s for %s.\n\t%s" % (
+            _user_to_str(users[0]) if user else "every student",
+            _assignment_to_str(the_assignment),
+            "\n\t".join(change_descriptions)
+        )
+    )
+
+    
+
+@_api_call(("admin", "teacher", "teaching_assistant"))
 def get_archive(current_user, assignment, email = ""):
     # zip_tasks imports galahweb because it wants access to the logger, to
     # prevent a circular dependency we won't load the module until we need it.
