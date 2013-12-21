@@ -1039,7 +1039,7 @@ def modify_user_deadline(current_user, assignment, user, new_due_date = "",
     )
 
 @_api_call(("admin", "teacher", "teaching_assistant"))
-def reset_user_deadline(current_user, assignment, user = ""):
+def reset_user_deadlines(current_user, assignment, user = ""):
     the_assignment = _get_assignment(assignment, current_user)
 
     if current_user.account_type != "admin" and \
@@ -1064,27 +1064,30 @@ def reset_user_deadline(current_user, assignment, user = ""):
 
     assn_id = str(the_assignment.id)
     due_date = the_assignment.due
-    due_string = _datetime_to_str(due_date)
     deadline = the_assignment.due_cutoff
     deadline_string = _datetime_to_str(deadline)
     for i in users:
-        i.personal_due_date[assn_id] = due_date
+        if assn_id in i.personal_due_date:
+            i.personal_due_date.pop(assn_id, None)
+            change_descriptions.append(
+                "Removed personal due date for %s." % _user_to_str(i)
+            )
 
         # Only set the cutoff date if the assignment has one.
         # Otherwise, remove the entry for this assignment if one exists.
         if deadline is not None:
             i.personal_deadline[assn_id] = deadline
+            change_descriptions.append(
+                "Set personal cutoff date for %s to %s." %
+                (_user_to_str(i), deadline_string)
+            )
         elif assn_id in i.personal_deadline:
             i.personal_deadline.pop(assn_id, None)
+            change_descriptions.append(
+                "Removed personal cutoff date for %s." % _user_to_str(i)
+            )
 
-        change_descriptions.append(
-            "Set personal due date for %s to %s." %
-                (_user_to_str(i), due_string)
-        )
-        change_descriptions.append(
-            "Set personal cutoff date for %s to %s." %
-                (_user_to_str(i), deadline_string)
-        )
+
         i.save()
 
     return (
@@ -1095,6 +1098,54 @@ def reset_user_deadline(current_user, assignment, user = ""):
         )
     )
 
+@_api_call(("admin", "teacher", "teaching_assistant"))
+def view_user_deadlines(current_user, assignment, user = ""):
+    the_assignment = _get_assignment(assignment, current_user)
+
+    if current_user.account_type != "admin" and \
+            the_assignment.for_class not in current_user.classes:
+        raise PermissionError(
+            "You can only view assignments for classes you teach."
+        )    
+
+    # Get the set of users whose deadlines will be viewed.
+    # If user is defined, only this user will be viewed.
+    users = []
+    if bool(user):
+        users.append(_get_user(user, current_user))
+    else:
+        users = list(
+            User.objects(
+                account_type = "student",
+                classes = the_assignment.for_class
+            ).order_by(
+                "-email"
+            )
+        )
+
+    assn_id = str(the_assignment.id)
+    deadline_strings = []
+    for i in users:
+        if assn_id in i.personal_due_date:
+            deadline_strings.append("personal due date for %s: %s" % \
+                                    (_user_to_str(i), _datetime_to_str(i.personal_due_date)))
+        if assn_id in i.personal_deadline:
+            deadline_strings.append("personal deadline for %s: %s" % \
+                                    (_user_to_str(i), _datetime_to_str(i.personal_deadline)))
+
+    if not len(deadline_strings):
+        if bool(user):
+            deadlines = "There are no personal deadlines for %s" % _user_to_str(users[0])
+        else:
+            deadlines = "There no personal deadlines for %s" % _assignment_to_str(the_assignment)
+    else:
+        deadlines = "\n\t".join(deadline_strings)
+
+    return (
+        "List of personal deadlines for %s:\n\t%s" % (
+            _assignment_to_str(the_assignment), deadlines
+        )
+    )
     
 
 @_api_call(("admin", "teacher", "teaching_assistant"))
