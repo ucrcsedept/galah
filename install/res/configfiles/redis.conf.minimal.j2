@@ -1,0 +1,36 @@
+## IMPORTANT!
+## This configuration is only appropriate for use in development.
+
+# We want Redis to run as a daemon.
+daemonize yes
+pidfile /var/run/redis.pid
+logfile /var/log/redis.log
+
+# Listen on an INET socket (no unix socket)
+bind 127.0.0.1
+port 6379
+
+# Never timeout
+timeout 0
+
+# Get lots of log messages (can be set to debug for even more)
+loglevel verbose
+
+# We only need one database.
+databases 1
+
+# Tiny maximum memory for testing (John's laptop is puny)
+maxmemory 10MB
+maxmemory-policy noeviction
+
+# No persistence at all (Redis goes down so does the data)
+appendonly no
+appendfsync no
+
+# Anything slower than 3 milliseconds is much too slow (below is in
+# microseconds)
+slowlog-log-slower-than 3000
+slowlog-max-len 1024
+
+# This will help save memory a little
+activerehashing yes
