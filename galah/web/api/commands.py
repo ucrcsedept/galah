@@ -1137,7 +1137,7 @@ def view_user_deadlines(current_user, assignment, user = ""):
         if bool(user):
             deadlines = "There are no personal deadlines for %s" % _user_to_str(users[0])
         else:
-            deadlines = "There no personal deadlines for %s" % _assignment_to_str(the_assignment)
+            deadlines = "There are no personal deadlines for %s" % _assignment_to_str(the_assignment)
     else:
         deadlines = "\n\t".join(deadline_strings)
 
