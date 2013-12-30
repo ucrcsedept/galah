@@ -1,0 +1,26 @@
+{
+    "builders": [
+        {
+            "type": "virtualbox",
+            "boot_command": [
+                "<tab> text ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/kickstart.cfg<enter>"
+            ],
+            "guest_os_type": "RedHat_64",
+            "iso_urls": [
+               "http://mirror.pac-12.org/6.5/isos/x86_64/CentOS-6.5-x86_64-minimal.iso",
+               "http://mirrors.xmission.com/centos/6.5/isos/x86_64/CentOS-6.5-x86_64-minimal.iso",
+               "http://mirrors.usc.edu/pub/linux/distributions/centos/6.5/isos/x86_64/CentOS-6.5-x86_64-minimal.iso",
+               "http://mirror.atlanticmetro.net/centos/6.5/isos/x86_64/CentOS-6.5-x86_64-minimal.iso"
+
+            ],
+            "iso_checksum": "f9d84907d77df62017944cb23cab66305e94ee6ae6c1126415b81cc5e999bdd0",
+            "iso_checksum_type": "sha256",
+            "ssh_username": "root",
+            "ssh_password": "packer",
+            "ssh_wait_timeout": "15m",
+            "http_directory": "res",
+            "format": "ova",
+            "shutdown_command": "shutdown -h now"
+        }
+    ]
+}
