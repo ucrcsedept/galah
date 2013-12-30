@@ -12,20 +12,24 @@
   register: redis_download
   notify: Restart Redis
 
+- name: Check if redis-server is available
+  stat: "path={{ redis_server_path }}"
+  register: redis_server_stat
+
 - name: Unpack Redis tarball
-  command: tar -xzf /tmp/redis-2.8.3.tar.gz
+  command: tar -xzf /tmp/redis-stable.tar.gz
     chdir=/tmp/
-  when: redis_download.changed
+  when: "redis_download.changed or not redis_server_stat.stat.exists"
 
 - name: Make Redis
   command: make
-    chdir=/tmp/redis-2.8.3
-  when: redis_download.changed
+    chdir=/tmp/redis-stable
+  when: "redis_download.changed or not redis_server_stat.stat.exists"
 
 - name: Install Redis
   shell: PREFIX=/usr/ make install
-    chdir=/tmp/redis-2.8.3
-  when: redis_download.changed
+    chdir=/tmp/redis-stable
+  when: "redis_download.changed or not redis_server_stat.stat.exists"
 
 - name: Install Redis init scripts
   template:
