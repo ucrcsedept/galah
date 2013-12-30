@@ -17,10 +17,43 @@
             "iso_checksum_type": "sha256",
             "ssh_username": "root",
             "ssh_password": "packer",
-            "ssh_wait_timeout": "15m",
-            "http_directory": "res",
+            "ssh_wait_timeout": "20m",
+            "http_directory": "http",
             "format": "ova",
             "shutdown_command": "shutdown -h now"
         }
-    ]
+    ],
+    "provisioners": [
+        {
+            "type": "shell",
+            "inline": [
+                "rpm -Uvh http://download.fedoraproject.org/pub/epel/6/i386/epel-release-6-8.noarch.rpm",
+                "yum -y install ansible"
+            ]
+
+        },
+        {
+            "type": "ansible-local",
+            "playbook_file": "playbook.yml",
+            "role_paths": [
+                "../../ansible/roles/openvz"
+            ]
+        },
+        {
+            "type": "shell",
+            "inline": [
+                "shutdown -r now",
+                "sleep 60"
+            ]
+        },
+        {
+            "type": "shell",
+            "inline": [
+                "yum -y remove kernel || true",
+                "yum -y update",
+                "yum clean all"
+            ]
+        }
+    ],
+    "post-processors": ["vagrant"]
 }

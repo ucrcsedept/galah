@@ -16,19 +16,6 @@
     state=latest
   register: openvz_kernel
 
-- name: Reboot
-  command: /sbin/shutdown -r now
-  when: openvz_kernel.changed
-
-- name: Wait for host down
-  pause: seconds=10
-  when: openvz_kernel.changed
-
-- name: Wait for host up
-  local_action: wait_for host=10.189.0.2 port=22
-  sudo: false
-  when: openvz_kernel.changed
-
 - name: Install/Update user tools (vzctl, vzquote, and ploop)
   yum: name={{ item }} state=latest
   with_items:
@@ -36,8 +23,22 @@
     - vzquota
     - ploop
 
+- name: Reboot
+  command: /sbin/shutdown -r now
+  when: openvz_kernel.changed and openvz_reboot is defined and openvz_reboot
+
+- name: Wait for host down
+  pause: seconds=10
+  when: openvz_kernel.changed and openvz_reboot is defined and openvz_reboot
+
+- name: Wait for host up
+  local_action: wait_for host=10.189.0.2 port=22
+  sudo: false
+  when: openvz_kernel.changed and openvz_reboot is defined and openvz_reboot
+
 - name: Remove old kernel
   yum:
     name=kernel
     state=absent
   ignore_errors: true
+  when: openvz_remove_old_kernel
