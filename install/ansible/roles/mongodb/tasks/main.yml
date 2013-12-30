@@ -1,0 +1,27 @@
+---
+# This playbook ensures that the MongoDB server is running on the machine. This
+# playbook assumes a single-server MongoDB install.
+
+- name: Install 10gen YUM repo
+  template:
+    src=mongodb.repo.j2
+    dest=/etc/yum.repos.d/mongodb.repo
+    owner=root
+    group=root
+    mode=644
+
+- name: Install latest MongoDB Server
+  yum: name={{ item }} state=latest
+  with_items:
+    - mongo-10gen-server
+    - mongo-10gen
+  notify: Restart MongoDB
+
+- name: Configure MongoDB
+  template:
+    dest=/etc/mongodb.conf
+    src=mongodb.conf.minimal.j2
+    owner=root
+    group=root
+    mode=644
+  notify: Restart MongoDB

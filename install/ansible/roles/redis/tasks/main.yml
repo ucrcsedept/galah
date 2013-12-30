@@ -1,0 +1,46 @@
+---
+# This playbook ensures that a Redis database is running on this machine. This
+# playbook assumes a simple, single-server Redis install.
+
+- name: Download latest stable Redis
+  get_url:
+    dest=/tmp/
+    "url=http://download.redis.io/redis-stable.tar.gz"
+    owner=root
+    group=root
+    mode=644
+  register: redis_download
+  notify: Restart Redis
+
+- name: Unpack Redis tarball
+  command: tar -xzf /tmp/redis-2.8.3.tar.gz
+    chdir=/tmp/
+  when: redis_download.changed
+
+- name: Make Redis
+  command: make
+    chdir=/tmp/redis-2.8.3
+  when: redis_download.changed
+
+- name: Install Redis
+  shell: PREFIX=/usr/ make install
+    chdir=/tmp/redis-2.8.3
+  when: redis_download.changed
+
+- name: Install Redis init scripts
+  template:
+    dest=/etc/init.d/redis
+    src=redis.j2
+    owner=root
+    group=root
+    mode=755
+  notify: Restart Redis
+
+- name: Configure Redis
+  template:
+    dest=/etc/redis.conf
+    src=redis.conf.minimal.j2
+    owner=root
+    group=root
+    mode=644
+  notify: Restart Redis

@@ -1,0 +1,43 @@
+---
+# This playbook ensures that the OpenVZ kernel is up-to-date and in use along
+# with the OpenVZ tools like vzctl.
+
+- name: Install OpenVZ YUM repo
+  template:
+    src=openvz.repo.j2
+    dest=/etc/yum.repos.d/openvz.repo
+    owner=root
+    group=root
+    mode=644
+
+- name: Install/Update OpenVZ kernel
+  yum:
+    name=vzkernel
+    state=latest
+  register: openvz_kernel
+
+- name: Reboot
+  command: /sbin/shutdown -r now
+  when: openvz_kernel.changed
+
+- name: Wait for host down
+  pause: seconds=10
+  when: openvz_kernel.changed
+
+- name: Wait for host up
+  local_action: wait_for host=10.189.0.2 port=22
+  sudo: false
+  when: openvz_kernel.changed
+
+- name: Install/Update user tools (vzctl, vzquote, and ploop)
+  yum: name={{ item }} state=latest
+  with_items:
+    - vzctl
+    - vzquota
+    - ploop
+
+- name: Remove old kernel
+  yum:
+    name=kernel
+    state=absent
+  ignore_errors: true

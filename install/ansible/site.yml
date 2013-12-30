@@ -1,0 +1,10 @@
+---
+
+- name: Install/Upgrade OpenVZ, Redis, and MongoDB
+  hosts: galah-server
+  user: root
+
+  roles:
+    - openvz
+    - redis
+    - mongodb
