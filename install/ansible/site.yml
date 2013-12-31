@@ -1,4 +1,5 @@
 ---
+# This playbook is only used directly during debugging.
 
 - name: Install/Upgrade OpenVZ, Redis, and MongoDB
   hosts: galah-server
@@ -8,3 +9,10 @@
     - openvz
     - redis
     - mongodb
+
+- name: Set up vagrant
+  hosts: default
+  user: root
+
+  roles:
+    - vagrantbox

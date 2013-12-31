@@ -36,7 +36,8 @@
             "type": "ansible-local",
             "playbook_file": "playbook.yml",
             "role_paths": [
-                "../../ansible/roles/openvz"
+                "../../ansible/roles/openvz",
+                "../../ansible/roles/vagrantbox"
             ]
         },
         {
