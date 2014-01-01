@@ -21,6 +21,8 @@ Galah is like.
 
 ## Documentation and Getting Started
 
+*Note: Most of the documentation concerns the code in the v0.2stable branch.*
+
 Documentation for Galah is maintained on the
 [GitHub project's wiki](https://github.com/galah-group/galah/wiki). This
 documentation is meant to be useful to users of Galah, interested parties
@@ -28,13 +30,31 @@ looking to see if Galah would be useful to them, and developers.
 
 ## Current Status
 
-Version 0.1 is stable and ready to be used within a production environment. This
-first version is only a submission system and does not perform any testing on
-student's code.
+Version 0.2 is stable and deployed at UCR. Servicing 4 courses and 1000+ users
+every quarter.
 
-Version 0.2 is unstable but highly useable (and is being used already).
+Version 0.3 is in active development and involves large refactoring and
+restructuring of Galah's design. See
+[this document](https://github.com/galah-group/galah/blob/master/docs/v0.3-spec/v0.3-requirements.rst)
+for a description of the goals for the new version. In short, the model layer
+will be greatly expanded to allow for automated testing, Redis will replace
+ZeroMQ, and Galah's installation will be automated. The feature-set of the
+system is not expected to radically change.
 
 ## News
+
+### Wednesday, January 1, 2014
+
+This last year has been amazing. Galah has been put through so many trials and
+made it through most looking pretty good. There's still a lot of improvement
+to be made though. This next 4 months I (John Sullivan) will dedicate myself
+to making Galah as excellent as possible, and I'm very excited to do it. We are
+quickly approaching a time when we'll want to expand to other institutions and
+hopefully make some deals with publishers to create test harnesses in line
+with their text books. If you (kind reader) are interested in using this
+software, please sent me an email at john@galahgroup.com.
+
+Also, happy New Years!
 
 ### Wednesday, January 30, 2013
 
