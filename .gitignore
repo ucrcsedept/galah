@@ -37,6 +37,9 @@ nosetests.xml
 # Credentials cache
 .cache/
 
+# VIM
+*~
+
 # Sublime
 *.sublime-project
 *.sublime-workspace
@@ -44,6 +47,7 @@ nosetests.xml
 # Vagrant
 .vagrant/
 vagrant_ansible_inventory_default
+*.box
 
 # Packer
 packer_cache/
