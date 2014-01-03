@@ -1,0 +1,45 @@
+{
+  "builders": [
+    {
+      "type": "virtualbox-ovf",
+      "source_path": "source.ova",
+      "ssh_username": "root",
+      "ssh_password": "packer",
+      "ssh_wait_timeout": "30m",
+      "format": "ova",
+      "shutdown_command": "shutdown -h now"
+    }
+  ],
+  "provisioners": [
+    {
+      "type": "shell",
+      "inline": [
+          "yum -y install ansible"
+      ]
+    },
+    {
+      "type": "ansible-local",
+      "playbook_file": "playbook.yml",
+      "role_paths": [
+        "../../ansible/roles/openvz",
+        "../../ansible/roles/vagrantbox"
+      ]
+    },
+    {
+      "type": "shell",
+      "inline": [
+        "yum -y remove ansible",
+        "shutdown -r now",
+        "sleep 60"
+      ]
+    },
+    {
+      "type": "shell",
+      "inline": [
+        "yum -y remove kernel || true",
+        "yum -y update",
+        "yum clean all"
+      ]
+    }
+  ]
+}
