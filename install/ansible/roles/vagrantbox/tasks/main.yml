@@ -6,8 +6,21 @@
 - name: Add vagrant user
   user: name=vagrant state=present
 
+- name: Create vagrant user's `.ssh` directory
+  file:
+    path=/home/vagrant/.ssh/
+    state=directory
+    owner=vagrant
+    group=vagrant
+    mode=700
+
 - name: Add insecure vagrant public key
-  authorized_key: user=vagrant key="ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEA6NF8iallvQVp22WDkTkyrtvp9eWW6A8YVr+kz4TjGYe7gHzIw+niNltGEFHzD8+v1I2YJ6oXevct1YeS0o9HZyN1Q9qgCgzUFtdOKLv6IedplqoPkcmF0aYet2PkEDo3MlTBckFXPITAMzF8dJSIFo9D8HfdOV0IAdx4O7PtixWKn5y2hMNG0zQPyUecp4pzC6kivAIhyfHilFR61RGL+GPXQ2MWZWFYbAGjyiYJnAmCP3NOTd0jMZEnDkbUvxhMmBYSdETk1rRgm+R4LOzFUGaHqHDLKLX+FIPKcF96hrucXzcWyLbIbEgE98OHlnVYCzRdK8jlqm8tehUc9c9WhQ== vagrant insecure public key"
+  copy:
+    src=authorized_keys
+    dest=/home/vagrant/.ssh/authorized_keys
+    owner=vagrant
+    group=vagrant
+    mode=600
 
 - name: Install sudo
   yum: name=sudo state=present
@@ -16,4 +29,9 @@
   lineinfile:
     dest=/etc/sudoers
     state=present
-    "line=vagrant ALL=(ALL) NOPASSWD:ALL"
+    "line={{ item }}"
+    insertafter=EOF
+    validate="visudo -cf %s"
+  with_items:
+    - "vagrant ALL=(ALL) NOPASSWD:ALL"
+    - "Defaults:vagrant !requiretty"

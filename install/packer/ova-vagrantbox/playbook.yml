@@ -1,0 +1,6 @@
+- name: Install OpenVZ
+  hosts: all
+  user: root
+
+  roles:
+    - vagrantbox
