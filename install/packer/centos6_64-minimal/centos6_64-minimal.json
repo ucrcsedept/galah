@@ -1,60 +1,46 @@
 {
-    "builders": [
-        {
-            "type": "virtualbox",
-            "boot_command": [
-                "<tab> text ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/kickstart.cfg<enter>"
-            ],
-            "guest_os_type": "RedHat_64",
-            "iso_urls": [
-               "http://mirror.pac-12.org/6.5/isos/x86_64/CentOS-6.5-x86_64-minimal.iso",
-               "http://mirrors.xmission.com/centos/6.5/isos/x86_64/CentOS-6.5-x86_64-minimal.iso",
-               "http://mirrors.usc.edu/pub/linux/distributions/centos/6.5/isos/x86_64/CentOS-6.5-x86_64-minimal.iso",
-               "http://mirror.atlanticmetro.net/centos/6.5/isos/x86_64/CentOS-6.5-x86_64-minimal.iso"
-
-            ],
-            "iso_checksum": "f9d84907d77df62017944cb23cab66305e94ee6ae6c1126415b81cc5e999bdd0",
-            "iso_checksum_type": "sha256",
-            "ssh_username": "root",
-            "ssh_password": "packer",
-            "ssh_wait_timeout": "20m",
-            "http_directory": "http",
-            "format": "ova",
-            "shutdown_command": "shutdown -h now"
-        }
-    ],
-    "provisioners": [
-        {
-            "type": "shell",
-            "inline": [
-                "rpm -Uvh http://download.fedoraproject.org/pub/epel/6/i386/epel-release-6-8.noarch.rpm",
-                "yum -y install ansible"
-            ]
-
-        },
-        {
-            "type": "ansible-local",
-            "playbook_file": "playbook.yml",
-            "role_paths": [
-                "../../ansible/roles/openvz",
-                "../../ansible/roles/vagrantbox"
-            ]
-        },
-        {
-            "type": "shell",
-            "inline": [
-                "shutdown -r now",
-                "sleep 60"
-            ]
-        },
-        {
-            "type": "shell",
-            "inline": [
-                "yum -y remove kernel || true",
-                "yum -y update",
-                "yum clean all"
-            ]
-        }
-    ],
-    "post-processors": ["vagrant"]
+  "builders": [
+    {
+      "type": "virtualbox",
+      "boot_command": [
+        "<tab> text ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/kickstart.cfg<enter>"
+      ],
+      "guest_os_type": "RedHat_64",
+      "iso_urls": [
+       "http://mirror.pac-12.org/6.5/isos/x86_64/CentOS-6.5-x86_64-minimal.iso",
+       "http://mirrors.xmission.com/centos/6.5/isos/x86_64/CentOS-6.5-x86_64-minimal.iso",
+       "http://mirrors.usc.edu/pub/linux/distributions/centos/6.5/isos/x86_64/CentOS-6.5-x86_64-minimal.iso",
+       "http://mirror.atlanticmetro.net/centos/6.5/isos/x86_64/CentOS-6.5-x86_64-minimal.iso"
+      ],
+      "iso_checksum": "f9d84907d77df62017944cb23cab66305e94ee6ae6c1126415b81cc5e999bdd0",
+      "iso_checksum_type": "sha256",
+      "ssh_username": "root",
+      "ssh_password": "packer",
+      "ssh_wait_timeout": "20m",
+      "http_directory": "http",
+      "format": "ova",
+      "shutdown_command": "shutdown -h now"
+    }
+  ],
+  "provisioners": [
+    {
+      "type": "shell",
+      "inline": [
+        "rpm -Uvh http://download.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm",
+        "yum -y install perl dkms gcc kernel-headers-$(uname -r) kernel-devel-$(uname -r)"
+      ]
+    },
+    {
+      "type": "shell",
+      "script": "provisioning/install_guest_additions.sh"
+    },
+    {
+      "type": "shell",
+      "inline": [
+        "yum -y remove perl",
+        "yum -y update",
+        "yum clean all"
+      ]
+    }
+  ]
 }
