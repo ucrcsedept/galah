@@ -48,6 +48,7 @@ nosetests.xml
 .vagrant/
 vagrant_ansible_inventory_default
 *.box
+*.ova
 
 # Packer
 packer_cache/
