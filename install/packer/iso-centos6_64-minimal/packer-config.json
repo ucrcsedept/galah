@@ -26,8 +26,9 @@
     {
       "type": "shell",
       "inline": [
-        "rpm -Uvh http://download.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm",
-        "yum -y install perl dkms gcc kernel-headers-$(uname -r) kernel-devel-$(uname -r)"
+        "yum -y update",
+        "shutdown -r now",
+        "sleep 60"
       ]
     },
     {
@@ -37,8 +38,6 @@
     {
       "type": "shell",
       "inline": [
-        "yum -y remove perl",
-        "yum -y update",
         "yum clean all",
         "rm -f /etc/udev/rules.d/70-persistent-net.rules; ln -s /dev/null /etc/udev/rules.d/75-persistent-net-generator.rules",
         "sed -i '/^HWADDR=/d' /etc/sysconfig/network-scripts/ifcfg-eth0"
