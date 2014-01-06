@@ -1,0 +1,19 @@
+{
+  "builders": [
+    {
+      "type": "virtualbox-ovf",
+      "source_path": "source.ova",
+      "ssh_username": "root",
+      "ssh_password": "packer",
+      "ssh_wait_timeout": "30m",
+      "format": "ova",
+      "shutdown_command": "shutdown -h now"
+    }
+  ],
+  "provisioners": [
+    {
+      "type": "shell",
+      "script": "provisioning/install_guest_additions.sh"
+    }
+  ]
+}
