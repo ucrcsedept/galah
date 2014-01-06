@@ -19,7 +19,7 @@
 
 - name: Configure MongoDB
   template:
-    dest=/etc/mongodb.conf
+    dest=/etc/mongod.conf
     src=mongodb.conf.minimal.j2
     owner=root
     group=root

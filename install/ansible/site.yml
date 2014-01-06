@@ -10,9 +10,9 @@
     - redis
     - mongodb
 
-- name: Set up vagrant
-  hosts: default
-  user: root
+- name: Set up 'dev-mongo-redis-vz' vagrant box
+  hosts: vm-dev-mongo-redis-vz
 
   roles:
-    - vagrantbox
+    - redis
+    - mongodb

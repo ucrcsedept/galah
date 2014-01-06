@@ -5,47 +5,6 @@
     redis_server_path: /usr/bin/redis-server
     redis_cli_path: /usr/bin/redis-cli
   tasks:
-    - name: Install OpenVZ YUM repo.
-      template:
-        src={{ res_dir }}/repofiles/openvz.repo.j2
-        dest=/etc/yum.repos.d/openvz.repo
-
-    - name: Install OpenVZ kernel
-      yum:
-        name=vzkernel
-        state=latest
-
-    - name: Install vzctl
-      yum:
-        name=vzctl
-        state=latest
-
-    - name: Install vzquota
-      yum:
-        name=vzquota
-        state=latest
-
-    - name: Install ploop
-      yum:
-        name=ploop
-        state=latest
-
-    - name: Reboot
-      command: /sbin/shutdown -r now
-
-    - name: Wait for host down
-      pause: seconds=10
-
-    - name: Wait for host up
-      local_action: wait_for host=10.189.0.2 port=22
-      sudo: false
-
-    - name: Remove old kernel
-      yum:
-        name=kernel
-        state=absent
-      ignore_errors: true
-
     - name: Add 10gen repository.
       template:
         dest=/etc/yum.repos.d/mongodb.repo

@@ -1,5 +1,4 @@
-## IMPORTANT!
-## This configuration is only appropriate for use in development.
+# This configuration is only appropriate for use in development.
 
 # Listen on an INET socket only
 bind_ip = 127.0.0.1
@@ -9,9 +8,9 @@ nounixsocket = true
 # Run in daemon mode and set sensible defaults. Don't change the pidfilepath
 # or logpath options without also changing them within the mongod init file.
 fork = true
-pidfilepath = /var/run/mongodb/mongodb.pid
-logpath = /var/log/mongodb/mongodb.log
-dbpath =/var/lib/mongodb
+pidfilepath = /var/run/mongodb.pid
+logpath = /var/log/mongo/mongodb.log
+dbpath =/var/lib/mongo
 
 # We don't care very much about durability because this is a configuration
 # meant to be used only for development.
