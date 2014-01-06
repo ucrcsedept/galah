@@ -14,7 +14,7 @@
     {
       "type": "shell",
       "inline": [
-          "yum -y install ansible"
+        "yum install -y ansible"
       ]
     },
     {
