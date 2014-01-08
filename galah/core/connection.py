@@ -2,6 +2,12 @@
 # generated with the Roman font at http://www.network-science.de/ascii/
 
 class Connection:
+    """
+    Provides access to the Galah core API and stores that state of any and all
+    connections necessary to do so.
+
+    """
+
     def __init__(self, **kwargs):
         pass
 
@@ -22,7 +28,7 @@ class Connection:
 
         """
 
-        pass
+        raise NotImplemented()
 
     def user_multilookup(self, current_user, handles, _hints = None):
         """
@@ -38,7 +44,7 @@ class Connection:
 
         """
 
-        pass
+        raise NotImplemented()
 
     def user_find(self, current_user, handle_starts_with = None, role = None,
             in_class = None, _hints = None):
@@ -52,7 +58,7 @@ class Connection:
 
         """
 
-        pass
+        raise NotImplemented()
 
     def user_create(self, current_user, new_user, _hints = None):
         """
@@ -66,7 +72,7 @@ class Connection:
 
         """
 
-        pass
+        raise NotImplemented()
 
     def user_update(self, current_user, updated_user, _hints = None):
         """
@@ -79,7 +85,7 @@ class Connection:
 
         """
 
-        pass
+        raise NotImplemented()
 
     def user_delete(self, current_user, handle, _hints = None):
         """
@@ -92,7 +98,7 @@ class Connection:
 
         """
 
-        pass
+        raise NotImplemented()
 
     #           oooo
     #           `888
@@ -113,7 +119,7 @@ class Connection:
 
         """
 
-        pass
+        raise NotImplemented()
 
     def class_multilookup(self, current_user, class_ids, _hints = None):
         """
@@ -128,19 +134,19 @@ class Connection:
 
         """
 
-        pass
+        raise NotImplemented()
 
     def class_find(self, current_user, term, handle_starts_width, _hints = None):
-        pass
+        raise NotImplemented()
 
     def class_create(self, current_user, new_class, _hints = None):
-        pass
+        raise NotImplemented()
 
     def class_update(self, current_user, updated_class, _hints = None):
-        pass
+        raise NotImplemented()
 
     def class_delete(self, current_user, id, _hints = None):
-        pass
+        raise NotImplemented()
 
     #  .oooo.    .oooo.o  .oooo.o  .oooooooo ooo. .oo.
     # `P  )88b  d88(  "8 d88(  "8 888' `88b  `888P"Y88b
@@ -151,16 +157,16 @@ class Connection:
     #                             "Y88888P'
 
     def assignment_lookup(self, current_user, assignment_id, _hints = None):
-        pass
+        raise NotImplemented()
 
     def assignment_find(self, current_user, for_classes = None, _hints = None):
-        pass
+        raise NotImplemented()
 
     def assignment_create(self, current_user, new_assignment, _hints = None):
-        pass
+        raise NotImplemented()
 
     def assignment_delete(self, current_user, id, _hints = None):
-        pass
+        raise NotImplemented()
 
     #                       .o8
     #                      "888
@@ -171,20 +177,20 @@ class Connection:
     # 8""888P'  `V88V"V8P'  `Y8bod8P' 8""888P'
 
     def submission_lookup(self, current_user, submission_id, _hints = None):
-        pass
+        raise NotImplemented()
 
     def submission_find(self, current_user, author = None, for_assignment = None,
             _hints = None):
-        pass
+        raise NotImplemented()
 
     def submission_create(self, current_user, new_submission, _hints = None):
-        pass
+        raise NotImplemented()
 
     def submission_update(self, current_user, updated_submission, _hints = None):
-        pass
+        raise NotImplemented()
 
     def submission_delete(self, current_user, submission_id, _hints = None):
-        pass
+        raise NotImplemented()
 
     #   .o8                        .o8
     # .o888oo  .ooooo.   .oooo.o .o888oo oooo d8b  .ooooo.   .ooooo oo  .oooo.
@@ -197,16 +203,16 @@ class Connection:
     #                                                             "
 
     def testrequest_lookup(self, current_user, testrequest_id, _hints = None):
-        pass
+        raise NotImplemented()
 
     def testrequest_pop(self, current_user, _hints = None):
-        pass
+        raise NotImplemented()
 
     def testrequest_create(self, current_user, new_testrequest, _hints = None):
-        pass
+        raise NotImplemented()
 
     def testrequest_delete(self, current_user, testrequest_id, _hints = None):
-        pass
+        raise NotImplemented()
 
     #                                         oooo      .
     #                                         `888    .o8
@@ -217,21 +223,20 @@ class Connection:
     # d888b    `Y8bod8P' 8""888P'  `V88V"V8P' o888o   "888" 8""888P'
 
     def testresult_lookup(self, current_user, testresult_id, _hints = None):
-        pass
+        raise NotImplemented()
 
     def testresult_find(self, current_user, for_submission = None, for_user = None,
             for_assignment = None, _hints = None):
-        pass
+        raise NotImplemented()
 
     def testresult_create(self, current_user, new_testresult, _hints = None):
-        pass
+        raise NotImplemented()
 
     def testresult_update(self, current_user, updated_testresult, _hints = None):
-        pass
+        raise NotImplemented()
 
     def testresult_delete(self, current_user, testresult_id, _hints = None):
-        pass
-
+        raise NotImplemented()
 
     #     .                      oooo
     #   .o8                      `888
@@ -242,13 +247,13 @@ class Connection:
     #   "888" `Y888""8o 8""888P' o888o o888o 8""888P'
 
     def task_lookup(self, current_user, task_id, _hints = None):
-        pass
+        raise NotImplemented()
 
     def task_create(self, current_user, new_task, _hints = None):
-        pass
+        raise NotImplemented()
 
     def task_pop(self, current_user, action, _hints = None):
-        pass
+        raise NotImplemented()
 
     def task_delete(self, current_user, task_id, _hints = None):
-        pass
+        raise NotImplemented()
