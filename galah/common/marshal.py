@@ -18,6 +18,7 @@ Galah. Reasons for this are
 
 # stdlib
 import json as _json
+import codecs
 
 def dumps(obj):
     """

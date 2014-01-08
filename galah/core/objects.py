@@ -4,6 +4,7 @@ from mangoengine import *
 from galah.base.config import load_config
 config = load_config("core")
 
+import logging
 log = logging.getLogger("galah.core.redis")
 
 class NodeID(Model):
