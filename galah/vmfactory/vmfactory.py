@@ -22,30 +22,29 @@
 import sys
 import logging
 
-# internal
-import galah.core
+# galah external
+from galah.core.objects import *
+import galah.core.redisconnection
 
 log = logging.getLogger("galah.vmfactory")
 
 def main():
+    con = galah.core.redisconnection.RedisConnection()
+
     # Load Galah's configuration.
     from galah.base.config import load_config
     config = load_config("sheep")
     log.debug("Loaded configuration: %s", config)
 
-    while True:
-        # This will check if the VM factory crashed and will add any dirty VM
-        # or clean VM to the deletion queue if they are associated with this
-        # VM factory.
-        if galah.core.vmfactory_repair(config["VMFACTORY_ID"]):
-            log.warning("vmfactory crashed.")
+    my_id = NodeID.get_mine()
 
+    while True:
         # This will block until either a dirty VM has been queued for deletion
         # or the number of clean VM's is less than the desired number. It will
         # then return either a dirty VM or some information that will be used
         # to create the clean VM. This vmfactory will also be associated with
         # clean or dirty VM to aid in crash recovery.
-        dirty_vm, clean_vm = galah.core.vmfactory_grab(config["VMFACTORY_ID"])
+        dirty_vm, clean_vm = con.vmfactory_grab(my_id)
 
         if dirty_vm is not None:
             log.info("Destroying virtual machine %s.", dirty_vm)
@@ -54,7 +53,7 @@ def main():
 
         # Mark the dirty or clean VM as successfully deleted/created and
         # disassociate it from this vmfactory.
-        galah.core.vmfactory_finish_dirty(config["VMFACTORY_ID"])
+        con.vmfactory_finish_dirty(my_id)
 
 if __name__ == "__main__":
     sys.exit(main())

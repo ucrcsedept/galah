@@ -1,3 +1,6 @@
+# stdlib
+import uuid
+
 # external
 from mangoengine import *
 
@@ -18,8 +21,23 @@ class NodeID(Model):
 
     """
 
-    @staticmethod
-    def get_mine():
+    @classmethod
+    def get_mine(cls):
         """Returns the current node's NodeID."""
 
-        return NodeID(u"a", u"b")
+        if hasattr(cls, "_saved_local_id"):
+            local = cls._saved_local_id
+        else:
+            # We always generate a new ID rather than reading it from a file
+            cls._saved_local_id = local = uuid.uuid4()
+
+        if hasattr(cls, "_saved_machine_id"):
+            machine = cls._saved_machine_id
+        else:
+            # TODO: This should make a peristant ID on the filesystem.
+            cls._saved_machine_id = machine = uuid.uuid4()
+
+        return cls(machine = machine, local = local)
+
+    def __str__(self):
+        return "%s::%s" % (self.machine, self.local)
