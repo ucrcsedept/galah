@@ -3,8 +3,13 @@
 
 class Connection:
     """
-    Provides access to the Galah core API and stores that state of any and all
+    Provides access to the Galah core API and stores the state of any and all
     connections necessary to do so.
+
+    .. warning::
+
+        Any core function can at any time raise an exception inherited from
+        objects.BackendError.
 
     """
 

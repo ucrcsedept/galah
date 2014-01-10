@@ -1,5 +1,15 @@
+"""
+This module contains objects that are a part of the galah.core API. As such,
+they are backend agnostic and suitable for passing in and out of core
+functions.
+
+"""
+
 # external
 from mangoengine import *
+
+class BackendError(RuntimeError):
+    pass
 
 class NodeID(Model):
     """
