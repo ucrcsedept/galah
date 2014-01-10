@@ -1,7 +1,11 @@
+# stdlib
+import time
+import StringIO
+import pkg_resources
+
 # external
 import redis
 import mangoengine
-import time
 
 # galah external
 import galah.common.marshal
@@ -30,29 +34,6 @@ class _VMFactoryNode(mangoengine.Model):
     currently_destroying = mangoengine.ModelField(objects.NodeID)
     currently_creating = mangoengine.ModelField(objects.NodeID)
 
-_LUA_SCRIPTS = {
-"vmfactory_grab:check_dirty":
-"""
-local dirty_vm_id = redis.call("rpop", KEYS[1])
-if dirty_vm_id == false then
-    return false
-end
-
--- Get and decode the vmfactory object
-local rv = redis.call("hget", KEYS[2], ARGV[1])
-if rv == false then
-    return -1
-end
-local vmfactory = cjson.decode(rv)
-
--- Set the currently_destroying key and persist the change
-vmfactory["currently_destroying"] = dirty_vm_id
-redis.call("hset", KEYS[2], ARGV[1], cjson.encode(vmfactory))
-
-return dirty_vm_id
-"""
-}
-
 class RedisConnection:
     # host and port should only ever be specified during testing
     def __init__(self, host = None, port = None):
@@ -61,11 +42,32 @@ class RedisConnection:
             port = port or config["core/REDIS_PORT"]
         )
 
-        # This will register the LUA scripts with Redis and make them
-        # accessible to us via the _scripts dictionary.
+        # This will contain all of our registered scripts.
         self._scripts = {}
-        for k, v in _LUA_SCRIPTS.items():
-            self._scripts[k] = self._redis.register_script(v)
+
+        # Open the LUA scripts (they are ASCII encoded because LUA isn't a
+        # big fan of unicode).
+        with pkg_resources.resource_stream("galah.core", "redisscripts.lua") \
+                as script_file:
+            # Each script is delimited by a line starting with this string
+            SCRIPT_DELIMITER = "----script "
+
+            # Iterate through every line in the script file and collect each
+            # script (don't register them with Redis yet).
+            current_script = None # Name of the current script
+            raw_scripts = {}
+            for i in script_file:
+                # If we found a new script
+                if i.startswith(SCRIPT_DELIMITER):
+                    current_script = i[len(SCRIPT_DELIMITER):].strip()
+                    raw_scripts[current_script] = StringIO.StringIO()
+                elif current_script is not None:
+                    raw_scripts[current_script].write(i + "\n")
+
+            # Register the scripts with Redis
+            for k, v in raw_scripts.items():
+                script_obj = self._redis.register_script(v.getvalue())
+                self._scripts[k] = script_obj
 
     def vmfactory_register(self, vmfactory_id, _hints = None):
         INITIAL_DATA = _VMFactoryNode(
@@ -100,12 +102,36 @@ class RedisConnection:
 
         poll_every = _hints.get("poll_every", 2)
         while True:
-            rv = self._scripts["vmfactory_grab:check_dirty"](
-                keys = ["%s_dirty_vms" % (vmfactory_id.machine, ), "vmfactory_nodes"],
+            # This will get a VM off of the dirty VM queue (returning None
+            # if there is no such dirty VM), set this vmfactory's
+            # currently_destroying field to the VM, and then return the
+            # VM's ID. This occurs atomically.
+            dirty_vm_id = self._scripts["vmfactory_grab:check_dirty"](
+                keys = [
+                    "%s_dirty_vms" % (vmfactory_id.machine, ),
+                    "vmfactory_nodes"
+                ],
                 args = [str(vmfactory_id)]
             )
-            if rv is not None:
-                return rv
+            if dirty_vm_id == -1:
+                raise RedisError(-1, "vmfactory not registered.")
+            elif dirty_vm_id is not None:
+                # This will be the popped VM's ID.
+                return dirty_vm_id
+
+            clean_vm_id = self._scripts["vmfactory_grab:check_clean"](
+                keys = [
+                    "%s_dirty_vms" % (vmfactory_id.machine, ),
+                    "vmfactory_nodes"
+                ],
+                args = [str(vmfactory_id), 3]
+            )
+            if clean_vm_id == -1:
+                raise RedisError(-1, "vmfactory not registered.")
+            elif clean_vm_id == -2:
+                raise RedisError(-2, "vmfactory already generating vm.")
+            elif clean_vm_id is not None:
+                return True
 
             time.sleep(poll_every)
 
