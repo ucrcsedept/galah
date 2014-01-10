@@ -257,3 +257,78 @@ class Connection:
 
     def task_delete(self, current_user, task_id, _hints = None):
         raise NotImplemented()
+
+    #  .o88o.                         .
+    #  888 `"                       .o8
+    # o888oo   .oooo.    .ooooo.  .o888oo  .ooooo.  oooo d8b oooo    ooo
+    #  888    `P  )88b  d88' `"Y8   888   d88' `88b `888""8P  `88.  .8'
+    #  888     .oP"888  888         888   888   888  888       `88..8'
+    #  888    d8(  888  888   .o8   888 . 888   888  888        `888'
+    # o888o   `Y888""8o `Y8bod8P'   "888" `Y8bod8P' d888b        .8'
+    #                                                        .o..P'
+    #                                                        `Y8P'
+
+    def vmfactory_register(self, vmfactory_id, _hints = None):
+        """
+        Registers a vmfactory.
+
+        All vmfactories should call this function when starting up. Calling
+        this function multiple times is fine.
+
+        :param vmfactory_id: The factory's NodeID.
+
+        :returns: True if the vmfactory was not already registered, False
+            otherwise.
+
+        """
+
+        pass
+
+    def vmfactory_unregister(self, vmfactory_id, _hints = None):
+        """
+        Unregisters a vmfactory.
+
+        All vmfactories should call this function when they are shutting
+        down (even if they are exiting on an error or failure). Any work
+        the vmfactory was assigned will be put back into the correct
+        queueus.
+
+        :param vmfactory_id: The factory's NodeID.
+
+        :returns: True if the vmfactory was already registered (and
+            therefore succesfully unregistered), False otherwise.
+
+        """
+
+        pass
+
+    def vmfactory_lookup(self, vmfactory_id, _hints = None):
+        """
+        Gets the VMFactory object for a vmfactory from its ID.
+
+        :param vmfactory_id: The NodeID for the vmfactory to look up.
+
+        :returns: The VMFactory object or None if no such vmfactory exists.
+
+        """
+
+        pass
+
+    def vmfactory_grab(self, vmfactory_id, _hints = None):
+        """
+        Grabs a new job for the vmfactory to complete.
+
+        This function will block until either a new clean VM is needed or a
+        dirty VM is queued for deletion. The backend will note that the
+        vmfactory is doing the work so the system can recover if the it
+        crashes.
+
+        :param vmfactory_id: The ID of the vmfactory who will complete the
+            returned job.
+
+        :returns: Returns True if a clean VM should be created, or a
+            VirtualMachineID specifying the VM to be destroyed.
+
+        """
+
+        pass
