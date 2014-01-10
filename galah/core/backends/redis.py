@@ -1,3 +1,6 @@
+# This helps us not import ourselves
+from __future__ import absolute_import
+
 # stdlib
 import time
 import StringIO
@@ -11,14 +14,14 @@ import mangoengine
 import galah.common.marshal
 
 # internal
-from . import objects
+from .. import objects
 
 # Parse the configuration file
 from galah.base.config import load_config
 config = load_config("core")
 
 import logging
-log = logging.getLogger("galah.core.redis")
+log = logging.getLogger("galah.core.backends.redis")
 
 class RedisError(RuntimeError):
     def __init__(self, return_value, description):
@@ -47,8 +50,8 @@ class RedisConnection:
 
         # Open the LUA scripts (they are ASCII encoded because LUA isn't a
         # big fan of unicode).
-        with pkg_resources.resource_stream("galah.core", "redisscripts.lua") \
-                as script_file:
+        with pkg_resources.resource_stream("galah.core.backends",
+                "redis-scripts.lua") as script_file:
             # Each script is delimited by a line starting with this string
             SCRIPT_DELIMITER = "----script "
 
