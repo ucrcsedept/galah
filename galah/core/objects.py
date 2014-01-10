@@ -26,6 +26,9 @@ class NodeID(Model):
     machine = UnicodeField()
     local = IntegralField(bounds = (0, None))
 
+    # Other core objects should not necessarily have a serialize function. If
+    # the object can be stored as JSON use a JSON serializer directly instead.
+    # The NodeID needs to be serialized a particular way thus these functions.
     def serialize(self):
         """
         Returns a string representation of this NodeID that can be passed to
@@ -76,3 +79,19 @@ class NodeID(Model):
         result.validate()
 
         return result
+
+VirtualMachineID = unicode
+"""
+The VirtualMachineID must be a unicode string, other than that the meaning is
+determined by the vmfactory on the machine.
+
+"""
+
+class VMFactory(Model):
+    STATUS_IDLE = 0
+    STATUS_CREATING = 1
+    STATUS_DESTROYING = 2
+
+    status = IntegralField(bounds = (0, 2))
+    vm_id = UnicodeField(nullable = True)
+
