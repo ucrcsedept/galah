@@ -23,7 +23,7 @@ config = load_config("core")
 import logging
 log = logging.getLogger("galah.core.backends.redis")
 
-class RedisError(RuntimeError):
+class RedisError(objects.BackendError):
     def __init__(self, return_value, description):
         self.return_value = return_value
         self.description = description
@@ -81,13 +81,17 @@ class RedisConnection:
         rv = self._redis.hsetnx("vmfactory_nodes", str(vmfactory_id),
             galah.common.marshal.dumps(INITIAL_DATA.to_dict()))
 
-        # Returns True if we're already registered, False otherwise
-        return rv != 1
+        # hsetnx will only make the change if the field did not exist to
+        # begin with. If it did exist, it will return 0, otherwise it will
+        # return 1.
+        return rv == 1
 
     def vmfactory_unregister(self, vmfactory_id, _hints = None):
         rv = self._redis.hdel("vmfactory_nodes", str(vmfactory_id))
-        if rv != 1:
-            raise RedisError(rv, "vmfactory not registered.")
+
+        # If a deletion was actually performed, redis will return 1, otherwise
+        # it will return 0.
+        return rv == 1
 
     def vmfactory_lookup(self, vmfactory_id, _hints = None):
         rv = self._redis.hget("vmfactory_nodes", str(vmfactory_id))
@@ -103,9 +107,11 @@ class RedisConnection:
         if _hints is None:
             _hints = {}
 
+        # The number of seconds to wait between each poll
         poll_every = _hints.get("poll_every", 2)
+
         while True:
-            # This will get a VM off of the dirty VM queue (returning None
+            # This will get a VM off of the dirty VM queue (returning ""
             # if there is no such dirty VM), set this vmfactory's
             # currently_destroying field to the VM, and then return the
             # VM's ID. This occurs atomically.
@@ -117,10 +123,12 @@ class RedisConnection:
                 args = [str(vmfactory_id)]
             )
             if dirty_vm_id == -1:
-                raise RedisError(-1, "vmfactory not registered.")
-            elif dirty_vm_id is not None:
+                raise objects.IDNotRegistered(vmfactory_id)
+            elif dirty_vm_id == -2:
+                raise objects.CoreError("vmfactory is busy")
+            elif dirty_vm_id != "":
                 # This will be the popped VM's ID.
-                return dirty_vm_id
+                return objects.VirtualMachineID.deserialize(dirty_vm_id)
 
             clean_vm_id = self._scripts["vmfactory_grab:check_clean"](
                 keys = [
@@ -130,22 +138,10 @@ class RedisConnection:
                 args = [str(vmfactory_id), 3]
             )
             if clean_vm_id == -1:
-                raise RedisError(-1, "vmfactory not registered.")
+                raise objects.IDNotRegistered(vmfactory_id)
             elif clean_vm_id == -2:
-                raise RedisError(-2, "vmfactory already generating vm.")
-            elif clean_vm_id is not None:
+                raise objects.CoreError("vmfactory is busy")
+            elif clean_vm_id == 1:
                 return True
 
             time.sleep(poll_every)
-
-        # poll every few seconds (set by hint with sensible default) to see if
-        # the number of clean vms is too low or there's any dirty vms
-
-        # pop a vm off (machine_id)_dirty_vms
-        # set vmfactory_nodes[vmfactory_id].currently_destroying to vmfactory_id of popped vm
-        # return vm vmfactory_id
-
-        # increment (machine_id)_num_clean_vms
-        # create new vm in (machine_id)_vms marked as clean but being created
-        # set vmfactory_nodes[vmfactory_id].currently_creating to the new VM vmfactory_id
-        # return vm vmfactory_id

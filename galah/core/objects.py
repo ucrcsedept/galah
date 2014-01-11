@@ -8,8 +8,36 @@ functions.
 # external
 from mangoengine import *
 
-class BackendError(RuntimeError):
+class CoreError(RuntimeError):
+    """
+    An error thrown by galah.core.
+
+    """
+
     pass
+
+class BackendError(CoreError):
+    """
+    Raised when an error occurs in the backend. This class is never
+    instantiated directly but rather is inherited from.
+
+    """
+
+    pass
+
+class IDNotRegistered(CoreError):
+    """
+    Raised when a provided ID (such as a NodeID) was not found in the backend.
+    This will most likely occur when trying to perform operations as an
+    unregistered user or with an unregistered node.
+
+    """
+
+    def __init__(self, unregistered_id):
+        self.unregistered_id = unregistered_id
+
+    def __str__(self):
+        "Unregistered id '%s'" % (str(self.unregistered_id), )
 
 class NodeID(Model):
     """
@@ -80,12 +108,19 @@ class NodeID(Model):
 
         return result
 
-VirtualMachineID = unicode
-"""
-The VirtualMachineID must be a unicode string, other than that the meaning is
-determined by the vmfactory on the machine.
+class VirtualMachineID(unicode):
+    """
+    The VirtualMachineID must be a unicode string, other than that the meaning
+    is determined by the vmfactory on the machine.
 
-"""
+    """
+
+    def serialize(self):
+        return self.encode("utf_8")
+
+    @classmethod
+    def deserialize(self, string):
+        return string.decode("utf_8")
 
 class VMFactory(Model):
     STATUS_IDLE = 0

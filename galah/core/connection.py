@@ -323,10 +323,13 @@ class Connection:
         """
         Grabs a new job for the vmfactory to complete.
 
-        This function will block until either a new clean VM is needed or a
-        dirty VM is queued for deletion. The backend will note that the
+        This function will block until either a dirty VM is queued for
+        deletion or a new clean VM is needed. The backend will note that the
         vmfactory is doing the work so the system can recover if the it
         crashes.
+
+        If a dirty VM is queued and a new clean VM is needed, the dirty VM
+        will take precedence.
 
         :param vmfactory_id: The ID of the vmfactory who will complete the
             returned job.
