@@ -1,5 +1,7 @@
 # Galah
 
+**Warning: Large refactoring is occuring in the master branch for version 0.3 and no attempt is being made to keep the master branch functional while this occurs. If you're interested in seeing an unbroken Galah see the v0.2stable branch (that is the version UCR has deployed).**
+
 ## What is Galah?
 
 Galah is an automated grading system geared towards processing computer
