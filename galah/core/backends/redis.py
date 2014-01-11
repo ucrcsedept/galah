@@ -33,9 +33,13 @@ class RedisError(objects.BackendError):
     def __str__(self):
         "%s (Redis returned %d)" % (self.description, self.return_value)
 
-class _VMFactoryNode(mangoengine.Model):
-    currently_destroying = mangoengine.ModelField(objects.NodeID)
-    currently_creating = mangoengine.ModelField(objects.NodeID)
+class VMFactory(Model):
+    STATUS_IDLE = 0
+    STATUS_CREATING = 1
+    STATUS_DESTROYING = 2
+
+    status = IntegralField(bounds = (0, 2))
+    vm_id = UnicodeField(nullable = True)
 
 class RedisConnection:
     # host and port should only ever be specified during testing
@@ -73,7 +77,7 @@ class RedisConnection:
                 self._scripts[k] = script_obj
 
     def vmfactory_register(self, vmfactory_id, _hints = None):
-        INITIAL_DATA = _VMFactoryNode(
+        INITIAL_DATA = VMFactoryNode(
             currently_destroying = u"",
             currently_creating = u""
         )
@@ -92,16 +96,6 @@ class RedisConnection:
         # If a deletion was actually performed, redis will return 1, otherwise
         # it will return 0.
         return rv == 1
-
-    def vmfactory_lookup(self, vmfactory_id, _hints = None):
-        rv = self._redis.hget("vmfactory_nodes", str(vmfactory_id))
-        if rv is None:
-            raise RedisError(rv, "vmfactory not registered.")
-
-        # Deserialize the data
-        rv_dict = galah.common.marshal.loads(rv)
-
-        return _VMFactoryNode.from_dict(rv_dict)
 
     def vmfactory_grab(self, vmfactory_id, _hints = None):
         if _hints is None:

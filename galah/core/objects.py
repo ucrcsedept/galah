@@ -108,20 +108,6 @@ class NodeID(Model):
 
         return result
 
-class VirtualMachineID(unicode):
-    """
-    The VirtualMachineID must be a unicode string, other than that the meaning
-    is determined by the vmfactory on the machine.
-
-    """
-
-    def serialize(self):
-        return self.encode("utf_8")
-
-    @classmethod
-    def deserialize(self, string):
-        return string.decode("utf_8")
-
 class VMFactory(Model):
     STATUS_IDLE = 0
     STATUS_CREATING = 1

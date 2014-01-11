@@ -307,18 +307,6 @@ class Connection:
 
         pass
 
-    def vmfactory_lookup(self, vmfactory_id, _hints = None):
-        """
-        Gets the VMFactory object for a vmfactory from its ID.
-
-        :param vmfactory_id: The NodeID for the vmfactory to look up.
-
-        :returns: The VMFactory object or None if no such vmfactory exists.
-
-        """
-
-        pass
-
     def vmfactory_grab(self, vmfactory_id, _hints = None):
         """
         Grabs a new job for the vmfactory to complete.
