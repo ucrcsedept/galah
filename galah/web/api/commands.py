@@ -1113,7 +1113,7 @@ def get_gradebook(current_user, the_class, fill=0):
         the_class = _get_class(the_class, current_user)
 
     if current_user.account_type != "admin" and \
-            the_class not in current_user.classes:
+            the_class.id not in current_user.classes:
         raise PermissionError(
             "You can only get information about classes you teach."
         )
