@@ -44,7 +44,7 @@ def download_submission(assignment_id, submission_id):
         assignment = Assignment.objects.get(id = assignment_id)
     except (InvalidId, Assignment.DoesNotExist) as e:
         logger.info("Could not retrieve assignment: %s.", str(e))
-        
+
         abort(404)
 
     # Figure out which submission the user is trying to download
@@ -53,6 +53,12 @@ def download_submission(assignment_id, submission_id):
         submission = Submission.objects.get(id = submission_id)
     except InvalidId, Submission.DoesNotExist:
         logger.info("Could not retrieve submission: %s.", str(e))
+
+        abort(404)
+
+    if current_user.account_type == "student" and \
+            submission.user != current_user.id:
+        logger.info("User tried to download submission they can't access.")
 
         abort(404)
 
