@@ -56,6 +56,12 @@ def download_submission(assignment_id, submission_id):
 
         abort(404)
 
+    if current_user.account_type == "student" and \
+            submission.user != current_user.id:
+        logger.info("User tried to download submission they can't access.")
+
+        abort(404)
+
     # Find any expired archives and remove them
     deleted_files = []
     for i in Archive.objects(expires__lt = datetime.datetime.today()).limit(5):

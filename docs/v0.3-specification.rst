@@ -1,0 +1,106 @@
+Version 0.3 Specification
+=========================
+
+About this Document
+-------------------
+
+Between December 16, 2013 and March 21, 2014 I will be working full-time (>40 hour work weeks) on Galah. The goal is for my involvement in Galah's development to be drastically lessened after this 4 month period for at least 7 months afterward. If this proves not to be feasible, alternatives will have to be explored.
+
+This document describes what must be done in order to accomplish this. For lack of a better word, I will call this 4 month period of time a sprint.
+
+High-Level Goals
+----------------
+
+The primary goal of this sprint is to make development on Galah as simple as possible. We have been stuck in a deadlocked state for a long time partially because Galah is difficult to develop for right now. Specific problems include...
+
+1. Setting up Galah on a new computer is a long, manual process.
+#. No automated tests exist to ensure changes do not break anything serious.
+#. The code base is very large and not entirely well-organized right now.
+#. There is so much to do it's hard to decide what to focus energy on.
+#. We don't have much manpower.
+
+Not all of this can be fixed, and indeed some of these problems are inherent in any software project of moderate size and complexity. But I believe that if we fix a few of them, development won't feel like an uphill unicycle ride. Specifically, I would like the following high-level goals to be accomplished through this sprint.
+
+1. Galah should be able to be automatically installed.
+#. Galah should have automated tests ranging from unit tests where appropriate to high-level system tests.
+#. Galah should have a more clearly defined structure.
+
+I have what I hope is a well-defined plan to accomplish each of these goals...
+
+Automated Installation
+----------------------
+
+I've been exploring different avenues that would allow Galah to be automatically installed for some time. I have iterated on various ideas and I believe the best way to approach this is laid out in `issue #389 <https://github.com/galah-group/galah/issues/389>`_. This should be fairly straightforward and most of the difficulty will be familiarizing ourselves with the tools (Packer, Vagrant, Ansible, FPM, and yum repos). They are often used together however and we are going down a well-traveled road so we should be able to get help along the way.
+
+Automated Testing and a Better Structure
+----------------------------------------
+
+Creating tests for Galah as it exists right now is not all-together possible. Only high level testing would be doable as far as I can tell. Therefore, I suggest we take this time to refactor Galah in the following ways...
+
+Model-View-Controller
+~~~~~~~~~~~~~~~~~~~~~
+
+Galah is roughly an MVC application. There are models created with MongoEngine that are used by the controllers (Python functions executed through Flask) who then use the models to shove data in the right places for the views (the Jinja2 templates).
+
+The problem we are facing regarding testing is that the controllers do a whole lot of very specific logic with the models. The controllers have a lot of logic embedded in them that generate very particular MongoDB queries. Therefore, the only way to test the controllers are to examine everything they send over to the templates (which is usually a lot of stuff and sometimes actual HTML). In addition, the API code is another controller that does entirely different things with the models, and has entirely different views (which are currently mixed in with the controller logic).
+
+To make testing straightforward and maintainable, I propose expanding the logic within the models and providing a less flexible interface to the controllers. The MongoEngine models would be replaced by a set of functions that perform actions and lookups on the persistent storage or various queues, and the current models like the User class would become nothing more than simple data structures. This "core" would look very similar to the API module currently implemented (and in truth this was an original goal for the API), but would deal with native Python objects rather than human-friendly text. For example, the following functions might be available through this core project.
+
+.. code-block:: python
+
+    def lookup_user(current_user, email):
+        """
+        Finds a single user with a specific email.
+
+        :param email: The email to search for.
+
+        :returns: A User object or None if no such user was found.
+
+        """
+
+        # code
+
+    def find_user(current_user, email_contains = None, account_type = None,
+            enrolled_in = None, max_results = 20):
+        """
+        Searches for users with particular parameters. If multiple criteria are
+        provided (ex: ``email_contains = "jo"`` and ``account_type = "admin"``,
+        users that satisfy all criteria will be returned).
+
+        :param email_contains: The user's email must contain this string.
+        :param account_type: The user's account type must be exactly this.
+        :type account_type: User.AccountType
+        :param enrolled_in: The user must be enrolled in this class.
+        :type enrolled_in: User.ID
+        :param max_results: The maximum number of results to return. 0 may be
+            specified to mean unlimited.
+
+        :returns: A generator that yields User objects.
+
+        """
+
+        # code
+
+Notice that there is no mention of any databases and the details of how things are stored are completely abstracted away. This should allow the controllers to be much more straightforward, and testing the models will become a much less daunting task. There are also a couple other things worth noting about the above code:
+
+* Every function has a ``current_user`` parameter. This is because the models should be who performs the security checks, not the controllers as there are multiple controllers and we don't want a user to be able to, for example, add a user through the web interface but not be able to through the API Client.
+* No MongoEngine or MongoDB specific types are referenced. For example, ``User.ID`` is used rather than ``ObjectID``. This should help prevent reliance on a particular database since we plan to support multiple in the future, and should make the model a truly swappable layer.
+
+The controllers will likely still be tied in pretty closely to the views, but that's not something I'm overly worried about. I don't think there's a need to expand the functionality of the views as I don't see a great benefit there.
+
+Redis
+~~~~~
+
+The Shepherd+ZeroMQ combo has been a consistent bottleneck during development, and I believe it will prove to be difficult to deal with when creating the core described above, and when creating the installation scripts. Rather than deal with this, we should replace the Shepherd with Redis. This should be a straightforward change and will require minimal changing of code (and we'll be able to get rid of the entire shepherd component and the ZeroMQ dependency).
+
+Specific Testing
+~~~~~~~~~~~~~~~~
+
+With the structural changes above in place, unit testing the core code should be straightforward. It might be awkward at times because we will have to use some functions to ensure that other functions are working correctly (testing if ``add_user`` works with ``lookup_user`` for example), but should be very doable.
+
+Unit testing the controllers and views will probably have to be done in a smoke-test fashion. So the controllers would simply be called and we'd check to see if any errors occurred. Writing more powerful tests would probably be a waste of time because they'd be tied too closely to the exact implementation of the controllers and views which are subject to rapid change.
+
+Conclusion
+----------
+
+Four months is not a very long development time, and the work described here is not very ambitious. This is why I believe this will be very doable.

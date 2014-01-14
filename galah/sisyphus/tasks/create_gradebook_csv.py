@@ -108,7 +108,8 @@ def _create_gradebook_csv(csv_id, requester, class_id, fill=0):
             for sub in submissions:
                 if sub.test_results:
                     test_result = TestResult.objects.get(id = sub.test_results)
-                    assn_to_score[sub.assignment] = str(test_result.score)
+                    if test_result.score is not None:
+                        assn_to_score[sub.assignment] = str(test_result.score)
 
             # Write gradebook results to csv file.
             print >> csv_file, "%s,%s" % \
