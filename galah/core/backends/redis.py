@@ -31,23 +31,22 @@ class RedisError(objects.BackendError):
         super(RedisError, self).__init__(self)
 
     def __str__(self):
-        "%s (Redis returned %d)" % (self.description, self.return_value)
+        return "%s (Redis returned %d)" % (self.description, self.return_value)
 
-class VMFactory(Model):
-    STATUS_IDLE = 0
-    STATUS_CREATING = 1
-    STATUS_DESTROYING = 2
-
-    status = IntegralField(bounds = (0, 2))
-    vm_id = UnicodeField(nullable = True)
+class VMFactory(mangoengine.Model):
+    currently_destroying = mangoengine.UnicodeField(nullable = True)
+    currently_creating = mangoengine.UnicodeField(nullable = True)
 
 class RedisConnection:
-    # host and port should only ever be specified during testing
-    def __init__(self, host = None, port = None):
-        self._redis = redis.StrictRedis(
-            host = host or config["core/REDIS_HOST"],
-            port = port or config["core/REDIS_PORT"]
-        )
+    # redis_connection should only ever be specified during testing
+    def __init__(self, redis_connection = None):
+        if redis_connection is None:
+            self._redis = redis.StrictRedis(
+                host = config["core/REDIS_HOST"],
+                port = config["core/REDIS_PORT"]
+            )
+        else:
+            self._redis = redis_connection
 
         # This will contain all of our registered scripts.
         self._scripts = {}
@@ -91,7 +90,20 @@ class RedisConnection:
         return rv == 1
 
     def vmfactory_unregister(self, vmfactory_id, _hints = None):
-        rv = self._redis.hdel("vmfactory_nodes", str(vmfactory_id))
+        dirty_vm_id = self._scripts["vmfactory_grab:check_dirty"](
+            keys = [
+                "%s_dirty_vms" % (vmfactory_id.machine, ),
+                "vmfactory_nodes"
+            ],
+            args = [str(vmfactory_id)]
+        )
+        if dirty_vm_id == -1:
+            raise objects.IDNotRegistered(vmfactory_id)
+        elif dirty_vm_id == -2:
+            raise objects.CoreError("vmfactory is busy")
+        elif dirty_vm_id != "":
+            # This will be the popped VM's ID.
+            return objects.VirtualMachineID.deserialize(dirty_vm_id)
 
         # If a deletion was actually performed, redis will return 1, otherwise
         # it will return 0.

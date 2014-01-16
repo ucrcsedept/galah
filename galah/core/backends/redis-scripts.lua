@@ -41,6 +41,7 @@ if recovered_vm ~= nil then
 end
 
 -- Actually delete the vmfactory from Redis
+redis.call("hdel", "vmfactory_nodes", ARGV[1])
 
 return 1
 
