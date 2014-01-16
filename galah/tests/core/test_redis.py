@@ -27,10 +27,6 @@ def redis_server(request, capfd):
     connection = redis.StrictRedis(host = config.host, port = config.port,
         db = db)
 
-    # Ensure that nobody else is using the database, this is a failsafe to
-    # prevent inadvertantly deleting a production database.
-    assert len(connection.client_list()) != 1
-
     # This will delete everything in the current database
     connection.flushdb()
 
