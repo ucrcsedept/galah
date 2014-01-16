@@ -2,7 +2,7 @@
 from galah.core.backends.redis import *
 
 # test internal
-from .redis_utils import parse_redis_config
+from .pytest_redis import parse_redis_config
 
 # stdlib
 import re
@@ -10,6 +10,11 @@ import re
 # external
 import pytest
 import redis
+
+# Tell pytest to load our pytest_redis plugin. Absolute import is required here
+# though I'm not sure why. It does not error when given simply "pytest_redis"
+# but it does not correclty load the plugin.
+pytest_plugins = ("galah.tests.core.pytest_redis", )
 
 @pytest.fixture
 def redis_server(request, capfd):

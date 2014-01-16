@@ -5,6 +5,29 @@ import sys
 import threading
 import StringIO
 import collections
+import inspect
+
+# external
+import pytest
+
+def pytest_runtest_call(item):
+    using_redis = "redis_server" in inspect.getargspec(item.function).args
+
+    if using_redis:
+        raw_config = item.config.getoption("--redis")
+        if not raw_config:
+            pytest.skip("Configuration with `--redis` required for this test.")
+        config = parse_redis_config(raw_config)
+
+        # Start the Redis monitor so we can see what commands get run.
+        monitor = RedisMonitor(host = config.host, port = config.port,
+            db = config.db_range[0])
+
+    try:
+        item.runtest()
+    finally:
+        if using_redis:
+            monitor.stop()
 
 RedisConfig = collections.namedtuple("RedisConfig",
     ["host", "port", "db_range"])
@@ -56,8 +79,33 @@ class RedisMonitor:
 
         self._output_buffer = StringIO.StringIO()
 
-        self._sock = socket.create_connection((host, port))
+        # We'll wait 10 seconds for Redis to accept our connection
+        self._sock = socket.create_connection((host, port), 10)
+        self._sock.settimeout(0.1) # 0.1 seconds timeout on blocking ops
+
+        # Tell Redis we want to monitor all commands.
         self._sock.sendall("MONITOR\n")
+
+        # Wait until we get an OK. We'll try to read from the socket 10
+        # times to give Redis some time to send the OK.
+        OK = "+OK"
+        data = ""
+        for i in range(10):
+            try:
+                data += self._sock.recv(len(OK) - len(data))
+                if len(data) == len(OK):
+                    break
+            except socket.timeout:
+                pass
+        else:
+            raise RuntimeError("Did not receive response from Redis.")
+        if data != OK:
+            # Grab whatever else has been sent so we can provide a useful
+            # error message.
+            data += self._sock.recv(2024)
+
+            raise RuntimeError("Redis returned a non-OK status. Redis sent: %s"
+                % (repr(data), ))
 
         self._alive = True # Flag for thread to keep going
         self._thread = threading.Thread(target = self._monitor_thread_main)
@@ -86,9 +134,6 @@ class RedisMonitor:
 
         buf = [""]
         while self._alive:
-            # Ensure that we never block for much more than 0.1 seconds
-            self._sock.settimeout(0.1)
-
             try:
                 # Grab data off the wire
                 data = self._sock.recv(2048)
@@ -108,6 +153,10 @@ class RedisMonitor:
             # Handle every line except for the last one which is still being
             # built.
             for line in buf[0:-1]:
+                # Ignore any blank lines that manage to sneak in
+                if len(line.strip()) == 0:
+                    continue
+
                 parsed_line = DB_NUMBER_RE.match(line)
                 if parsed_line is None or \
                         int(parsed_line.group("db")) != self.db:
