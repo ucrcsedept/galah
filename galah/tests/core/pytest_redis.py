@@ -143,7 +143,7 @@ class RedisMonitor:
         # MONITOR. An example line is
         # `+1339518083.107412 [0 127.0.0.1:60866] "keys" "*"` where that 0 is
         # the DB number.
-        DB_NUMBER_RE = re.compile(r"[\d\s+.]+\[(?P<db>\d+) [^ :]+:\d+\]")
+        DB_NUMBER_RE = re.compile(r"[\d\s+.]+\[(?P<db>\d+) ([^ :]+:\d+|lua)\]")
 
         # Terminal effect codes
         EFFECT_FAINT = "\x1b[2m" if self.effects else ""
