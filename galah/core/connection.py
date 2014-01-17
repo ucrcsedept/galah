@@ -263,6 +263,40 @@ class Connection:
     def task_delete(self, current_user, task_id, _hints = None):
         raise NotImplemented()
 
+
+    #                             .o8
+    #                            "888
+    # ooo. .oo.    .ooooo.   .oooo888   .ooooo.   .oooo.o
+    # `888P"Y88b  d88' `88b d88' `888  d88' `88b d88(  "8
+    #  888   888  888   888 888   888  888ooo888 `"Y88b.
+    #  888   888  888   888 888   888  888    .o o.  )88b
+    # o888o o888o `Y8bod8P' `Y8bod88P" `Y8bod8P' 8""888P'
+
+    def node_allocate_id(self, machine, _hints = None):
+        """
+        Allocates a free ID for a node to use.
+
+        A node ID is made up of two parts, a textual machine part (any valid
+        unicode string can be stored as the machine part) and an integral
+        local part. The local part should be unique to the machine. This
+        function is used to create the local part by finding a free local
+        integer (this is done by incrementing a simple counter).
+
+        .. warning::
+
+            The integer in Redis used to find a free local part is never
+            reset to 0 by this function. The maximum size of the integer is
+            ``2^63`` so make sure to reset it to 0 manually every few million
+            years to prevent overflowing.
+
+        :param machine: The machine part of the NodeID to create.
+
+        :returns: A NodeID object.
+
+        """
+
+        pass
+
     #  .o88o.                         .
     #  888 `"                       .o8
     # o888oo   .oooo.    .ooooo.  .o888oo  .ooooo.  oooo d8b oooo    ooo

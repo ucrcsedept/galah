@@ -75,6 +75,19 @@ class RedisConnection:
                 script_obj = self._redis.register_script(v.getvalue())
                 self._scripts[k] = script_obj
 
+    def node_allocate_id(self, machine, _hints = None):
+        if not isinstance(machine, unicode):
+            raise TypeError("machine must be a unicode string, got %s" %
+                (repr(machine), ))
+
+        rv = self._redis.hincrby("machine_rolling_ids",
+            machine.encode("utf_8"), 1)
+
+        result = objects.NodeID(machine = machine, local = rv)
+        result.validate()
+
+        return result
+
     def vmfactory_register(self, vmfactory_id, _hints = None):
         INITIAL_DATA = VMFactory(
             currently_destroying = u"",
