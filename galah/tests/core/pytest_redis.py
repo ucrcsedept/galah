@@ -9,6 +9,7 @@ import inspect
 
 # external
 import pytest
+import redis
 
 def pytest_runtest_call(item):
     using_redis = "redis_server" in inspect.getargspec(item.function).args
@@ -28,6 +29,22 @@ def pytest_runtest_call(item):
     finally:
         if using_redis:
             monitor.stop()
+
+@pytest.fixture
+def redis_server(request):
+    raw_config = request.config.getoption("--redis")
+    if not raw_config:
+        pytest.skip("Configuration with `--redis` required for this test.")
+    config = parse_redis_config(raw_config)
+
+    db = config.db_range[0]
+    connection = redis.StrictRedis(host = config.host, port = config.port,
+        db = db)
+
+    # This will delete everything in the current database
+    connection.flushdb()
+
+    return connection
 
 RedisConfig = collections.namedtuple("RedisConfig",
     ["host", "port", "db_range"])
