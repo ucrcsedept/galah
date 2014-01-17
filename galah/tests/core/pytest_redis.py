@@ -25,9 +25,16 @@ def pytest_runtest_setup(item):
 
         item._redis_monitor = monitor
 
-def pytest_runtest_teardown(item):
-    if hasattr(item, "_redis_monitor"):
-        item._redis_monitor.stop()
+        # This will make sure that the monitor thread is stopped no matter
+        # what happens (supposedly at least).
+        item.addfinalizer(lambda: monitor.stop())
+
+# Best explained at http://stackoverflow.com/a/10806465/1989056
+@pytest.mark.tryfirst
+def pytest_runtest_makereport(item, call, __multicall__):
+    rep = __multicall__.execute()
+    rep.sections.append(("Redis MONITOR Output", item._redis_monitor.stop()))
+    return rep
 
 @pytest.fixture
 def redis_server(request):
@@ -128,15 +135,11 @@ class RedisMonitor:
         self._thread.daemon = True
         self._thread.start()
 
-    def stop(self, dump_buffer = True, join = True):
+    def stop(self, join = True):
         self._alive = False
         self._thread.join()
 
-        if dump_buffer:
-            print "--- Dumping Redis MONITOR Output ---"
-            self._output_buffer.seek(0)
-            for i in self._output_buffer:
-                print i
+        return self._output_buffer.getvalue()
 
     def _monitor_thread_main(self):
         # A regex that can pull out the DB number form a line of output from
