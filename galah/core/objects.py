@@ -54,6 +54,12 @@ class NodeID(Model):
     machine = UnicodeField()
     local = IntegralField(bounds = (0, None))
 
+    def __str__(self):
+        # This is to give us a little bit of type-checking goodness where
+        # NodeID's are serialized because it forces us to use .serialize()
+        # rather than just using str() which will work on nearly every type.
+        raise TypeError("__str__ is not supported for NodeID objects.")
+
     # Other core objects should not necessarily have a serialize function. If
     # the object can be stored as JSON use a JSON serializer directly instead.
     # The NodeID needs to be serialized a particular way thus these functions.
@@ -107,12 +113,4 @@ class NodeID(Model):
         result.validate()
 
         return result
-
-class VMFactory(Model):
-    STATUS_IDLE = 0
-    STATUS_CREATING = 1
-    STATUS_DESTROYING = 2
-
-    status = IntegralField(bounds = (0, 2))
-    vm_id = UnicodeField(nullable = True)
 

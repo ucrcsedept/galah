@@ -76,12 +76,12 @@ class RedisConnection:
                 self._scripts[k] = script_obj
 
     def vmfactory_register(self, vmfactory_id, _hints = None):
-        INITIAL_DATA = VMFactoryNode(
+        INITIAL_DATA = VMFactory(
             currently_destroying = u"",
             currently_creating = u""
         )
 
-        rv = self._redis.hsetnx("vmfactory_nodes", str(vmfactory_id),
+        rv = self._redis.hsetnx("vmfactory_nodes", vmfactory_id.serialize(),
             galah.common.marshal.dumps(INITIAL_DATA.to_dict()))
 
         # hsetnx will only make the change if the field did not exist to
@@ -90,23 +90,17 @@ class RedisConnection:
         return rv == 1
 
     def vmfactory_unregister(self, vmfactory_id, _hints = None):
-        dirty_vm_id = self._scripts["vmfactory_grab:check_dirty"](
+        rv = self._scripts["vmfactory_unregister:unregister"](
             keys = [
-                "%s_dirty_vms" % (vmfactory_id.machine, ),
-                "vmfactory_nodes"
+                "vmfactory_nodes",
+                "%s_dirty_vms" % (vmfactory_id.machine, )
             ],
-            args = [str(vmfactory_id)]
+            args = [vmfactory_id.serialize()]
         )
-        if dirty_vm_id == -1:
-            raise objects.IDNotRegistered(vmfactory_id)
-        elif dirty_vm_id == -2:
-            raise objects.CoreError("vmfactory is busy")
-        elif dirty_vm_id != "":
-            # This will be the popped VM's ID.
-            return objects.VirtualMachineID.deserialize(dirty_vm_id)
 
-        # If a deletion was actually performed, redis will return 1, otherwise
-        # it will return 0.
+        # Our script will return 1 if the vmfactory was registered and 0
+        # otherwise. Error conditions will be transformed into exceptions by
+        # pyredis automatically.
         return rv == 1
 
     def vmfactory_grab(self, vmfactory_id, _hints = None):

@@ -1,6 +1,7 @@
 ----script vmfactory_unregister:unregister
 -- keys = (vmfactory_nodes, dirty_vms_queue), args = (vmfactory_id)
--- Returns 0 if the vmfactory wasn't registered, -1 if the vmfactory is
+-- Returns 0 if the vmfactory wasn't registered, 1 if it was registered and
+--     was succesfully unregistered.
 
 -- Get and decode the vmfactory object
 local vmfactory_json = redis.call("hget", KEYS[1], ARGV[1])
@@ -10,25 +11,11 @@ if vmfactory_json == false then
 end
 local vmfactory = cjson.decode(vmfactory_json)
 
--- Both of these fields should not have a value (one or the other should). If
--- both of them do something weird is going on.
-if (vmfactory["currently_creating"] ~= "" and
-        vmfactory["currently_destroying"] ~= "") then
-    return -1
-end
-
--- If we were in the middle of creating a VM but there was no ID associated
--- with it yet we won't be able to properly clean the machine. Not sure what
--- the best course of action will be in this case.
-if vmfactory["currently_creating"] == "ID_NOT_DETERMINED" then
-    redis.call("hdel", "vmfactory_nodes", ARGV[1])
-    return -2
-end
-
 -- If we were creating or destroying a VM, make note so we can add it to the
 -- queue of dirty vms.
 local recovered_vm = nil
-if vmfactory["currently_creating"] ~= "" then
+if (vmfactory["currently_creating"] ~= "" and
+        vmfactory["currently_creating"] ~= "ID_NOT_DETERMINED") then
     recovered_vm = vmfactory["currently_creating"]
 elseif vmfactory["currently_destroying"] ~= "" then
     recovered_vm = vmfactory["currently_destroying"]

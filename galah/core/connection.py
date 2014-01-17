@@ -294,14 +294,14 @@ class Connection:
         Unregisters a vmfactory.
 
         All vmfactories should call this function when they are shutting
-        down (even if they are exiting on an error or failure). Any work
-        the vmfactory was assigned will be put back into the correct
-        queueus.
+        down (even if they are exiting on an error or failure). Any VMs the
+        VMFactory was working with will be queued for deletion (if possible).
 
         :param vmfactory_id: The factory's NodeID.
 
-        :returns: True if the vmfactory was already registered (and
-            therefore succesfully unregistered), False otherwise.
+        :returns: True if the vmfactory was already registered (and therefore
+            succesfully unregistered), False if the vmfactory was not already
+            registered.
 
         """
 

@@ -15,9 +15,15 @@ pytest_plugins = ("galah.tests.core.pytest_redis", )
 
 class TestVMFactory:
     def test_registration(self, redis_server):
+        """
+        Basic test to ensure that registering and unregistering VMs work to
+        some degree.
+
+        """
+
         con = RedisConnection(redis_server)
 
-        my_id = NodeID(machine = u"localhost", local = u"pytest")
+        my_id = NodeID(machine = u"localhost", local = 0)
 
         # Try to unregister out not registered node
         assert not con.vmfactory_unregister(my_id)
