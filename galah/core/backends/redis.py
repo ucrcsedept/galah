@@ -88,8 +88,7 @@ class RedisConnection:
             raise TypeError("machine must be a unicode string, got %s" %
                 (repr(machine), ))
 
-        rv = self._redis.hincrby("machine_rolling_ids",
-            machine.encode("utf_8"), 1)
+        rv = self._redis.incr("LastID/%s" % (machine.encode("utf_8"), ))
 
         result = objects.NodeID(machine = machine, local = rv)
         result.validate()
