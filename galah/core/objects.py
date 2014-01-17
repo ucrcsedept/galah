@@ -37,7 +37,7 @@ class IDNotRegistered(CoreError):
         self.unregistered_id = unregistered_id
 
     def __str__(self):
-        "Unregistered id '%s'" % (str(self.unregistered_id), )
+        return "Unregistered id '%s'" % (self.unregistered_id.serialize(), )
 
 class NodeID(Model):
     """
