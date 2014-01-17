@@ -11,9 +11,8 @@ import inspect
 import pytest
 import redis
 
-def pytest_runtest_call(item):
+def pytest_runtest_setup(item):
     using_redis = "redis_server" in inspect.getargspec(item.function).args
-
     if using_redis:
         raw_config = item.config.getoption("--redis")
         if not raw_config:
@@ -24,11 +23,11 @@ def pytest_runtest_call(item):
         monitor = RedisMonitor(host = config.host, port = config.port,
             db = config.db_range[0])
 
-    try:
-        item.runtest()
-    finally:
-        if using_redis:
-            monitor.stop()
+        item._redis_monitor = monitor
+
+def pytest_runtest_teardown(item):
+    if hasattr(item, "_redis_monitor"):
+        item._redis_monitor.stop()
 
 @pytest.fixture
 def redis_server(request):
@@ -126,6 +125,7 @@ class RedisMonitor:
 
         self._alive = True # Flag for thread to keep going
         self._thread = threading.Thread(target = self._monitor_thread_main)
+        self._thread.daemon = True
         self._thread.start()
 
     def stop(self, dump_buffer = True, join = True):
