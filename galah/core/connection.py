@@ -359,6 +359,52 @@ class Connection:
         :returns: Returns True if a clean VM should be created, or a
             VirtualMachineID specifying the VM to be destroyed.
 
+        :raises IDNotRegistered:
+        :raises CoreError: If the vmfactory already has work assigned to it.
+
+        """
+
+        pass
+
+    def vmfactory_note_clean_id(self, vmfactory_id, clean_id, _hints = None):
+        """
+        Notes the name of the clean VM that the vmfactory is currently
+        creating on the backend so it can be queued for deletion if the
+        vmfactory crashes.
+
+        This function should be called shortly after vmfactory_grab() returns
+        True.
+
+        :param vmfactory_id: The vmfactory that is creating the VM.
+        :param clean_id: The ID of the clean virtual machine to note.
+
+        :returns: Always returns True.
+
+        :raises IDNotRegistered:
+        :raises CoreError: If the vmfactory is not creating a virtual machine
+            at this time (according to the backend).
+
+        """
+
+        pass
+
+
+    # oooooo     oooo ooo        ooooo
+    #  `888.     .8'  `88.       .888'
+    #   `888.   .8'    888b     d'888   .oooo.o
+    #    `888. .8'     8 Y88. .P  888  d88(  "8
+    #     `888.8'      8  `888'   888  `"Y88b.
+    #      `888'       8    Y     888  o.  )88b
+    #       `8'       o8o        o888o 8""888P'
+
+    def vm_mark_dirty(self, vm_id, _hints = None):
+        """
+        Queues a virtual machine for deletion.
+
+        :param vm_id: The virtual machine's ID (a unicode string).
+
+        :returns: True.
+
         """
 
         pass

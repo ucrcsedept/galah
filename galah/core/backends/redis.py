@@ -75,6 +75,14 @@ class RedisConnection:
                 script_obj = self._redis.register_script(v.getvalue())
                 self._scripts[k] = script_obj
 
+    #                             .o8
+    #                            "888
+    # ooo. .oo.    .ooooo.   .oooo888   .ooooo.   .oooo.o
+    # `888P"Y88b  d88' `88b d88' `888  d88' `88b d88(  "8
+    #  888   888  888   888 888   888  888ooo888 `"Y88b.
+    #  888   888  888   888 888   888  888    .o o.  )88b
+    # o888o o888o `Y8bod8P' `Y8bod88P" `Y8bod8P' 8""888P'
+
     def node_allocate_id(self, machine, _hints = None):
         if not isinstance(machine, unicode):
             raise TypeError("machine must be a unicode string, got %s" %
@@ -88,10 +96,20 @@ class RedisConnection:
 
         return result
 
+    #  .o88o.                         .
+    #  888 `"                       .o8
+    # o888oo   .oooo.    .ooooo.  .o888oo  .ooooo.  oooo d8b oooo    ooo
+    #  888    `P  )88b  d88' `"Y8   888   d88' `88b `888""8P  `88.  .8'
+    #  888     .oP"888  888         888   888   888  888       `88..8'
+    #  888    d8(  888  888   .o8   888 . 888   888  888        `888'
+    # o888o   `Y888""8o `Y8bod8P'   "888" `Y8bod8P' d888b        .8'
+    #                                                        .o..P'
+    #                                                        `Y8P'
+
     def vmfactory_register(self, vmfactory_id, _hints = None):
         INITIAL_DATA = VMFactory(
-            currently_destroying = u"",
-            currently_creating = u""
+            currently_destroying = None,
+            currently_creating = None
         )
 
         rv = self._redis.hsetnx("vmfactory_nodes", vmfactory_id.serialize(),
@@ -123,6 +141,11 @@ class RedisConnection:
         # The number of seconds to wait between each poll
         poll_every = _hints.get("poll_every", 2)
 
+        # The maximum number of clean virtual machines that can exist. Should
+        # be typically pulled down from the configuration but can be
+        # overridden during testing.
+        max_clean_vms = _hints.get("max_clean_vms", 3)
+
         while True:
             # This will get a VM off of the dirty VM queue (returning ""
             # if there is no such dirty VM), set this vmfactory's
@@ -133,7 +156,7 @@ class RedisConnection:
                     "%s_dirty_vms" % (vmfactory_id.machine, ),
                     "vmfactory_nodes"
                 ],
-                args = [str(vmfactory_id)]
+                args = [vmfactory_id.serialize()]
             )
             if dirty_vm_id == -1:
                 raise objects.IDNotRegistered(vmfactory_id)
@@ -141,14 +164,14 @@ class RedisConnection:
                 raise objects.CoreError("vmfactory is busy")
             elif dirty_vm_id != "":
                 # This will be the popped VM's ID.
-                return objects.VirtualMachineID.deserialize(dirty_vm_id)
+                return dirty_vm_id.decode("utf_8")
 
             clean_vm_id = self._scripts["vmfactory_grab:check_clean"](
                 keys = [
                     "%s_dirty_vms" % (vmfactory_id.machine, ),
                     "vmfactory_nodes"
                 ],
-                args = [str(vmfactory_id), 3]
+                args = [vmfactory_id.serialize(), max_clean_vms]
             )
             if clean_vm_id == -1:
                 raise objects.IDNotRegistered(vmfactory_id)
@@ -158,3 +181,47 @@ class RedisConnection:
                 return True
 
             time.sleep(poll_every)
+
+    def vmfactory_note_clean_id(self, vmfactory_id, clean_id, _hints = None):
+        if not isinstance(clean_id, unicode):
+            raise TypeError("clean_id must be of type unicode, got %s" %
+                (repr(clean_id), ))
+
+        encoded_clean_id = clean_id.encode("utf_8")
+        if encoded_clean_id == "":
+            raise ValueError("clean_id cannot be the empty string.")
+
+        rv = self._scripts["vmfactory_note_clean_id:note"](
+            keys = ["vmfactory_nodes"],
+            args = [vmfactory_id.serialize(), encoded_clean_id]
+        )
+        if rv == -1:
+            raise objects.IDNotRegistered(vmfactory_id)
+        elif rv == -2:
+            raise objects.CoreError("vmfactory is not currently creating a vm")
+        elif rv == -3:
+            raise objects.CoreError("vmfactory already named its vm")
+
+        return True
+
+    # oooooo     oooo ooo        ooooo
+    #  `888.     .8'  `88.       .888'
+    #   `888.   .8'    888b     d'888   .oooo.o
+    #    `888. .8'     8 Y88. .P  888  d88(  "8
+    #     `888.8'      8  `888'   888  `"Y88b.
+    #      `888'       8    Y     888  o.  )88b
+    #       `8'       o8o        o888o 8""888P'
+
+    def vm_mark_dirty(self, vmfactory_id, vm_id, _hints = None):
+        if not isinstance(vm_id, unicode):
+            raise TypeError("vm_id must be a unicode string, got %s." %
+                (repr(vm_id), ))
+
+        vm_id_encoded = vm_id.encode("utf_8")
+        if vm_id_encoded == "":
+            raise ValueError("vm_id cannot be the empty string")
+
+        self._redis.lpush("%s_dirty_vms" % (vmfactory_id.machine, ),
+            vm_id_encoded)
+
+        return True

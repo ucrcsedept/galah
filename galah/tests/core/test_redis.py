@@ -54,3 +54,68 @@ class TestVMFactory:
 
         # Unregister our node again
         assert not con.vmfactory_unregister(my_id)
+
+    def test_grab_clean(self, redis_server):
+        """
+        Tests grab to ensure that it will return True when there are no queued
+        VMs waiting for deletion.
+
+        """
+
+        con = RedisConnection(redis_server)
+
+        my_id = NodeID(machine = u"localhost", local = 0)
+        assert con.vmfactory_register(my_id)
+
+        grab_hints = {"max_clean_vms": 2}
+
+        # This should tell us to make a clean virtual machine
+        assert con.vmfactory_grab(my_id, grab_hints)
+
+        # The last grab should have assigned us the work, so this should error
+        # out.
+        with pytest.raises(CoreError):
+            con.vmfactory_grab(my_id, grab_hints)
+
+    def test_grab_dirty(self, redis_server):
+        """
+        This test ensures that we get a dirty VM from grab if there is one
+        queued.
+
+        """
+
+        con = RedisConnection(redis_server)
+
+        my_id = NodeID(machine = u"localhost", local = 0)
+        assert con.vmfactory_register(my_id)
+
+        grab_hints = {"max_clean_vms": 2}
+
+        fake_vm_id = u"101"
+        assert con.vm_mark_dirty(my_id, fake_vm_id)
+
+        fake_vm_id2 = u"102"
+        assert con.vm_mark_dirty(my_id, fake_vm_id)
+
+        dirty_vm = con.vmfactory_grab(my_id, grab_hints)
+        assert dirty_vm == fake_vm_id
+        assert isinstance(dirty_vm, unicode)
+
+        # We are already assigned work so this should fail
+        with pytest.raises(CoreError):
+            con.vmfactory_grab(my_id, grab_hints)
+
+    def test_workflow(self, redis_server):
+        con = RedisConnection(redis_server)
+
+        my_id = NodeID(machine = u"localhost", local = 0)
+        assert con.vmfactory_register(my_id)
+
+        grab_hints = {"max_clean_vms": 2}
+
+        # This should tell us to make a clean virtual machine
+        assert con.vmfactory_grab(my_id, grab_hints)
+
+        fake_vm_id = u"101"
+        assert con.vmfactory_note_clean_id(my_id, fake_vm_id)
+
