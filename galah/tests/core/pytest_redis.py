@@ -33,7 +33,11 @@ def pytest_runtest_setup(item):
 @pytest.mark.tryfirst
 def pytest_runtest_makereport(item, call, __multicall__):
     rep = __multicall__.execute()
-    rep.sections.append(("Redis MONITOR Output", item._redis_monitor.stop()))
+
+    if call.when == "call":
+        rep.sections.append(
+            ("Redis MONITOR Output", item._redis_monitor.stop()))
+
     return rep
 
 @pytest.fixture
