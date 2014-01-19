@@ -67,7 +67,18 @@ class VMFactory(mangoengine.Model):
 
     """
 
-class RedisConnection:
+class _Return(Exception):
+    """
+    An exception raised from within functions passed to
+    ``redis.StricRedis.transaction()`` that signifies that the calling
+    function should return a particular value.
+
+    """
+
+    def __init__(self, what):
+        self.what = what
+
+class RedisConnection(object):
     # redis_connection should only ever be specified during testing
     def __init__(self, redis_connection = None):
         if redis_connection is None:
@@ -149,15 +160,14 @@ class RedisConnection:
 
     def vmfactory_unregister(self, vmfactory_id, _hints = None):
         vmfactory_key = "NodeInfo/%s" % (vmfactory_id.serialize(), )
-        with self._redis.pipeline() as pipe:
-            # Make sure nobody does anything with the vmfactory while we're
-            # doing our thing.
-            pipe.watch(vmfactory_key)
 
+        # This function performs the transaction. See Redis-Py's documentation
+        # for more information on this pattern.
+        def unregister(pipe):
             # Pull the vmfactory object from the database
             vmfactory_serialized = pipe.get(vmfactory_key)
             if vmfactory_serialized is None:
-                return False
+                raise _Return(False)
             vmfactory = VMFactory.from_dict(
                 galah.common.marshal.loads(vmfactory_serialized))
 
@@ -177,9 +187,12 @@ class RedisConnection:
             # Remove the reference to the VM factory.
             pipe.delete(vmfactory_key)
 
-            pipe.execute()
+        try:
+            self._redis.transaction(unregister, vmfactory_key)
+        except _Return as e:
+            return e.what
 
-            return True
+        return True
 
     def vmfactory_grab(self, vmfactory_id, _hints = None):
         if _hints is None:
