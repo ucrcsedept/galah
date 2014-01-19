@@ -34,8 +34,38 @@ class RedisError(objects.BackendError):
         return "%s (Redis returned %d)" % (self.description, self.return_value)
 
 class VMFactory(mangoengine.Model):
-    currently_destroying = mangoengine.UnicodeField(nullable = True)
-    currently_creating = mangoengine.UnicodeField(nullable = True)
+    STATE_IDLE = 0
+    """The vmfactory is waiting for work."""
+
+    STATE_CREATING_NOID = 1
+    """
+    The vmfactory is creating a new virtual machine and has not yet assigned
+    an ID for it yet.
+
+    """
+
+    STATE_CREATING = 2
+    """The vmfactory is creating a new virtual machine."""
+
+    STATE_DESTROYING = 3
+    """The vmfactory is destroying a dirty virtual machine."""
+
+    state = mangoengine.IntegralField(bounds = (0, 3))
+    """The state of the vmfactory."""
+
+    vm_id = mangoengine.UnicodeField(nullable = True)
+    """
+    The ID of the VM the vmfactory is working with.
+
+    When in ``STATE_CREATING``, this is the ID of the virtual machine that
+    is being created and prepared.
+
+    When in ``STATE_DESTROYING``, this is the ID of the virtual machine that
+    is being destroyed.
+
+    In all other states this attribute should be None.
+
+    """
 
 class RedisConnection:
     # redis_connection should only ever be specified during testing
@@ -106,32 +136,50 @@ class RedisConnection:
     #                                                        `Y8P'
 
     def vmfactory_register(self, vmfactory_id, _hints = None):
-        INITIAL_DATA = VMFactory(
-            currently_destroying = None,
-            currently_creating = None
+        new_factory = VMFactory(state = VMFactory.STATE_IDLE, vm_id = None)
+        new_factory.validate()
+        new_factory_serialized = galah.common.marshal.dumps(
+            new_factory.to_dict())
+
+        rv = self._redis.setnx(
+            "NodeInfo/%s" % (vmfactory_id.serialize(), ),
+            new_factory_serialized
         )
-
-        rv = self._redis.hsetnx("vmfactory_nodes", vmfactory_id.serialize(),
-            galah.common.marshal.dumps(INITIAL_DATA.to_dict()))
-
-        # hsetnx will only make the change if the field did not exist to
-        # begin with. If it did exist, it will return 0, otherwise it will
-        # return 1.
         return rv == 1
 
     def vmfactory_unregister(self, vmfactory_id, _hints = None):
-        rv = self._scripts["vmfactory_unregister:unregister"](
-            keys = [
-                "vmfactory_nodes",
-                "%s_dirty_vms" % (vmfactory_id.machine, )
-            ],
-            args = [vmfactory_id.serialize()]
-        )
+        vmfactory_key = "NodeInfo/%s" % (vmfactory_id.serialize(), )
+        with self._redis.pipeline() as pipe:
+            # Make sure nobody does anything with the vmfactory while we're
+            # doing our thing.
+            pipe.watch(vmfactory_key)
 
-        # Our script will return 1 if the vmfactory was registered and 0
-        # otherwise. Error conditions will be transformed into exceptions by
-        # pyredis automatically.
-        return rv == 1
+            # Pull the vmfactory object from the database
+            vmfactory_serialized = pipe.get(vmfactory_key)
+            if vmfactory_serialized is None:
+                return False
+            vmfactory = VMFactory.from_dict(
+                galah.common.marshal.loads(vmfactory_serialized))
+
+            # All the Redis calls from here-on will be queued and executed
+            # all at once in a transaction.
+            pipe.multi()
+
+            if vmfactory.state in (VMFactory.STATE_CREATING,
+                    VMFactory.STATE_DESTROYING):
+                # Destroy any VM it was working on.
+                pipe.lpush(
+                    "DirtyVMQueue/%s" %
+                        (vmfactory_id.machine.encode("utf_8"), ),
+                    vmfactory.vm_id.encode("utf_8")
+                )
+
+            # Remove the reference to the VM factory.
+            pipe.delete(vmfactory_key)
+
+            pipe.execute()
+
+            return True
 
     def vmfactory_grab(self, vmfactory_id, _hints = None):
         if _hints is None:
@@ -202,6 +250,40 @@ class RedisConnection:
             raise objects.CoreError("vmfactory already named its vm")
 
         return True
+
+    def vmfactory_finish(self, vmfactory_id, _hints = None):
+        with self._redis.pipeline() as pipe:
+            pipe.watch("vmfactory_nodes", )
+
+        # ----script vmfactory_finish:finish
+        # -- keys = (vmfactory_nodes, clean_vms_queue), args = (vmfactory_id)
+        # -- Returns 1 on success, -1 if the vmfactory wasn't registered, -2 if the
+        # --     vmfactory was not assigned work, or -3 if the vmfactory has not
+        # --     given an ID to a VM it was creating.
+
+        # -- Get and decode the vmfactory object
+        # local vmfactory_json = redis.call("hget", KEYS[1], ARGV[1])
+        # if vmfactory_json == false then
+        #     return -1
+        # end
+        # local vmfactory = cjson.decode(vmfactory_json)
+
+        # if vmfactory["currently_creating"] ~= cjson.null then
+        #     if vmfactory["currently_creating"] == "" then
+        #         return -3
+        #     end
+
+        #     redis.call("lpush", KEYS[2], vmfactory["currently_creating"])
+        #     vmfactory["currently_creating"] = cjson.null
+        # else if vmfactory["currently_destroying"] ~= cjson.null then
+        #     vmfactory["currently_destroying"] = cjson.null
+        # else
+        #     return -2
+        # end
+
+        # redis.call("hset", KEYS[1], ARGV[1], cjson.encode(vmfactory))
+
+        # return 1
 
     # oooooo     oooo ooo        ooooo
     #  `888.     .8'  `88.       .888'

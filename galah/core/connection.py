@@ -388,6 +388,23 @@ class Connection:
 
         pass
 
+    def vmfactory_finish(self, vmfactory_id, _hints = None):
+        """
+        If the vmfactory was creating a VM, add that VM into the clean VM
+        queue, else if the vmfactory was destroying a VM, free the vmfactory
+        for more work.
+
+        :param vmfactory_id: The vmfactory to mark as finished.
+
+        :returns: Always returns True.
+
+        :raises IDNotRegistered:
+        :raises CoreError: If the vmfactory was not performing work or it
+            never assigned a name to its clean VM.
+
+        """
+
+        pass
 
     # oooooo     oooo ooo        ooooo
     #  `888.     .8'  `88.       .888'

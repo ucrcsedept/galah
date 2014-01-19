@@ -6,7 +6,6 @@
 -- Get and decode the vmfactory object
 local vmfactory_json = redis.call("hget", KEYS[1], ARGV[1])
 if vmfactory_json == false then
-    -- The vmfactory wasn't registered, nothing to do
     return -1
 end
 local vmfactory = cjson.decode(vmfactory_json)
@@ -19,40 +18,6 @@ end
 
 vmfactory["currently_creating"] = ARGV[2]
 redis.call("hset", KEYS[1], ARGV[1], cjson.encode(vmfactory))
-
-return 1
-
-----script vmfactory_unregister:unregister
--- keys = (vmfactory_nodes, dirty_vms_queue), args = (vmfactory_id)
--- Returns 0 if the vmfactory wasn't registered, 1 if it was registered and
---     was succesfully unregistered.
-
--- Get and decode the vmfactory object
-local vmfactory_json = redis.call("hget", KEYS[1], ARGV[1])
-if vmfactory_json == false then
-    -- The vmfactory wasn't registered, nothing to do
-    return 0
-end
-local vmfactory = cjson.decode(vmfactory_json)
-
--- If we were creating or destroying a VM, make note so we can add it to the
--- queue of dirty vms.
-local recovered_vm = nil
-if (vmfactory["currently_creating"] ~= cjson.null and
-        vmfactory["currently_creating"] ~= "") then
-    recovered_vm = vmfactory["currently_creating"]
-elseif vmfactory["currently_destroying"] ~= cjson.null then
-    recovered_vm = vmfactory["currently_destroying"]
-end
-
--- Add the VM to the dirty queue (we don't need to decrement the clean VM
--- count in either case).
-if recovered_vm ~= nil then
-    redis.call("lpush", KEYS[2], recovered_vm)
-end
-
--- Actually delete the vmfactory from Redis
-redis.call("hdel", "vmfactory_nodes", ARGV[1])
 
 return 1
 
