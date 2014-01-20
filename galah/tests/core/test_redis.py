@@ -116,6 +116,9 @@ class TestVMFactory:
         # This should tell us to make a clean virtual machine
         assert con.vmfactory_grab(my_id, grab_hints)
 
+        # We'll pretend we created a machine and named it something
         fake_vm_id = u"101"
         assert con.vmfactory_note_clean_id(my_id, fake_vm_id)
+
+
 

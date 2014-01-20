@@ -164,6 +164,8 @@ class RedisConnection(object):
         # This function performs the transaction. See Redis-Py's documentation
         # for more information on this pattern.
         def unregister(pipe):
+            # watch(vmfactory_key)
+
             # Pull the vmfactory object from the database
             vmfactory_serialized = pipe.get(vmfactory_key)
             if vmfactory_serialized is None:
@@ -206,7 +208,78 @@ class RedisConnection(object):
         # overridden during testing.
         max_clean_vms = _hints.get("max_clean_vms", 3)
 
+        vmfactory_key = "NodeInfo/%s" % (vmfactory_id.serialize(), )
+
+        # Will check to see if there is a dirty virtual machine waiting to be
+        # deleted. If there is no such VM, _Return(None) is raised. If there
+        # is one, it can be retrieved by examining the first result in the
+        # transaction.
+        dirty_queue_key = "DirtyVMs/%s" % (
+            vmfactory_id.machine.encode("utf_8"), )
+        def check_dirty(pipe):
+            # watch(dirty_queue_kye, vmfactory_key)
+
+            vmfactory_json = pipe.get(vmfactory_key)
+            if vmfactory_json is None:
+                raise IDNotRegistered(vmfactory_id)
+            vmfactory = galah.common.marshal.loads(vmfactory_json)
+            if vmfactory.state != VMFactory.STATE_IDLE:
+                raise CoreError("vmfactory is busy")
+
+            # This will peek at the last element in the list
+            dirty_vm_id = pipe.lindex(dirty_queue_key, -1)
+            if dirty_vm_id is None:
+                raise _Return(None)
+
+            # All following Redis calls will be buffered and executed at once
+            # as a transaction.
+            pipe.multi()
+
+            # Actually pop the last item from the dirty vm queue
+            pipe.rpop(dirty_queue_key)
+
+            # Change the VM factory's state
+            vmfactory.state = VMFactory.STATE_DESTROYING
+            vmfactory.vm_id = dirty_vm_id
+            pipe.set(vmfactory_key, galah.common.marshal.dumps(vmfactory))
+
+        # If this transaction does not raise _Return(None) then the vmfactory
+        # should begin producing a new clean virtual machine.
+        clean_vm_count_key = "CleanVMCount/%s" % (
+            vmfactory_id.machine.encode("utf_8"), )
+        def check_clean(pipe):
+            # watch(clean_vm_count_key, vmfactory_key)
+
+            num_clean_vms = pipe.get(clean_vm_count_key)
+            if num_clean_vms is not None and
+                    int(num_clean_vms) >= max_clean_vms):
+                raise _Return(None)
+
+            vmfactory_json = pipe.get(vmfactory_key)
+            if vmfactory_json is None:
+                raise IDNotRegistered(vmfactory_id)
+            vmfactory = galah.common.marshal.loads(vmfactory_json)
+            if vmfactory.state != VMFactory.STATE_IDLE:
+                raise CoreError("vmfactory is busy")
+
+            # All following calls to redis will be queued as part of the
+            # transaction.
+            pipe.multi()
+
+            vmfactory.state = VMFactory.STATE_CREATING_NOID
+            pipe.set(vmfactory_key, galah.common.marshal.dumps(vmfactory))
+
+            # We increment this before we actually create the VM so other
+            # vmfactories don't end up making more virtual machines than
+            # necessary.
+            pipe.incr(clean_vm_count_key)
+
         while True:
+            try:
+                self._redis.transaction(unregister, vmfactory_key)
+            except _Return as e:
+                return e.what
+
             # This will get a VM off of the dirty VM queue (returning ""
             # if there is no such dirty VM), set this vmfactory's
             # currently_destroying field to the VM, and then return the
