@@ -21,36 +21,6 @@ redis.call("hset", KEYS[1], ARGV[1], cjson.encode(vmfactory))
 
 return 1
 
-----script vmfactory_grab:check_dirty
--- keys = (dirty_vms_queue, vmfactory_nodes), args = (vmfactory_id)
--- returns -1 if the vmfactory isn't registered, -2 if the vmfactory
---     is already destroying a vm, "" if no vm needs destroying, or
---     a UTF-8 encoded string containing the serialized VirtualMachineID
---     of the vm that needs destroying.
-
-local dirty_vm_id = redis.call("rpop", KEYS[1])
-if dirty_vm_id == false then
-    return ""
-end
-
--- Get and decode the vmfactory object
-local vmfactory_json = redis.call("hget", KEYS[2], ARGV[1])
-if vmfactory_json == false then
-    return -1
-end
-local vmfactory = cjson.decode(vmfactory_json)
-
--- Make sure we're not in the middle of destroying a VM already
-if vmfactory["currently_destroying"] ~= cjson.null then
-    return -2
-end
-
--- Set the currently_destroying key and persist the change
-vmfactory["currently_destroying"] = dirty_vm_id
-redis.call("hset", KEYS[2], ARGV[1], cjson.encode(vmfactory))
-
-return dirty_vm_id
-
 ----script vmfactory_grab:check_clean
 -- keys = (dirty_vms_queue, vmfactory_nodes)
 -- args = (vmfactory_id, num_desired_clean_vms)
