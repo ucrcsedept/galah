@@ -73,6 +73,9 @@ class _Return(Exception):
     ``redis.StricRedis.transaction()`` that signifies that the calling
     function should return a particular value.
 
+    This is not an exception in the traditional sense, rather it is a tool
+    used to send messages out of the transaction functions.
+
     """
 
     def __init__(self, what):
@@ -91,30 +94,6 @@ class RedisConnection(object):
 
         # This will contain all of our registered scripts.
         self._scripts = {}
-
-        # Open the LUA scripts (they are ASCII encoded because LUA isn't a
-        # big fan of unicode).
-        with pkg_resources.resource_stream("galah.core.backends",
-                "redis-scripts.lua") as script_file:
-            # Each script is delimited by a line starting with this string
-            SCRIPT_DELIMITER = "----script "
-
-            # Iterate through every line in the script file and collect each
-            # script (don't register them with Redis yet).
-            current_script = None # Name of the current script
-            raw_scripts = {}
-            for i in script_file:
-                # If we found a new script
-                if i.startswith(SCRIPT_DELIMITER):
-                    current_script = i[len(SCRIPT_DELIMITER):].strip()
-                    raw_scripts[current_script] = StringIO.StringIO()
-                elif current_script is not None:
-                    raw_scripts[current_script].write(i + "\n")
-
-            # Register the scripts with Redis
-            for k, v in raw_scripts.items():
-                script_obj = self._redis.register_script(v.getvalue())
-                self._scripts[k] = script_obj
 
     #                             .o8
     #                            "888
@@ -221,7 +200,7 @@ class RedisConnection(object):
 
             vmfactory_json = pipe.get(vmfactory_key)
             if vmfactory_json is None:
-                raise IDNotRegistered(vmfactory_id)
+                raise objects.IDNotRegistered(vmfactory_id)
             vmfactory = VMFactory.from_dict(
                 galah.common.marshal.loads(vmfactory_json))
             if vmfactory.state != VMFactory.STATE_IDLE:
@@ -259,7 +238,7 @@ class RedisConnection(object):
 
             vmfactory_json = pipe.get(vmfactory_key)
             if vmfactory_json is None:
-                raise IDNotRegistered(vmfactory_id)
+                raise objects.IDNotRegistered(vmfactory_id)
             vmfactory = VMFactory.from_dict(
                 galah.common.marshal.loads(vmfactory_json))
             if vmfactory.state != VMFactory.STATE_IDLE:
@@ -287,8 +266,8 @@ class RedisConnection(object):
                 # *not* start creating a new virtual machine.
                 assert e.what is None
             else:
-                # The check_dirty function raises _Return(None) if there
-                # is no dirty VM waiting for deletion.
+                # The first result of the transaction will be the ID of the
+                # VM to destroy.
                 return result[0].decode("utf_8")
 
             try:
@@ -299,8 +278,9 @@ class RedisConnection(object):
                 # *not* start creating a new virtual machine.
                 assert e.what is None
             else:
-                # The first result of the transaction will be the ID of the
-                # virtual machine to destroy.
+                # If the transaction didn't raise an exception, that means
+                # everything went fine and we should signal to the VM
+                # factory to begin creating a new VM.
                 return True
 
             time.sleep(poll_every)
@@ -310,20 +290,32 @@ class RedisConnection(object):
             raise TypeError("clean_id must be of type unicode, got %s" %
                 (repr(clean_id), ))
 
-        encoded_clean_id = clean_id.encode("utf_8")
-        if encoded_clean_id == "":
-            raise ValueError("clean_id cannot be the empty string.")
+        vmfactory_key = "NodeInfo/%s" % (vmfactory_id.serialize(), )
 
-        rv = self._scripts["vmfactory_note_clean_id:note"](
-            keys = ["vmfactory_nodes"],
-            args = [vmfactory_id.serialize(), encoded_clean_id]
-        )
-        if rv == -1:
-            raise objects.IDNotRegistered(vmfactory_id)
-        elif rv == -2:
-            raise objects.CoreError("vmfactory is not currently creating a vm")
-        elif rv == -3:
-            raise objects.CoreError("vmfactory already named its vm")
+        def note_clean(pipe):
+            # watch(vmfactory_key)
+
+            vmfactory_json = pipe.get(vmfactory_key)
+            if vmfactory_json is None:
+                raise objects.IDNotRegistered(vmfactory_id)
+            vmfactory = VMFactory.from_dict(
+                galah.common.marshal.loads(vmfactory_json))
+
+            if vmfactory.state != VMFactory.STATE_CREATING_NOID:
+                raise objects.CoreError(
+                    "vmfactory is not creating a virtual machine that does "
+                    "not yet have an ID"
+                )
+
+            pipe.multi()
+
+            vmfactory.state = VMFactory.STATE_CREATING
+            vmfactory.vm_id = clean_id.encode("utf_8")
+            pipe.set(vmfactory_key,
+                galah.common.marshal.dumps(vmfactory.to_dict()))
+
+        # This will raise an appropriate exception if any errors occur
+        self._redis.transaction(note_clean, vmfactory_key)
 
         return True
 
