@@ -20,36 +20,3 @@ vmfactory["currently_creating"] = ARGV[2]
 redis.call("hset", KEYS[1], ARGV[1], cjson.encode(vmfactory))
 
 return 1
-
-----script vmfactory_grab:check_clean
--- keys = (dirty_vms_queue, vmfactory_nodes)
--- args = (vmfactory_id, num_desired_clean_vms)
--- returns -1 if vmfactory isn't registered, -2 if vmfactory is already
---     creating a new vm, 0 if no clean vm is needed, 1 if the vmfactory
---     should create a new vm now
-
-local clean_vms_count = redis.call("get", KEYS[1])
-if (clean_vms_count == false or
-        tonumber(clean_vms_count) < tonumber(ARGV[2])) then
-    -- Get and decode the vmfactory object
-    local vmfactory_json = redis.call("hget", KEYS[2], ARGV[1])
-    if vmfactory_json == false then
-        return -1
-    end
-    local vmfactory = cjson.decode(vmfactory_json)
-
-    -- Make sure we're not in the middle of creating a VM already
-    if vmfactory["currently_creating"] ~= cjson.null then
-        return -2
-    end
-
-    -- Set the currently_creating key and persist the change. Note the
-    -- empty string is a placeholder signifying that the ID has not yet been
-    -- determined.
-    vmfactory["currently_creating"] = ""
-    redis.call("hset", KEYS[2], ARGV[1], cjson.encode(vmfactory))
-
-    return 1
-end
-
-return 0

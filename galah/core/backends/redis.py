@@ -260,7 +260,8 @@ class RedisConnection(object):
             vmfactory_json = pipe.get(vmfactory_key)
             if vmfactory_json is None:
                 raise IDNotRegistered(vmfactory_id)
-            vmfactory = galah.common.marshal.loads(vmfactory_json)
+            vmfactory = VMFactory.from_dict(
+                galah.common.marshal.loads(vmfactory_json))
             if vmfactory.state != VMFactory.STATE_IDLE:
                 raise CoreError("vmfactory is busy")
 
@@ -269,7 +270,8 @@ class RedisConnection(object):
             pipe.multi()
 
             vmfactory.state = VMFactory.STATE_CREATING_NOID
-            pipe.set(vmfactory_key, galah.common.marshal.dumps(vmfactory))
+            pipe.set(vmfactory_key,
+                galah.common.marshal.dumps(vmfactory.to_dict()))
 
             # We increment this before we actually create the VM so other
             # vmfactories don't end up making more virtual machines than
@@ -281,27 +283,25 @@ class RedisConnection(object):
                 result = self._redis.transaction(check_dirty,
                     dirty_queue_key, vmfactory_key)
             except _Return as e:
+                # The check_dirty function raises _Return(None) if we should
+                # *not* start creating a new virtual machine.
+                assert e.what is None
+            else:
                 # The check_dirty function raises _Return(None) if there
                 # is no dirty VM waiting for deletion.
+                return result[0].decode("utf_8")
+
+            try:
+                result = self._redis.transaction(check_clean,
+                    clean_vm_count_key, vmfactory_key)
+            except _Return as e:
+                # The check_dirty function raises _Return(None) if we should
+                # *not* start creating a new virtual machine.
                 assert e.what is None
             else:
                 # The first result of the transaction will be the ID of the
                 # virtual machine to destroy.
-                return result[0].decode("utf_8")
-
-            # clean_vm_id = self._scripts["vmfactory_grab:check_clean"](
-            #     keys = [
-            #         "%s_dirty_vms" % (vmfactory_id.machine, ),
-            #         "vmfactory_nodes"
-            #     ],
-            #     args = [vmfactory_id.serialize(), max_clean_vms]
-            # )
-            # if clean_vm_id == -1:
-            #     raise objects.IDNotRegistered(vmfactory_id)
-            # elif clean_vm_id == -2:
-            #     raise objects.CoreError("vmfactory is busy")
-            # elif clean_vm_id == 1:
-            #     return True
+                return True
 
             time.sleep(poll_every)
 
