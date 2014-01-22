@@ -18,7 +18,6 @@ Galah. Reasons for this are
 
 # stdlib
 import json as _json
-import codecs
 
 def dumps(obj):
     """
@@ -35,7 +34,7 @@ def dumps(obj):
     unencoded = _json.dumps(obj, separators = (",", ":"), ensure_ascii = False)
 
     # This will always give us a str object
-    return codecs.encode(unencoded, "utf_8")
+    return unencoded.decode("utf_8")
 
 def loads(raw):
     """
