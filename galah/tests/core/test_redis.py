@@ -159,31 +159,26 @@ class TestVMFactory:
             with pytest.raises(CoreError):
                 con.vmfactory_finish(my_id)
 
-    # def test_workflow_dirty(self, redis_server):
-    #     con = RedisConnection(redis_server)
+    def test_workflow_dirty(self, redis_server):
+        con = RedisConnection(redis_server)
 
-    #     my_id = NodeID(machine = u"localhost", local = 0)
-    #     assert con.vmfactory_register(my_id)
+        my_id = NodeID(machine = UNICODE_TEST_PONY, local = 0)
+        assert con.vmfactory_register(my_id)
 
-    #     grab_hints = {"max_clean_vms": 20}
+        grab_hints = {"max_clean_vms": 3}
 
-    #     fake_vm_id = u"101"
-    #     assert con.vm_mark_dirty(my_id, fake_vm_id)
+        # We should be able to continually perform these operations so we'll
+        # do them ten times here.
+        for i in range(10):
+            fake_vm_id = UNICODE_TEST_SCRIBBLES
+            assert con.vm_mark_dirty(my_id, fake_vm_id)
 
-    #     # We should be able to continually perform these operations so we'll
-    #     # do them ten times here.
-    #     for i in range(10):
-    #         # This should tell us to make a clean virtual machine
-    #         assert con.vmfactory_grab(my_id, grab_hints)
+            # This should tell us to destroy the dirty VM
+            assert con.vmfactory_grab(my_id, grab_hints) == fake_vm_id
 
-    #         with pytest.raises(CoreError):
-    #             con.vmfactory_finish(my_id)
+            # Say that we finished
+            assert con.vmfactory_finish(my_id)
 
-    #         # We'll pretend we created a machine and named it something
-    #         fake_vm_id = u"101"
-    #         assert con.vmfactory_note_clean_id(my_id, fake_vm_id)
-
-    #         assert con.vmfactory_finish(my_id)
-
-    #         with pytest.raises(CoreError):
-    #             con.vmfactory_finish(my_id)
+            # We shouldn't be able to finish twice without error
+            with pytest.raises(CoreError):
+                con.vmfactory_finish(my_id)
