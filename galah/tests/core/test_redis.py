@@ -105,20 +105,36 @@ class TestVMFactory:
         with pytest.raises(CoreError):
             con.vmfactory_grab(my_id, grab_hints)
 
-    def test_workflow(self, redis_server):
+    def test_workflow_clean(self, redis_server):
+        """
+        This tests performs all of the calls a vmfactory who is creating
+        clean VMs would make while performing its duties.
+
+        """
+
         con = RedisConnection(redis_server)
 
         my_id = NodeID(machine = u"localhost", local = 0)
         assert con.vmfactory_register(my_id)
 
-        grab_hints = {"max_clean_vms": 2}
+        grab_hints = {"max_clean_vms": 20}
 
-        # This should tell us to make a clean virtual machine
-        assert con.vmfactory_grab(my_id, grab_hints)
+        # We should be able to continually perform these operations
+        for i in range(10):
+            # This should tell us to make a clean virtual machine
+            assert con.vmfactory_grab(my_id, grab_hints)
 
-        # We'll pretend we created a machine and named it something
-        fake_vm_id = u"101"
-        assert con.vmfactory_note_clean_id(my_id, fake_vm_id)
+            with pytest.raises(CoreError):
+                con.vmfactory_finish(my_id)
+
+            # We'll pretend we created a machine and named it something
+            fake_vm_id = u"101"
+            assert con.vmfactory_note_clean_id(my_id, fake_vm_id)
+
+            assert con.vmfactory_finish(my_id)
+
+            with pytest.raises(CoreError):
+                con.vmfactory_finish(my_id)
 
 
 

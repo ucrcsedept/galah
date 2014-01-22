@@ -140,10 +140,13 @@ class RedisConnection(object):
     def vmfactory_unregister(self, vmfactory_id, _hints = None):
         vmfactory_key = "NodeInfo/%s" % (vmfactory_id.serialize(), )
 
+        clean_vm_count_key = "CleanVMCount/%s" % (
+            vmfactory_id.machine.encode("utf_8"), )
+
         # This function performs the transaction. See Redis-Py's documentation
         # for more information on this pattern.
         def unregister(pipe):
-            # watch(vmfactory_key)
+            # watch(vmfactory_key, clean_vm_count_key)
 
             # Pull the vmfactory object from the database
             vmfactory_serialized = pipe.get(vmfactory_key)
@@ -165,11 +168,18 @@ class RedisConnection(object):
                     vmfactory.vm_id.encode("utf_8")
                 )
 
+            # If we were in the middle of creating a VM we want to decrement
+            # the current count of VMs.
+            if vmfactory.state in (VMFactory.STATE_CREATING,
+                    VMFactory.STATE_CREATING_NOID):
+                pipe.decr(clean_vm_count_key)
+
             # Remove the reference to the VM factory.
             pipe.delete(vmfactory_key)
 
         try:
-            self._redis.transaction(unregister, vmfactory_key)
+            self._redis.transaction(unregister, vmfactory_key,
+                clean_vm_count_key)
         except _Return as e:
             return e.what
 
@@ -320,38 +330,38 @@ class RedisConnection(object):
         return True
 
     def vmfactory_finish(self, vmfactory_id, _hints = None):
-        with self._redis.pipeline() as pipe:
-            pipe.watch("vmfactory_nodes", )
+        vmfactory_key = "NodeInfo/%s" % (vmfactory_id.serialize(), )
 
-        # ----script vmfactory_finish:finish
-        # -- keys = (vmfactory_nodes, clean_vms_queue), args = (vmfactory_id)
-        # -- Returns 1 on success, -1 if the vmfactory wasn't registered, -2 if the
-        # --     vmfactory was not assigned work, or -3 if the vmfactory has not
-        # --     given an ID to a VM it was creating.
+        clean_vm_queue_key = "CleanVMs/%s" % (
+            vmfactory_id.machine.encode("utf_8"))
 
-        # -- Get and decode the vmfactory object
-        # local vmfactory_json = redis.call("hget", KEYS[1], ARGV[1])
-        # if vmfactory_json == false then
-        #     return -1
-        # end
-        # local vmfactory = cjson.decode(vmfactory_json)
+        def finish(pipe):
+            # watch(vmfactory_key, clean_vm_queue_key)
 
-        # if vmfactory["currently_creating"] ~= cjson.null then
-        #     if vmfactory["currently_creating"] == "" then
-        #         return -3
-        #     end
+            vmfactory_json = pipe.get(vmfactory_key)
+            if vmfactory_json is None:
+                raise IDNotRegistered(vmfactory_id)
+            vmfactory = VMFactory.from_dict(
+                galah.common.marshal.loads(vmfactory_json))
 
-        #     redis.call("lpush", KEYS[2], vmfactory["currently_creating"])
-        #     vmfactory["currently_creating"] = cjson.null
-        # else if vmfactory["currently_destroying"] ~= cjson.null then
-        #     vmfactory["currently_destroying"] = cjson.null
-        # else
-        #     return -2
-        # end
+            if vmfactory.state not in (VMFactory.STATE_CREATING,
+                    VMFactory.STATE_DESTROYING):
+                raise objects.CoreError("vmfactory not in correct state")
 
-        # redis.call("hset", KEYS[1], ARGV[1], cjson.encode(vmfactory))
+            pipe.multi()
 
-        # return 1
+            if vmfactory.state == VMFactory.STATE_CREATING:
+                pipe.lpush(clean_vm_queue_key, vmfactory.vm_id)
+
+            vmfactory.state = VMFactory.STATE_IDLE
+            vmfactory.vm_id = None
+            pipe.set(vmfactory_key,
+                galah.common.marshal.dumps(vmfactory.to_dict()))
+
+        self._redis.transaction(finish, vmfactory_key, clean_vm_queue_key)
+
+        return True
+
 
     # oooooo     oooo ooo        ooooo
     #  `888.     .8'  `88.       .888'
