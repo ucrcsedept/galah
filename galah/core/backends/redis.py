@@ -18,7 +18,7 @@ from .. import objects
 
 # Parse the configuration file
 from galah.base.config import load_config
-config = load_config("core")
+config = load_config("")
 
 import logging
 log = logging.getLogger("galah.core.backends.redis")
