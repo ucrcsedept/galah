@@ -4,13 +4,10 @@ import os
 import random
 from datetime import datetime, timedelta
 
-NULL_FILE = open(os.devnull, "w")
-
-vzctlPath = "/usr/sbin/vzctl"
-vzlistPath = "/usr/sbin/vzlist"
-containerDirectory = None
-
+import logging
 log = logging.getLogger("galah.vmfactory")
+
+NULL_FILE = open(os.devnull, "w")
 
 class NoAvailableIDs(RuntimeError):
     pass
@@ -68,7 +65,7 @@ class OpenVZProvider:
                     stderr = NULL_FILE)
             except subprocess.CalledProcessError as e:
                 if e.returncode == CONTAINER_LOCKED and \
-                        datetime.datetime.today() < deadline
+                        datetime.datetime.today() < deadline:
                     # Just try again
                     continue
                 else:

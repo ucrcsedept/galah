@@ -12,8 +12,7 @@ import pytest
 import redis
 
 def pytest_runtest_setup(item):
-    using_redis = "redis_server" in inspect.getargspec(item.function).args
-    if using_redis:
+    if "redis_server" in item.fixturenames:
         raw_config = item.config.getoption("--redis")
         if not raw_config:
             pytest.skip("Configuration with `--redis` required for this test.")
@@ -34,7 +33,7 @@ def pytest_runtest_setup(item):
 def pytest_runtest_makereport(item, call, __multicall__):
     rep = __multicall__.execute()
 
-    if call.when == "call":
+    if call.when == "call" and "redis_server" in item.fixturenames:
         rep.sections.append(
             ("Redis MONITOR Output", item._redis_monitor.stop()))
 

@@ -68,6 +68,13 @@ defaults = {
     "sheep/vz/TESTUSER_GID": 1000,
     "sheep/vz/VM_SUBNET": "10.0.1",
     "sheep/vz/VM_PORT": 6668, # Must be changed in the bootstrapper as well.
+    "vmfactory/vz/VZCTL_PATH": "/usr/sbin/vzctl",
+    "vmfactory/vz/VZLIST_PATH": "/usr/sbin/vzlist",
+    "vmfactory/vz/ID_RANGE": range(101, 255),
+    "vmfactory/SUBNET": "10.0.12",
+    "vmfactory/vz/OS_TEMPLATE": None,
+    "vmfactory/vz/CONTAINER_DIRECTORY": "/vz/private/",
+    "vmfactory/GUEST_USER": "galah-bootstrapper",
     "shepherd/SHEEP_SOCKET": "ipc:///tmp/shepherd-sheep.sock",
     "shepherd/PUBLIC_SOCKET": "ipc:///tmp/shepherd-public.sock",
     "shepherd/REQUEST_QUEUE_TIMEOUT": datetime.timedelta(minutes = 1),
