@@ -4,6 +4,9 @@ import os
 import random
 from datetime import datetime, timedelta
 
+# internal
+from .base import BaseProvider
+
 import logging
 log = logging.getLogger("galah.vmfactory")
 
@@ -12,11 +15,8 @@ config = load_config("")
 
 NULL_FILE = open(os.devnull, "w")
 
-class NoAvailableIDs(RuntimeError):
-    pass
-
-class OpenVZProvider:
-    CONTAINER_DESCRIPTION = "galah-created"
+class OpenVZProvider(BaseProvider):
+    container_description = "galah-created"
 
     def __init__(self, vzctl_path = None, vzlist_path = None, id_range = None,
             subnet = None, os_template = None, container_directory = None,
@@ -75,38 +75,6 @@ class OpenVZProvider:
                     # Any other error should be allowed to propagate
                     raise
 
-    def _create_container(self):
-        """
-        Creates a new OpenVZ container.
-
-        :returns: The ID of the newly created container as an ``int``.
-
-        :raises NoAvailableIDs: If we could not find an available CTID.
-
-        """
-
-        # Figure out what IDs are available
-        available_ids = set(self.id_range) - set(self._get_containers())
-
-        if not available_ids:
-            raise NoAvailableIDs()
-
-        # Get a random ID (this is in the hope of preventing the vmfactory
-        # being unoperational if a particular container gets in a bad state
-        # and we keep trying and failing to make a container with a particular
-        # id).
-        chosen_id = random.choice(list(available_ids))
-
-        # Actually call vzctl to create the container
-        vzctl_args = [
-            "--ipadd", self.subnet + "." + str(chosen_id),
-            "--ostemplate", self.os_template,
-            "--description", CONTAINER_DESCRIPTION
-        ]
-        run_vzctl(["create", str(chosen_id)] + vzctl_args)
-
-        return chosen_id
-
     def _inject_file(self, container, source_path, dest_path):
         """
         Injects a file from the host system into the filesystem of the
@@ -148,7 +116,7 @@ class OpenVZProvider:
 
         cmd = [self.vzlist_path, "--all", "--no-header", "--output", "ctid"]
         if galah_created:
-            cmd += ["--description", OpenVZProvider.CONTAINER_DESCRIPTION]
+            cmd += ["--description", self.container_description]
 
         # check_output would be better here but it's not supported in
         # Python 2.6
@@ -161,3 +129,59 @@ class OpenVZProvider:
                 cmd = cmd)
 
         return [int(i.strip()) for i in stdout.splitlines()]
+
+    def create_vm(self):
+        """
+        Creates a new OpenVZ container.
+
+        :returns: The ID of the newly created container as an ``int``.
+
+        :raises NoAvailableIDs: If we could not find an available CTID.
+
+        """
+
+        # Error code returned by vzctl if you try to create a container with
+        # a taken CTID.
+        ALREADY_EXISTS = 44
+
+        # We'll try to create the container multiple times. This may be
+        # necessary because if another process is creating containers (or
+        # perhaps the sysadmin is) by the time we select an available CTID
+        # it could be taken already.
+        retries_left = 3 # We'll decrement this counter with each retry
+        while True:
+            # Figure out what IDs are available
+            available_ids = \
+                set(self.id_range) - set(self._get_containers(False))
+
+            if not available_ids:
+                log.error("Could not find an available ID in %r.",
+                    (self.id_range, ))
+                raise RuntimeError("No available IDs in range.")
+
+            # Get a random ID (this is in the hope of preventing the vmfactory
+            # becoming unoperational if a particular container gets in a bad
+            # state and we keep trying and failing to make a container with a
+            # particular id).
+            chosen_id = random.choice(list(available_ids))
+
+            # Actually call vzctl to create the container
+            vzctl_args = [
+                "--ipadd", self.subnet + "." + str(chosen_id),
+                "--ostemplate", self.os_template,
+                "--description", self.container_description
+            ]
+            try:
+                self._run_vzctl(["create", str(chosen_id)] + vzctl_args)
+            except subprocess.CalledProcessError as e:
+                if e.returncode == ALREADY_EXISTS:
+                    retries_left -= 1
+                    if retries_left > 0:
+                        continue
+
+                raise
+
+            return unicode(chosen_id)
+
+    def destroy_vm(self, vm_id):
+        self._run_vzctl(["destroy", vm_id.encode("ascii")])
