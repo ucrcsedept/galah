@@ -12,7 +12,11 @@ def vz(request):
     config = eval(raw_config)
 
     provider = OpenVZProvider(**config)
+
+    # This will prevent containers created during testing from being picked up
+    # incidently by a running vmfactory in the event of an ID range overlap.
     provider.container_description = "galah-created:test"
+
     return provider
 
 class TestOpenVZProvider:
@@ -21,10 +25,13 @@ class TestOpenVZProvider:
 
     .. warning::
 
-        It is not a good idea to manipulate/create/destroy containers while
-        this test is running as it may get confused (there are certain race
-        conditions in the testing code that come into play). At least make sure
-        that the range of virtual machines
+        Make sure that the IDs being used in testing are not being used by
+        anything else (including you) while the tests are running otherwise the
+        tests may give false results.
+
+        This can be done by changing the configuration option
+        `vmfactory/vz/ID_RANGE` when running the tests to a different range
+        than any running vmfactory.
 
     """
 
