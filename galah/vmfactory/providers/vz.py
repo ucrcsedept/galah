@@ -136,7 +136,7 @@ class OpenVZProvider:
         subprocess.check_call(["chmod", "-R", "500", real_dest_path],
             stdout = NULL_FILE, stderr = NULL_FILE)
 
-    def _get_containers(galah_created):
+    def _get_containers(self, galah_created):
         """
         Returns a list all existing containers.
 
@@ -148,13 +148,13 @@ class OpenVZProvider:
 
         cmd = [self.vzlist_path, "--all", "--no-header", "--output", "ctid"]
         if galah_created:
-            cmd += ["--description", CONTAINER_DESCRIPTION]
+            cmd += ["--description", OpenVZProvider.CONTAINER_DESCRIPTION]
 
         # check_output would be better here but it's not supported in
         # Python 2.6
-        proc = subprocess.Popen(cmd, stdout = subprocess.PIPE,
+        p = subprocess.Popen(cmd, stdout = subprocess.PIPE,
             stderr = NULL_FILE)
-        stdout, stderr = proc.communicate()
+        stdout, stderr = p.communicate()
 
         if p.returncode != 0:
             raise subprocess.CalledProcessError(returncode = p.returncode,
