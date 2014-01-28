@@ -7,6 +7,9 @@ from datetime import datetime, timedelta
 import logging
 log = logging.getLogger("galah.vmfactory")
 
+from galah.base.config import load_config
+config = load_config("")
+
 NULL_FILE = open(os.devnull, "w")
 
 class NoAvailableIDs(RuntimeError):
@@ -18,20 +21,20 @@ class OpenVZProvider:
     def __init__(self, vzctl_path = None, vzlist_path = None, id_range = None,
             subnet = None, os_template = None, container_directory = None,
             guest_user = None):
-        self.vzctl_path = (vzctl_path if vzctl_path is None else
+        self.vzctl_path = (vzctl_path if vzctl_path is not None else
             config["vmfactory/vz/VZCTL_PATH"])
-        self.vzlist_path = (vzlist_path if vzlist_path is None else
+        self.vzlist_path = (vzlist_path if vzlist_path is not None else
             config["vmfactory/vz/VZLIST_PATH"])
-        self.id_range = (id_range if id_range is None else
+        self.id_range = (id_range if id_range is not None else
             config["vmfactory/vz/ID_RANGE"])
-        self.subnet = (subnet if subnet is None else
+        self.subnet = (subnet if subnet is not None else
             config["vmfactory/SUBNET"])
-        self.os_template = (os_template if os_template is None else
+        self.os_template = (os_template if os_template is not None else
             config["vmfactory/vz/OS_TEMPLATE"])
         self.container_directory = (
-            container_directory if container_directory is None else
+            container_directory if container_directory is not None else
             config["vmfactory/vz/CONTAINER_DIRECTORY"])
-        self.guest_user = (guest_user if guest_user is None else
+        self.guest_user = (guest_user if guest_user is not None else
             config["vmfactory/GUEST_USER"])
 
     def _run_vzctl(self, arguments):
@@ -61,7 +64,7 @@ class OpenVZProvider:
 
         while True:
             try:
-                rv = subprocess.check_call(cmd, stdout = NULL_FILE,
+                return subprocess.check_call(cmd, stdout = NULL_FILE,
                     stderr = NULL_FILE)
             except subprocess.CalledProcessError as e:
                 if e.returncode == CONTAINER_LOCKED and \

@@ -15,6 +15,9 @@ def vz(request):
 
 class TestOpenVZProvider:
     def test_run_vzctl(self, vz):
-        """A smoke test to make sure that ``vzctl`` is available."""
+        """
+        A smoke test to make sure that ``vzctl`` and ``vzlist`` is available.
 
-        assert vz._run_vzctl(["--version"])
+        """
+
+        assert vz._run_vzctl(["--version"]) == 0
