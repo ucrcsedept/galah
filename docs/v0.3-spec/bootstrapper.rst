@@ -27,14 +27,14 @@ Responses by the bootstrapper will be framed the same way.
 
 The bootstrapper is always in one of several states. Which state it is in determines the types of commands it will accept. Below is a listing of the various states and the commands the bootstrapper will accept while in that state.
 
-Note however, that the *get_status* command is accepted in every state.
+Note however, that the *get_status* and *bye* commands are accepted in every state.
 
- * **NOT_READY** (the initial state): Accepts *init*, *subscribe*, *unsubscribe*.
- * **IDLE**: Accepts *upload_harness*, *reset*, *subscribe*, and *unsubscribe*.
- * **HARNESS_READY**: Accepts *upload_submission* and *reset*.
- * **TEST_READY**: Accepts *run_test* and *reset*.
- * **RUNNING_TEST**: Accepts *reset* and *abort_test*.
- * **RESULTS_READY**: Accepts *reset* and *get_results*.
+ * **NOT_READY** (the initial state): Accepts *init*.
+ * **IDLE**: Accepts *upload_harness*.
+ * **HARNESS_READY**: Accepts *upload_submission*.
+ * **TEST_READY**: Accepts *run_test*.
+ * **RUNNING_TEST**: Accepts *abort_test*.
+ * **RESULTS_READY**: Accepts *get_results*.
 
 The only time (with one exception) the bootstrapper transitions between states is when it receives a command, therefore the documentation of each command below notes the transition it causes (if any). The exception is during the **RUNNING_TEST** state: once the test completes the bootstrapper will transition into the **RESULTS_READY** state.
 
