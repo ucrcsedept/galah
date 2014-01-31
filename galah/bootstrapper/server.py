@@ -1,7 +1,11 @@
 # stdlib
+import sys
 import socket
 import select
 import StringIO
+
+import logging
+log = logging.getLogger("galah.bootstrapper.server")
 
 # The interface and port to listen on
 LISTEN_ON = ("", 51749)
@@ -48,7 +52,10 @@ class Decoder(object):
         assert isinstance(character, str)
         assert len(character) == 1
 
-        print repr(character), repr(self.state), repr(self.buffer.getvalue())
+        # We don't want to log the massive payloads
+        if self.state != "PAYLOAD":
+            log.debug("Decoding %r (state = %r, buffer = %r)", character,
+                self.state, self.buffer.getvalue())
 
         if self.state == "COMMAND":
             if character == " ":
@@ -141,10 +148,53 @@ def main():
                 sock, address = server_sock.accept()
                 connections.append(Connection(sock, address))
 
-                print "New connection from", address
+                log.info("New connection from %s", address)
             else:
                 for msg in sock.read():
-                    print "Got message:", msg
+                    log.info("Received %s command with %d-byte payload",
+                        msg.command, msg.num_bytes)
+
+def setup_logging(use_logfile):
+    import codecs
+    import tempfile
+    import os
+    import errno
+
+    # We'll let all log messages through to the handlers (though the handlers
+    # can filter on another level if they'd like).
+    log.setLevel(logging.DEBUG)
+
+    if use_logfile:
+        # Add log handler that spills logs into
+        # /var/log/galah/bootstrapper.log-XXX
+        LOG_DIR = "/var/log/galah/"
+        try:
+            os.makedirs(LOG_DIR)
+        except OSError as exception:
+            if exception.errno != errno.EEXIST:
+                raise
+
+        # We'll let the tempfile module handle the heavy lifting of finding an
+        # available filename.
+        log_file = tempfile.NamedTemporaryFile(dir = LOG_DIR,
+            prefix = "bootstrapper.log-", delete = False)
+        log_file = codecs.EncodedFile(log_file, "utf_8")
+
+        file_handler = logging.StreamHandler(log_file)
+        file_handler.setFormatter(logging.Formatter(
+            "[%(levelname)s;%(asctime)s]: %(message)s"
+        ))
+        log.addHandler(file_handler)
+    else:
+        # If we're not using a logfile, just log everythign to standard err
+        stderr_handler = logging.StreamHandler()
+        stderr_handler.setFormatter(logging.Formatter(
+            "[%(levelname)s;%(asctime)s]: %(message)s"
+        ))
+        log.addHandler(stderr_handler)
 
 if __name__ == "__main__":
+    no_logfile = len(sys.argv) > 1 and sys.argv[1] == "--no-logfile"
+    setup_logging(not no_logfile)
+
     main()
