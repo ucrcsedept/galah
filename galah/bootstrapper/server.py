@@ -11,10 +11,26 @@ log = logging.getLogger("galah.bootstrapper.server")
 LISTEN_ON = ("", 51749)
 
 class Message(object):
-    def __init__(self, command = None, num_bytes = None, payload = None):
+    def __init__(self, command = None, payload = None):
         self.command = command
-        self.num_bytes = num_bytes
         self.payload = payload
+
+    def serialize(self):
+        buf = StringIO.StringIO()
+
+        buf.write(command.encode("ascii"))
+        buf.write(" ")
+
+        num_bytes = len(payload)
+        buf.write(str(num_bytes).encode("ascii"))
+        buf.write(" ")
+
+        if not isinstance(payload, str):
+            raise TypeError("payload must be a str object, got %s" % (
+                type(payload).__name__))
+        buf.write(payload)
+
+        return buf.getvalue()
 
 class Decoder(object):
     """
@@ -28,6 +44,7 @@ class Decoder(object):
     def __init__(self):
         self.state = "COMMAND"
         self.msg = Message()
+        self._num_bytes = 0
         self._buffer_clear()
 
     def _buffer_write(self, data):
@@ -68,7 +85,7 @@ class Decoder(object):
         elif self.state == "NUM_BYTES":
             if character == " ":
                 decoded_data = self.buffer.getvalue().decode("ascii")
-                self.msg.num_bytes = int(decoded_data)
+                self._num_bytes = int(decoded_data)
 
                 self.state = "PAYLOAD"
                 self._buffer_clear()
@@ -77,9 +94,9 @@ class Decoder(object):
         elif self.state == "PAYLOAD":
             self._buffer_write(character)
 
-            assert self.buffer_size <= self.msg.num_bytes
+            assert self.buffer_size <= self._num_bytes
 
-            if self.buffer_size == self.msg.num_bytes:
+            if self.buffer_size == self._num_bytes:
                 self.msg.payload = self.buffer.getvalue()
 
                 full_command = self.msg
@@ -152,7 +169,11 @@ def main():
             else:
                 for msg in sock.read():
                     log.info("Received %s command with %d-byte payload",
-                        msg.command, msg.num_bytes)
+                        msg.command, len(msg.payload))
+
+# def handle_message(msg):
+#     if msg.command == u"ping":
+#         return Message("pong", msg.payload)
 
 def setup_logging(use_logfile):
     import codecs

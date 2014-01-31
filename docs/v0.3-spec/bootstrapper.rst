@@ -6,11 +6,11 @@ The minimum required version of Python available on the VM is version 2.6 (the s
 
 ## Bootstrapper Protocol
 
-Once the bootstrapper starts up it will accept TCP connections on port ``71749``.
+Once the bootstrapper starts up it will accept TCP connections on port ``51749``.
 
 ### Framing
 
-Messages to the bootstrapper should follow the format ``COMMAND NUM_BYTES PAYLOAD`` or the UTF-8 encoded message type followed by a space, the number of bytes in the payload (encoded as a UTF-8 string containing the number) followed by a space, followed by the payload. Any newline and space characters printed before a message are ignored (useful when interacting with the bootstrapper over telnet). For example, the following stream contains two well framed messages:
+Messages to the bootstrapper should follow the format ``COMMAND NUM_BYTES PAYLOAD`` or the ASCII encoded message type followed by a space, the number of bytes in the payload (encoded as an ASCII encoded string containing the number) followed by a space, followed by the payload (meaning of the payload depends on the command). Any newline and space characters printed before a message are ignored (useful when interacting with the bootstrapper over telnet). For example, the following stream contains two well framed messages:
 
 .. code-block:: json
 
@@ -44,8 +44,8 @@ The only time (with one exception) the bootstrapper transitions between states i
 
 When the bootstrapper receives an ``init`` command it will initialize itself based on the UTF-8 encoded JSON dictionary in the payload. The JSON dictionary must have the following keys and no others:
 
- * **user** (string or int): The username or UID to change to.
- * **group** (string or int): The groupname or GID to change to.
+ * **user** (string or int): The username or UID to run the harness under.
+ * **group** (string or int): The groupname or GID to run the harness under.
  * **harness_directory** (string): The directory to store the test harness in.
  * **testables_directory** (string): The directory to store the testables in.
  * **provision_script** (string or null): A script that will be run as root before any other work by the bootstrapper is performed. May be ``null`` if not needed.

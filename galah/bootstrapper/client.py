@@ -29,7 +29,8 @@ def serialize_message(command, payload):
     buf.write(command.encode("ascii"))
     buf.write(" ")
 
-    buf.write(str(len(payload)).encode("ascii"))
+    num_bytes = len(payload)
+    buf.write(str(num_bytes).encode("ascii"))
     buf.write(" ")
 
     if not isinstance(payload, str):
