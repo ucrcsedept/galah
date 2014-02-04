@@ -14,22 +14,29 @@ class Message(object):
         self.command = command
         self.payload = payload
 
-    def serialize(self):
-        buf = StringIO.StringIO()
+def serialize(message):
+    """
+    Serializes a message into a ``str`` object suitable for sending over
+    the wire. The encoded messages can be decoded by the decoder object at
+    the other end.
 
-        buf.write(self.command.encode("ascii"))
-        buf.write(" ")
+    """
 
-        num_bytes = len(self.payload)
-        buf.write(str(num_bytes).encode("ascii"))
-        buf.write(" ")
+    buf = StringIO.StringIO()
 
-        payload = self.payload
-        if isinstance(payload, unicode):
-            payload = payload.encode("utf_8")
-        buf.write(payload)
+    buf.write(message.command.encode("ascii"))
+    buf.write(" ")
 
-        return buf.getvalue()
+    num_bytes = len(message.payload)
+    buf.write(str(num_bytes).encode("ascii"))
+    buf.write(" ")
+
+    payload = message.payload
+    if isinstance(payload, unicode):
+        payload = payload.encode("utf_8")
+    buf.write(payload)
+
+    return buf.getvalue()
 
 class Decoder(object):
     """

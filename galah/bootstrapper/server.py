@@ -92,7 +92,7 @@ def main():
                         response = handle_message(msg)
                         log.info("Sending %s response with payload %r",
                             response.command, response.payload)
-                        sock.sock.sendall(response.serialize())
+                        sock.sock.sendall(serialize(response))
             except socket.error:
                 log.warning("Exception raised on socket connected to %r",
                     sock.address, exc_info = sys.exc_info())

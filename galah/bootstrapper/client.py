@@ -1,6 +1,11 @@
+# This is necessary to allow relative imports from a script
+if __name__ == "__main__" and __package__ is None:
+    import galah.bootstrapper
+    __package__ = "galah.bootstrapper"
+
 import StringIO
 
-import protocol
+from .protocol import *
 import random
 
 COMMANDS = set(["ping"])
@@ -10,5 +15,5 @@ if __name__ == "__main__":
     import socket
     sock = socket.create_connection(("localhost", 51749))
 
-    while True:
-        sock.sendall("".join(chr(random.choice([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])) for i in range(random.randint(0, 5000))))
+    raw = serialize(Message("ping", "good morning"))
+    sock.sendall(raw)
