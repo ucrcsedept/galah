@@ -14,6 +14,16 @@ class Message(object):
         self.command = command
         self.payload = payload
 
+    def __repr__(self):
+        formatted_payload = self.payload
+        if len(formatted_payload) > 40:
+            formatted_payload = repr(formatted_payload[:40]) + "..."
+        else:
+            formatted_payload = repr(formatted_payload)
+
+        return "Message(command = %r, payload = %s)" % (self.command,
+            formatted_payload)
+
 def serialize(message):
     """
     Serializes a message into a ``str`` object suitable for sending over
@@ -24,17 +34,23 @@ def serialize(message):
 
     buf = StringIO.StringIO()
 
-    buf.write(message.command.encode("ascii"))
+    # If the payload is a unicode string, we will encode it as UTF-8 (doing
+    # this here is primarily for conveniece)
+    if isinstance(message.payload, unicode):
+        message.payload = message.payload.encode("utf_8")
+
+    encoded_command = message.command.encode("ascii")
+    if " " in encoded_command:
+        raise ValueError("command cannot have spaces. Got %r" % (
+            encoded_command))
+    buf.write(encoded_command)
     buf.write(" ")
 
     num_bytes = len(message.payload)
     buf.write(str(num_bytes).encode("ascii"))
     buf.write(" ")
 
-    payload = message.payload
-    if isinstance(payload, unicode):
-        payload = payload.encode("utf_8")
-    buf.write(payload)
+    buf.write(message.payload)
 
     return buf.getvalue()
 
@@ -93,8 +109,20 @@ class Decoder(object):
                 decoded_data = self.buffer.getvalue().decode("ascii")
                 self._num_bytes = int(decoded_data)
 
-                self.state = "PAYLOAD"
-                self._buffer_clear()
+                # Make sure that we only switch into the payload state if we're
+                # actually expecting a payload.
+                if self._num_bytes != 0:
+                    self.state = "PAYLOAD"
+                    self._buffer_clear()
+                else:
+                    self.msg.payload = ""
+                    full_command = self.msg
+                    self.msg = Message()
+
+                    self.state = "COMMAND"
+                    self._buffer_clear()
+
+                    return full_command
             else:
                 self._buffer_write(character)
         elif self.state == "PAYLOAD":
@@ -108,7 +136,7 @@ class Decoder(object):
                 full_command = self.msg
                 self.msg = Message()
 
-                self._decoder_state = "COMMAND"
+                self.state = "COMMAND"
                 self._buffer_clear()
 
                 return full_command
