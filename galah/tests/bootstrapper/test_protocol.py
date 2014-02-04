@@ -4,6 +4,9 @@ from galah.bootstrapper import protocol
 # external
 import pytest
 
+# stdlib
+import itertools
+
 # A crazy unicode string suitable for use in testing. Prints as
 # "THE PONY HE COMES" with tons of decoration.
 UNICODE_TEST_PONY = (
@@ -26,6 +29,13 @@ TEST_MESSAGES = [
 
 @pytest.mark.parametrize("test_message", TEST_MESSAGES)
 def test_single_encode_decode(test_message):
+    """
+    Tests that all of the test messages can be encoded and decoded properly by
+    the protocol module. Each message is tested individually with its own
+    fresh decoder instance.
+
+    """
+
     encoded_message = protocol.serialize(test_message)
     print "Encoded Message:", repr(encoded_message)
 
@@ -48,3 +58,39 @@ def test_single_encode_decode(test_message):
         decoded_message.payload = \
             decoded_message.payload.decode("utf_8")
     assert decoded_message.payload == test_message.payload
+
+def test_stream():
+    """
+    Tests that a stream of messages are all encoded and decoded properly.
+
+    """
+
+    # This will create a flat list of messages containing every possible
+    # ordering of our list of test messages.
+    combos = itertools.combinations(TEST_MESSAGES, len(TEST_MESSAGES))
+    message_stream = [i for combo in combos for i in combo]
+
+    decoder = protocol.Decoder()
+    for i in message_stream:
+        print "Decoding Message:", repr(i)
+        encoded_message = protocol.serialize(i)
+        print "Encoded Message:", repr(encoded_message)
+
+        # Feed the decoder every character except the last, it should not be
+        # able to decode a complete message during that time.
+        for j in encoded_message[:-1]:
+            decoded_message = decoder.decode(j)
+            assert decoded_message is None
+
+        # The decoder should be able to complete the message with the last
+        # character.
+        decoded_message = decoder.decode(encoded_message[-1])
+        assert decoded_message is not None
+
+        assert decoded_message.command == i.command
+
+        if isinstance(i.payload, unicode):
+            decoded_message.payload = \
+                decoded_message.payload.decode("utf_8")
+        assert decoded_message.payload == i.payload
+
