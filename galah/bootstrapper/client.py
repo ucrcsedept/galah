@@ -13,7 +13,12 @@ COMMANDS = set(["ping"])
 
 if __name__ == "__main__":
     import socket
-    sock = socket.create_connection(("localhost", 51749))
+    raw_sock = socket.create_connection(("localhost", 51749))
+    sock = Connection(raw_sock, "localhost")
 
-    raw = serialize(Message("ping", "good morning"))
-    sock.sendall(raw)
+    sock.send(Message("ping", "good morning"))
+    response = sock.recv()
+    print response[0].payload, response[0].command
+
+
+

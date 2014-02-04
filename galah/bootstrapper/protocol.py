@@ -114,3 +114,52 @@ class Decoder(object):
                 return full_command
 
         return None
+
+class Connection(object):
+    """
+    :ivar sock: The ``socket`` instance returned by ``socket.accept()``.
+    :ivar address: The address of the node at the other end of the connection.
+
+    """
+
+    class Disconnected(Exception):
+        pass
+
+    def __init__(self, sock, address):
+        self.sock = sock
+        self.address = address
+
+        self._decoder = Decoder()
+
+    # Necessary to support select.select()
+    def fileno(self):
+        return self.sock.fileno()
+
+    def recv(self):
+        """
+        Reads in data waiting in the socket and returns a list of Message
+        objects that were decoded.
+
+        :returns: ``None``
+
+        """
+
+        data = self.sock.recv(4096)
+        if len(data) == 0:
+            raise Connection.Disconnected()
+
+        messages = []
+        for i in data:
+            msg = self._decoder.decode(i)
+            if msg is not None:
+                messages.append(msg)
+        return messages
+
+    def send(self, message):
+        """
+        Sends the given Message across the connection.
+
+        """
+
+        self.sock.sendall(serialize(message))
+

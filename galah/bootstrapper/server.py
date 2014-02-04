@@ -17,46 +17,6 @@ log = logging.getLogger("galah.bootstrapper.server")
 # The interface and port to listen on
 LISTEN_ON = ("", 51749)
 
-class Connection(object):
-    """
-    :ivar sock: The ``socket`` instance returned by ``socket.accept()``.
-    :ivar address: The address of the node at the other end of the connection.
-
-    """
-
-    class Disconnected(Exception):
-        pass
-
-    def __init__(self, sock, address):
-        self.sock = sock
-        self.address = address
-
-        self._decoder = Decoder()
-
-    # Necessary to support select.select()
-    def fileno(self):
-        return self.sock.fileno()
-
-    def read(self):
-        """
-        Reads in data waiting in the socket and returns a list of Message
-        objects that were decoded.
-
-        :returns: ``None``
-
-        """
-
-        data = self.sock.recv(4096)
-        if len(data) == 0:
-            raise Connection.Disconnected()
-
-        messages = []
-        for i in data:
-            msg = self._decoder.decode(i)
-            if msg is not None:
-                messages.append(msg)
-        return messages
-
 def main():
     server_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
@@ -85,14 +45,15 @@ def main():
 
                     log.info("New connection from %s", address)
                 else:
-                    for msg in sock.read():
+                    for msg in sock.recv():
                         log.info("Received %s command with %d-byte payload",
                             msg.command, len(msg.payload))
 
                         response = handle_message(msg)
-                        log.info("Sending %s response with payload %r",
-                            response.command, response.payload)
-                        sock.sock.sendall(serialize(response))
+                        if response is not None:
+                            log.info("Sending %s response with payload %r",
+                                response.command, response.payload)
+                            sock.send(response)
             except socket.error:
                 log.warning("Exception raised on socket connected to %r",
                     sock.address, exc_info = sys.exc_info())
