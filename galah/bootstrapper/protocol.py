@@ -146,16 +146,14 @@ class Decoder(object):
 class Connection(object):
     """
     :ivar sock: The ``socket`` instance returned by ``socket.accept()``.
-    :ivar address: The address of the node at the other end of the connection.
 
     """
 
     class Disconnected(Exception):
         pass
 
-    def __init__(self, sock, address):
+    def __init__(self, sock):
         self.sock = sock
-        self.address = address
 
         self._decoder = Decoder()
 

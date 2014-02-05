@@ -10,30 +10,42 @@ from .protocol import *
 import sys
 import socket
 import select
+from optparse import make_option, OptionParser
 
 import logging
 log = logging.getLogger("galah.bootstrapper.server")
 
 # The interface and port to listen on
-LISTEN_ON = ("", 51749)
+LISTEN_ON = ("", BOOTSTRAPPER_PORT)
 
-def main():
-    server_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+def main(uds):
+    if uds is not None:
+        server_sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        server_sock.bind(uds)
+    else:
+        # If you're using TCP sockets for testing you might be tempted to use
+        # the reuse addresses flag on the socket, I'd rather not deal with the
+        # security problems there so just use UDS for testing.
+        server_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        server_sock.bind(LISTEN_ON)
 
-    # This is useful during testing
-    server_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-
+    # The server will likely work just fine in blocking mode as well, but
+    # we could get stuck in a deadlocked state if we're not careful. This is
+    # due to the supposed fact that if select.select says that there's data
+    # waiting to be read from a socket, that does not necessarily mean that you
+    # won't block when you try.
     server_sock.setblocking(0)
 
-    server_sock.bind(LISTEN_ON)
-    server_sock.listen(2)
+    # Begin accepting new connections
+    server_sock.listen(1)
 
     connections = []
 
     while True:
         # Block until one of the sockets we're looking at has data waiting to
         # be read or connections waiting to be accepted.
-        socks, _w, _e = select.select([server_sock] + connections, [], [server_sock] + connections)
+        socks, _w, _e = select.select([server_sock] + connections, [],
+            [server_sock] + connections)
         log.debug("%r, %r", socks, _e)
 
         for sock in socks:
@@ -41,7 +53,7 @@ def main():
                 if sock is server_sock:
                     # Accept any new connections
                     sock, address = server_sock.accept()
-                    connections.append(Connection(sock, address))
+                    connections.append(Connection(sock))
 
                     log.info("New connection from %s", address)
                 else:
@@ -56,7 +68,7 @@ def main():
                             sock.send(response)
             except socket.error:
                 log.warning("Exception raised on socket connected to %r",
-                    sock.address, exc_info = sys.exc_info())
+                    sock.sock.getpeername(), exc_info = sys.exc_info())
                 try:
                     sock.sock.shutdown(socket.SHUT_RDWR)
                     sock.sock.close()
@@ -64,11 +76,11 @@ def main():
                     pass
                 connections.remove(sock)
             except Connection.Disconnected:
-                log.info("%r disconnected", sock.address)
+                log.info("%r disconnected", sock.sock.getpeername())
                 connections.remove(sock)
             except Exception:
                 log.error("Unknown exception raised while reading data from "
-                    "%r", sock.address, exc_info = sys.exc_info())
+                    "%r", sock.sock.getpeername(), exc_info = sys.exc_info())
                 try:
                     sock.sock.shutdown(socket.SHUT_RDWR)
                     sock.sock.close()
@@ -82,7 +94,7 @@ def handle_message(msg):
     else:
         return Message("error", u"unknown command")
 
-def setup_logging(use_logfile):
+def setup_logging(log_dir):
     import codecs
     import tempfile
     import os
@@ -94,20 +106,30 @@ def setup_logging(use_logfile):
     # can filter on another level if they'd like).
     package_logger.setLevel(logging.DEBUG)
 
-    if use_logfile:
-        # Add log handler that spills logs into
-        # /var/log/galah/bootstrapper.log-XXX
-        LOG_DIR = "/var/log/galah/"
+    if log_dir == "-":
+        # If we're not using a logfile, just log everythign to standard error
+        stderr_handler = logging.StreamHandler(sys.stderr)
+        stderr_handler.setFormatter(logging.Formatter(
+            "[%(levelname)s;%(asctime)s]: %(message)s"
+        ))
+        package_logger.addHandler(stderr_handler)
+    else:
+        # If the directory we want to log to doesn't exist yet, create it
         try:
-            os.makedirs(LOG_DIR)
+            os.makedirs(log_dir)
         except OSError as exception:
+            # Ignore the "already exists" error but let through anything else
             if exception.errno != errno.EEXIST:
                 raise
 
         # We'll let the tempfile module handle the heavy lifting of finding an
         # available filename.
-        log_file = tempfile.NamedTemporaryFile(dir = LOG_DIR,
+        log_file = tempfile.NamedTemporaryFile(dir = log_dir,
             prefix = "bootstrapper.log-", delete = False)
+
+        # We want to make sure the file is encoded using utf-8 so we wrap the
+        # file object here to make the encoding transparent to the logging
+        # library.
         log_file = codecs.EncodedFile(log_file, "utf_8")
 
         file_handler = logging.StreamHandler(log_file)
@@ -115,16 +137,34 @@ def setup_logging(use_logfile):
             "[%(levelname)s;%(asctime)s]: %(message)s"
         ))
         package_logger.addHandler(file_handler)
-    else:
-        # If we're not using a logfile, just log everythign to standard err
-        stderr_handler = logging.StreamHandler()
-        stderr_handler.setFormatter(logging.Formatter(
-            "[%(levelname)s;%(asctime)s]: %(message)s"
-        ))
-        package_logger.addHandler(stderr_handler)
+
+def parse_arguments(argv = sys.argv[1:]):
+    option_list = [
+        make_option(
+            "--log-dir", action = "store", default = "/var/log/galah/",
+            dest = "log_dir",
+            help =
+                "A directory that will hold the bootstrapper's log file. Can "
+                "be - to log to standard error. Default %default."
+        ),
+        make_option(
+            "--uds", action = "store", default = None,
+            help =
+                "If specified, the given unix domain socket will be created "
+                "and listened on rather than binding to a port. Used during "
+                "testing."
+        )
+    ]
+
+    parser = OptionParser(option_list = option_list)
+
+    options, args = parser.parse_args(argv)
+
+    return (options, args)
 
 if __name__ == "__main__":
-    no_logfile = len(sys.argv) > 1 and sys.argv[1] == "--no-logfile"
-    setup_logging(not no_logfile)
+    options, args = parse_arguments()
 
-    main()
+    setup_logging(options.log_dir)
+
+    main(uds = options.uds)

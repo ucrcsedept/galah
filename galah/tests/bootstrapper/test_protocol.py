@@ -1,11 +1,20 @@
 # internal
-from galah.bootstrapper import protocol
+from galah.bootstrapper import protocol, server
 
 # external
 import pytest
 
 # stdlib
 import itertools
+import socket
+import sys
+import os.path
+import inspect
+import subprocess
+import tempfile
+import time
+import signal
+import shutil
 
 # A crazy unicode string suitable for use in testing. Prints as
 # "THE PONY HE COMES" with tons of decoration.
@@ -94,3 +103,49 @@ def test_stream():
                 decoded_message.payload.decode("utf_8")
         assert decoded_message.payload == i.payload
 
+@pytest.fixture
+def bootstrapper_server(request):
+    # Create a temporary directory that will house our unix socket
+    temp_dir = tempfile.mkdtemp()
+    socket_path = os.path.join(temp_dir, "bootstrapper-socket")
+
+    # This will execute the server with the interpreter that is executing this
+    # code. Output will go to our standard error
+    args = [sys.executable, inspect.getsourcefile(server), "--log-dir",
+        temp_dir,"--uds", socket_path]
+    server_process = subprocess.Popen(args, stdout = sys.stderr,
+        stderr = subprocess.STDOUT)
+
+    def cleanup():
+        # Brutally murder the server process
+        os.kill(server_process.pid, signal.SIGKILL)
+
+        # Delete the temporary directory
+        shutil.rmtree(temp_dir)
+    request.addfinalizer(cleanup)
+
+    # Wait for the server to start up and create the socket file
+    tries_left = 5
+    while not os.path.exists(socket_path):
+        time.sleep(.3)
+
+        tries_left -= 1
+        if tries_left <= 0:
+            pytest.fail("Could not start bootstrapper server.")
+
+    # Connect to the bootstrapper
+    bootstrapper_sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    bootstrapper_sock.settimeout(4)
+    bootstrapper_sock.connect(socket_path)
+
+    return protocol.Connection(bootstrapper_sock)
+
+class TestLiveInstance:
+    def test_ping(self, bootstrapper_server):
+        ping_message = protocol.Message("ping", "data")
+        bootstrapper_server.send(ping_message)
+
+        received_messages = bootstrapper_server.recv()
+        assert len(received_messages) == 1
+        assert received_messages[0].command == "pong"
+        assert received_messages[0].payload == ping_message.payload
