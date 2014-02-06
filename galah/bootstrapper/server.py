@@ -18,6 +18,30 @@ log = logging.getLogger("galah.bootstrapper.server")
 # The interface and port to listen on
 LISTEN_ON = ("", BOOTSTRAPPER_PORT)
 
+def process_socket(sock, server_sock, connections):
+    if sock is server_sock:
+        # Accept any new connections
+        sock, address = server_sock.accept()
+        connections.append(Connection(sock))
+
+        log.info("New connection from %s", address)
+    else:
+        for msg in sock.recv():
+            log.info("Received %s command from %s with %d-byte payload",
+                msg.command, sock.sock.getpeername(), len(msg.payload))
+
+            response = handle_message(msg)
+            if response is not None:
+                log.info("Sending %s response with payload %r",
+                    response.command, response.payload)
+                sock.send(response)
+
+                if response.command == "error":
+                    log.info("Disconnecting from %s", sock.getpeername())
+                    sock.sock.close()
+                    sock.sock.shutdown(socket.SHUT_RDWR)
+                    connections.remove(sock)
+
 def main(uds):
     if uds is not None:
         server_sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
@@ -49,22 +73,7 @@ def main(uds):
 
         for sock in socks:
             try:
-                if sock is server_sock:
-                    # Accept any new connections
-                    sock, address = server_sock.accept()
-                    connections.append(Connection(sock))
-
-                    log.info("New connection from %s", address)
-                else:
-                    for msg in sock.recv():
-                        log.info("Received %s command with %d-byte payload",
-                            msg.command, len(msg.payload))
-
-                        response = handle_message(msg)
-                        if response is not None:
-                            log.info("Sending %s response with payload %r",
-                                response.command, response.payload)
-                            sock.send(response)
+                process_socket(sock, server_sock, connections)
             except socket.error:
                 log.warning("Exception raised on socket connected to %r",
                     sock.sock.getpeername(), exc_info = sys.exc_info())
