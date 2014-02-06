@@ -46,7 +46,6 @@ def main(uds):
         # be read or connections waiting to be accepted.
         socks, _w, _e = select.select([server_sock] + connections, [],
             [server_sock] + connections)
-        log.debug("%r, %r", socks, _e)
 
         for sock in socks:
             try:
