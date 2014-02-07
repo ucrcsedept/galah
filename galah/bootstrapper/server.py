@@ -16,6 +16,7 @@ import json
 import tempfile
 import subprocess
 import os
+import zipfile
 
 import logging
 log = logging.getLogger("galah.bootstrapper.server")
@@ -149,7 +150,9 @@ def handle_message(msg):
             temp_path = f.name
             f.write(msg.payload)
 
+        # The tempfile module inits it to 600
         os.chmod(temp_path, 0700)
+
         p = subprocess.Popen([temp_path], stdout = subprocess.PIPE,
             stderr = subprocess.STDOUT)
         output = p.communicate()[0]
@@ -157,6 +160,21 @@ def handle_message(msg):
         os.remove(temp_path)
 
         return Message("provision_output", output)
+
+    elif msg.command == u"upload_harness":
+        if config is None:
+            return Message("error", "no configuration")
+
+        with tempfile.TemporaryFile() as f:
+            f.write(msg.payload)
+            f.seek(0)
+            archive = zipfile.ZipFile(f, mode = "r")
+            log.debug("Extracting harness with members %r to %r",
+                archive.namelist(), config["harness_directory"])
+            archive.extractall(config["harness_directory"])
+            archive.close()
+
+        return Message("ok", "")
 
     else:
         return Message("error", u"unknown command")

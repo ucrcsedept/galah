@@ -5,6 +5,10 @@ from galah.common import marshal
 # stdlib
 import socket
 import time
+import tempfile
+import shutil
+import zipfile
+import os
 
 # external
 import pytest
@@ -156,3 +160,46 @@ class TestLiveInstance:
         assert msg.command == "provision_output"
         assert msg.payload == expected_output
         con.shutdown()
+
+    def test_upload_harness(self, bootstrapper_server):
+        temp_dir = tempfile.mkdtemp()
+
+        try:
+            con = bootstrapper_server()
+            test_config = {
+                "user": "notvalid",
+                "group": "notvalid",
+                "harness_directory": temp_dir,
+                "testables_directory": "/dev/null"
+            }
+            con.send(protocol.Message("init", marshal.dumps(test_config)))
+            assert con.recv().command == "ok"
+
+            test_files = {
+                "file.test": "Delicious applesauce",
+                "a/file.test": "Even more delicious applesauce",
+                "a/unicode": UNICODE_TEST_SCRIBBLES.encode("utf_8")
+            }
+
+            with tempfile.TemporaryFile() as f:
+                test_zipfile = zipfile.ZipFile(f, mode = "w")
+                for k, v in test_files.items():
+                    test_zipfile.writestr(k, v)
+                test_zipfile.close()
+
+                f.seek(0)
+                con.send(protocol.Message("upload_harness", f.read()))
+
+            assert con.recv().command == "ok"
+
+            # Print everything in the temp directory for the debuggers sake
+            print repr(list(os.walk(temp_dir)))
+
+            for k, v in test_files.items():
+                adjusted_path = os.path.join(temp_dir, k)
+                assert os.path.isfile(adjusted_path)
+                assert open(adjusted_path, "rb").read() == v
+
+            con.shutdown()
+        finally:
+            shutil.rmtree(temp_dir)
