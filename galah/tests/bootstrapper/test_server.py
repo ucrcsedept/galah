@@ -27,7 +27,14 @@ class TestLiveInstance:
                 assert message.command == "pong"
                 assert message.payload == str(i)
 
+            con.shutdown()
+
     def test_ping(self, bootstrapper_server):
+        """
+        Basic test ensuring the bootstrapper server responds to pings.
+
+        """
+
         con = bootstrapper_server()
 
         ping_message = protocol.Message("ping", "data")

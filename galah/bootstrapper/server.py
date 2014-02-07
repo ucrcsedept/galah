@@ -56,9 +56,9 @@ def process_socket(sock, server_sock, connections):
 
                 if response.command == "error":
                     log.info("Disconnecting from %s", sock.getpeername())
-                    sock.sock.close()
-                    sock.sock.shutdown(socket.SHUT_RDWR)
+                    sock.shutdown()
                     connections.remove(sock)
+                    return
 
 def main(uds = None):
     """
@@ -108,6 +108,7 @@ def main(uds = None):
                 connections.remove(sock)
             except Connection.Disconnected:
                 log.info("%r disconnected", sock.sock.getpeername())
+                sock.shutdown() # Just in case
                 connections.remove(sock)
             except Exception:
                 log.error("Unknown exception raised while reading data from "
@@ -117,7 +118,7 @@ def main(uds = None):
 
 def handle_message(msg):
     if msg.command == u"ping":
-        return Message("pong", msg.payload.decode("utf_8"))
+        return Message("pong", msg.payload)
     else:
         return Message("error", u"unknown command")
 
