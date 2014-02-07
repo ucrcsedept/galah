@@ -24,18 +24,6 @@ class Message(object):
         return "Message(command = %r, payload = %s)" % (self.command,
             formatted_payload)
 
-    def shutdown(self):
-        """
-        Properly shuts down and closes the socket. Any errors are ignored.
-
-        """
-
-        try:
-            self.sock.shutdown(socket.SHUT_RDWR)
-            self.sock.close()
-        except:
-            pass
-
 def serialize(message):
     """
     Serializes a message into a ``str`` object suitable for sending over
@@ -217,3 +205,15 @@ class Connection(object):
 
         self.sock.sendall(serialize(message))
 
+
+    def shutdown(self):
+        """
+        Properly shuts down and closes the socket. Any errors are ignored.
+
+        """
+
+        try:
+            self.sock.shutdown(socket.SHUT_RDWR)
+            self.sock.close()
+        except:
+            pass
