@@ -21,7 +21,8 @@ def pytest_runtest_makereport(item, call, __multicall__):
     rep = __multicall__.execute()
 
     if call.when == "call" and "bootstrapper_server" in item.fixturenames:
-        # Brutally murder the server process
+        # Brutally murder the server process. We need it to be dead, otherwise
+        # the read that follows will block forever.
         os.kill(item._bootstrapper_server_process.pid, signal.SIGKILL)
 
         server_output = item._bootstrapper_server_process.stdout.read()
@@ -43,6 +44,14 @@ def pytest_runtest_makereport(item, call, __multicall__):
 
 @pytest.fixture
 def bootstrapper_server(request):
+    """
+    pytest fixture that will start up a bootstrapper server and give you access
+    to it. The fixture's return value is a function that can be called with no
+    arguments and it will return a new protocol.Connection object that is
+    already connected to the server.
+
+    """
+
     # Create a temporary directory that will house our unix socket
     temp_dir = tempfile.mkdtemp()
     socket_path = os.path.join(temp_dir, "bootstrapper-socket")
@@ -55,10 +64,11 @@ def bootstrapper_server(request):
         stderr = subprocess.STDOUT)
 
     # These will be used by our make report function to add proper sections to
-    # our results
+    # our results.
     request.node._bootstrapper_server_process = server_process
     request.node._bootstrapper_log_dir = temp_dir
 
+    # Ensure that the process and files are cleaned up once the test is done
     def cleanup():
         # Brutally murder the server process
         os.kill(server_process.pid, signal.SIGKILL)
@@ -67,8 +77,7 @@ def bootstrapper_server(request):
         shutil.rmtree(temp_dir, ignore_errors = True)
     request.addfinalizer(cleanup)
 
-    # Wait for the server to start up and create the socket file (the setup
-    # function above will take care of that)
+    # Wait for the server to start up and create the socket file
     tries_left = 5
     while not os.path.exists(socket_path):
         time.sleep(.3)
@@ -78,8 +87,11 @@ def bootstrapper_server(request):
             pytest.fail("Could not start bootstrapper server.")
 
     # Connect to the bootstrapper
-    bootstrapper_sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-    bootstrapper_sock.settimeout(4)
-    bootstrapper_sock.connect(socket_path)
+    def create_connection():
+        bootstrapper_sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        bootstrapper_sock.settimeout(4)
+        bootstrapper_sock.connect(socket_path)
 
-    return protocol.Connection(bootstrapper_sock)
+        return protocol.Connection(bootstrapper_sock)
+
+    return create_connection

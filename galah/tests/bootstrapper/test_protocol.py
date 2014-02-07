@@ -1,18 +1,11 @@
 # internal
-from galah.bootstrapper import protocol, server
+from galah.bootstrapper import protocol
 
 # external
 import pytest
 
 # stdlib
 import itertools
-import sys
-import os.path
-
-# Tell pytest to load our bootstrapper plugin. Absolute import is required here
-# though I'm not sure why. It does not error when given simply "bootstrapper"
-# but it does not correclty load the plugin.
-pytest_plugins = ("galah.tests.bootstrapper.pytest_bootstrapper", )
 
 # A crazy unicode string suitable for use in testing. Prints as
 # "THE PONY HE COMES" with tons of decoration.
@@ -66,7 +59,7 @@ def test_single_encode_decode(test_message):
             decoded_message.payload.decode("utf_8")
     assert decoded_message.payload == test_message.payload
 
-def test_stream():
+def test_stream_encode_decode():
     """
     Tests that a stream of messages are all encoded and decoded properly.
 
@@ -101,12 +94,3 @@ def test_stream():
                 decoded_message.payload.decode("utf_8")
         assert decoded_message.payload == i.payload
 
-class TestLiveInstance:
-    def test_ping(self, bootstrapper_server):
-        ping_message = protocol.Message("ping", "data")
-        bootstrapper_server.send(ping_message)
-
-        received_messages = bootstrapper_server.recv()
-        assert len(received_messages) == 1
-        assert received_messages[0].command == "pong"
-        assert received_messages[0].payload == ping_message.payload
