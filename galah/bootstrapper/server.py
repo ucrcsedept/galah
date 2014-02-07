@@ -30,6 +30,7 @@ def process_socket(sock, server_sock, connections):
     if sock is server_sock:
         # Accept any new connections
         sock, address = server_sock.accept()
+        sock.setblocking(0)
         connections.append(Connection(sock))
 
         log.info("New connection from %s", address)
@@ -81,8 +82,6 @@ def main(uds = None):
         server_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         server_sock.bind(LISTEN_ON)
 
-    # The code is written with the assumption that all of the sockets are
-    # non-blocking.
     server_sock.setblocking(0)
 
     # Begin accepting new connections
@@ -93,8 +92,8 @@ def main(uds = None):
     while True:
         # Block until one of the sockets we're looking at has data waiting to
         # be read or connections waiting to be accepted.
-        socks, _w, _e = select.select([server_sock] + connections, [],
-            [server_sock] + connections)
+        socks, _w, _e = select.select([server_sock] + connections, [], [])
+        log.debug("%d sockets out of %d with data waiting.", len(socks), len(connections))
 
         for sock in socks:
             try:

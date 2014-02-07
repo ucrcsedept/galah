@@ -193,6 +193,7 @@ class Connection(object):
             for i in data:
                 msg = self._decoder.decode(i)
                 if msg is not None:
+                    log.debug("Received new %r message.", msg.command)
                     self.message_buffer.insert(0, msg)
 
         return self.message_buffer.pop()
