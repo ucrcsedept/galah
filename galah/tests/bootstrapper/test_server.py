@@ -20,10 +20,12 @@ class TestLiveInstance:
 
         for i in range(10):
             con = bootstrapper_server()
-            con.send(protocol.Message("ping", str(i)))
-            message = con.recv()
-            assert message.command == "pong"
-            assert message.payload == str(i)
+
+            for j in range(5):
+                con.send(protocol.Message("ping", str(i)))
+                message = con.recv()
+                assert message.command == "pong"
+                assert message.payload == str(i)
 
     def test_ping(self, bootstrapper_server):
         con = bootstrapper_server()
