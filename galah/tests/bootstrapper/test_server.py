@@ -115,8 +115,7 @@ class TestLiveInstance:
             "user": 100,
             "group": 100,
             "harness_directory": "/tmp/harness",
-            "testables_directory": "/tmp/testables",
-            "provision_script": UNICODE_TEST_SCRIBBLES
+            "testables_directory": UNICODE_TEST_SCRIBBLES
         }
         test_config_serialized = marshal.dumps(test_config)
 
@@ -140,4 +139,20 @@ class TestLiveInstance:
         assert msg.command == "config"
         assert marshal.loads(msg.payload) == test_config
 
+        con.shutdown()
+
+    def test_provision(self, bootstrapper_server):
+        expected_output = "Good day sir"
+        test_script = """#!/usr/bin/env bash
+        echo "%s"
+        """ % (expected_output, )
+
+        # The output of the script will actually contain a trailing newline
+        expected_output += "\n"
+
+        con = bootstrapper_server()
+        con.send(protocol.Message("provision", test_script))
+        msg = con.recv()
+        assert msg.command == "provision_output"
+        assert msg.payload == expected_output
         con.shutdown()

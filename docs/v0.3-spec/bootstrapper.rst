@@ -48,13 +48,12 @@ When the bootstrapper receives an ``init`` command it will initialize itself bas
  * **group** (string or int): The groupname or GID to run the harness under.
  * **harness_directory** (string): The directory to store the test harness in.
  * **testables_directory** (string): The directory to store the testables in.
- * **provision_script** (string or null): A script that will be run as root before any other work by the bootstrapper is performed. May be ``null`` if not needed.
 
 The bootstrapper will respond with an ``ok`` response.
 
 .. code-block:: json
 
-    init 128 {"user": 100, "group": 100, "harness_directory": "/tmp/harness", "testables_directory": "/tmp/testables", "provision_script": null}
+    init 128 {"user": 100, "group": 100, "harness_directory": "/tmp/harness", "testables_directory": "/tmp/testables"}
     ok 0
 
 #### get_config
@@ -66,7 +65,7 @@ last ``init`` command.
 .. code-block:: json
 
     get_config 0
-    config 128 {"user": 100, "group": 100, "harness_directory": "/tmp/harness", "testables_directory": "/tmp/testables", "provision_script": null}
+    config 128 {"user": 100, "group": 100, "harness_directory": "/tmp/harness", "testables_directory": "/tmp/testables"}
 
 #### subscribe
 

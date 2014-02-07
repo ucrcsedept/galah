@@ -13,6 +13,9 @@ import socket
 import select
 import errno
 import json
+import tempfile
+import subprocess
+import os
 
 import logging
 log = logging.getLogger("galah.bootstrapper.server")
@@ -125,7 +128,7 @@ def handle_message(msg):
 
     elif msg.command == u"init":
         EXPECTED_KEYS = set(["user", "group", "harness_directory",
-            "testables_directory", "provision_script"])
+            "testables_directory"])
 
         decoded_payload = msg.payload.decode("utf_8")
         received_config = json.loads(decoded_payload)
@@ -140,6 +143,20 @@ def handle_message(msg):
     elif msg.command == u"get_config":
         serialized_config = json.dumps(config, ensure_ascii = False)
         return Message("config", serialized_config)
+
+    elif msg.command == u"provision":
+        with tempfile.NamedTemporaryFile(delete = False) as f:
+            temp_path = f.name
+            f.write(msg.payload)
+
+        os.chmod(temp_path, 0700)
+        p = subprocess.Popen([temp_path], stdout = subprocess.PIPE,
+            stderr = subprocess.STDOUT)
+        output = p.communicate()[0]
+
+        os.remove(temp_path)
+
+        return Message("provision_output", output)
 
     else:
         return Message("error", u"unknown command")

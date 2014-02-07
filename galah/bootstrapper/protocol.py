@@ -34,6 +34,9 @@ def serialize(message):
 
     buf = StringIO.StringIO()
 
+    if not isinstance(message.payload, basestring):
+        raise TypeError("payload must be str or unicode")
+
     # If the payload is a unicode string, we will encode it as UTF-8 (doing
     # this here is primarily for conveniece)
     if isinstance(message.payload, unicode):
