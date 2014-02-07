@@ -54,8 +54,19 @@ The bootstrapper will respond with an ``ok`` response.
 
 .. code-block:: json
 
-    init 128 {"uid": 100, "gid": 100, "harness_directory": "/tmp/harness", "testables_directory": "/tmp/testables", "provision_script": null}
+    init 128 {"user": 100, "group": 100, "harness_directory": "/tmp/harness", "testables_directory": "/tmp/testables", "provision_script": null}
     ok 0
+
+#### get_config
+
+When the bootstrapper recieves this command it will respond with a ``config``
+message containing the UTF-8 JSON encoded configuration it recieved from the
+last ``init`` command.
+
+.. code-block:: json
+
+    get_config 0
+    config 128 {"user": 100, "group": 100, "harness_directory": "/tmp/harness", "testables_directory": "/tmp/testables", "provision_script": null}
 
 #### subscribe
 

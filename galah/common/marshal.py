@@ -34,7 +34,7 @@ def dumps(obj):
     unencoded = _json.dumps(obj, separators = (",", ":"), ensure_ascii = False)
 
     # This will always give us a str object
-    return unencoded.decode("utf_8")
+    return unencoded.encode("utf_8")
 
 def loads(raw):
     """

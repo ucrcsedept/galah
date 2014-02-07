@@ -7,17 +7,21 @@ if __name__ == "__main__" and __package__ is None:
 from .protocol import *
 
 # stdlib
+from optparse import make_option, OptionParser
 import sys
 import socket
 import select
 import errno
-from optparse import make_option, OptionParser
+import json
 
 import logging
 log = logging.getLogger("galah.bootstrapper.server")
 
 # The interface and port to listen on
 LISTEN_ON = ("", BOOTSTRAPPER_PORT)
+
+config = None
+"""The global configuration dictionary. Set by the ``init`` command."""
 
 def process_socket(sock, server_sock, connections):
     """
@@ -118,6 +122,25 @@ def main(uds = None):
 def handle_message(msg):
     if msg.command == u"ping":
         return Message("pong", msg.payload)
+
+    elif msg.command == u"init":
+        EXPECTED_KEYS = set(["user", "group", "harness_directory",
+            "testables_directory", "provision_script"])
+
+        decoded_payload = msg.payload.decode("utf_8")
+        received_config = json.loads(decoded_payload)
+        if set(received_config.keys()) != EXPECTED_KEYS:
+            return Message("error", u"bad configuration")
+
+        global config
+        config = received_config
+
+        return Message("ok", u"")
+
+    elif msg.command == u"get_config":
+        serialized_config = json.dumps(config, ensure_ascii = False)
+        return Message("config", serialized_config)
+
     else:
         return Message("error", u"unknown command")
 
