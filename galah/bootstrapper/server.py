@@ -55,7 +55,7 @@ def process_socket(sock, server_sock, connections):
                 sock.send(response)
 
                 if response.command == "error":
-                    log.info("Disconnecting from %s", sock.getpeername())
+                    log.info("Disconnecting from %s", sock.sock.getpeername())
                     sock.shutdown()
                     connections.remove(sock)
                     return

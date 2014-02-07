@@ -1,6 +1,9 @@
 # internal
 from galah.bootstrapper import protocol, server
 
+# stdlib
+import socket
+
 # external
 import pytest
 
@@ -28,6 +31,29 @@ class TestLiveInstance:
                 assert message.payload == str(i)
 
             con.shutdown()
+
+    def test_bad_message(self, bootstrapper_server):
+        """
+        Tests that the server send an error response when given an invalid
+        command and disconnects, but stays alive.
+
+        """
+
+        con = bootstrapper_server()
+        con.send(protocol.Message("not_a_command", "some data"))
+        message = con.recv()
+        assert message.command == "error"
+        con.send(protocol.Message("ping", "data"))
+        with pytest.raises(socket.timeout):
+            con.recv()
+        con.shutdown()
+
+        con = bootstrapper_server()
+        con.send(protocol.Message("ping", "data"))
+        message2 = con.recv()
+        assert message2.command == "pong"
+        assert message2.payload == "data"
+        con.shutdown()
 
     def test_ping(self, bootstrapper_server):
         """
