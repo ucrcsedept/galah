@@ -10,6 +10,7 @@ from .protocol import *
 import sys
 import socket
 import select
+import errno
 from optparse import make_option, OptionParser
 
 import logging
@@ -19,6 +20,13 @@ log = logging.getLogger("galah.bootstrapper.server")
 LISTEN_ON = ("", BOOTSTRAPPER_PORT)
 
 def process_socket(sock, server_sock, connections):
+    """
+    A helper function used by ``main()`` to correctly read from its sockets.
+
+    The arguments are meant to match the variables in the main function.
+
+    """
+
     if sock is server_sock:
         # Accept any new connections
         sock, address = server_sock.accept()
@@ -26,7 +34,17 @@ def process_socket(sock, server_sock, connections):
 
         log.info("New connection from %s", address)
     else:
-        for msg in sock.recv():
+        while True:
+            try:
+                msg = sock.recv()
+            except socket.error as e:
+                if e.args[0] == errno.EAGAIN or e.args[0] == errno.EWOULDBLOCK:
+                    # There is no more data in the socket
+                    break
+                else:
+                    # Something else happened so let it bubble up
+                    raise
+
             log.info("Received %s command from %s with %d-byte payload",
                 msg.command, sock.sock.getpeername(), len(msg.payload))
 
@@ -42,7 +60,17 @@ def process_socket(sock, server_sock, connections):
                     sock.sock.shutdown(socket.SHUT_RDWR)
                     connections.remove(sock)
 
-def main(uds):
+def main(uds = None):
+    """
+    Executes the main logic of the server.
+
+    :param uds: If ``None``, the server will listen on the TCP address-port
+        pair specified by ``LISTEN_ON``, otherwise this argument will be
+        treated as a path to a unix domain socket which will be created and
+        listened on.
+
+    """
+
     if uds is not None:
         server_sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         server_sock.bind(uds)
@@ -53,11 +81,8 @@ def main(uds):
         server_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         server_sock.bind(LISTEN_ON)
 
-    # The server will likely work just fine in blocking mode as well, but
-    # we could get stuck in a deadlocked state if we're not careful. This is
-    # due to the supposed fact that if select.select says that there's data
-    # waiting to be read from a socket, that does not necessarily mean that you
-    # won't block when you try.
+    # The code is written with the assumption that all of the sockets are
+    # non-blocking.
     server_sock.setblocking(0)
 
     # Begin accepting new connections
@@ -73,15 +98,13 @@ def main(uds):
 
         for sock in socks:
             try:
+                # There's quite a bit of log we have to do here and the nesting
+                # becomes a problem so I moved the code to a helper function.
                 process_socket(sock, server_sock, connections)
             except socket.error:
                 log.warning("Exception raised on socket connected to %r",
                     sock.sock.getpeername(), exc_info = sys.exc_info())
-                try:
-                    sock.sock.shutdown(socket.SHUT_RDWR)
-                    sock.sock.close()
-                except:
-                    pass
+                sock.shutdown()
                 connections.remove(sock)
             except Connection.Disconnected:
                 log.info("%r disconnected", sock.sock.getpeername())
@@ -89,11 +112,7 @@ def main(uds):
             except Exception:
                 log.error("Unknown exception raised while reading data from "
                     "%r", sock.sock.getpeername(), exc_info = sys.exc_info())
-                try:
-                    sock.sock.shutdown(socket.SHUT_RDWR)
-                    sock.sock.close()
-                except:
-                    pass
+                sock.shutdown()
                 connections.remove(sock)
 
 def handle_message(msg):

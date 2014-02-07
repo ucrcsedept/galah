@@ -24,6 +24,18 @@ class Message(object):
         return "Message(command = %r, payload = %s)" % (self.command,
             formatted_payload)
 
+    def shutdown(self):
+        """
+        Properly shuts down and closes the socket. Any errors are ignored.
+
+        """
+
+        try:
+            self.sock.shutdown(socket.SHUT_RDWR)
+            self.sock.close()
+        except:
+            pass
+
 def serialize(message):
     """
     Serializes a message into a ``str`` object suitable for sending over
@@ -146,6 +158,10 @@ class Decoder(object):
 class Connection(object):
     """
     :ivar sock: The ``socket`` instance returned by ``socket.accept()``.
+    :ivar message_buffer: A ``list`` instance containing any messages received
+        over the network but not yet returned by ``recv()``. Most recently
+        recieved messages are at the front of the list, so
+        ``message_buffer[-1]`` will be the next Message returned by ``recv()``.
 
     """
 
@@ -155,6 +171,8 @@ class Connection(object):
     def __init__(self, sock):
         self.sock = sock
 
+        self.message_buffer = []
+
         self._decoder = Decoder()
 
     # Necessary to support select.select()
@@ -163,23 +181,33 @@ class Connection(object):
 
     def recv(self):
         """
-        Reads in data waiting in the socket and returns a list of Message
-        objects that were decoded.
+        Reads a Message from the socket and returns it (or returns a Message
+        that has already been received if any such Message is in the buffer).
 
-        :returns: ``None``
+        If the socket is in blocking mode, this function returns the oldest
+        message in the message buffer if it is non-empty, otherwise it reads
+        in data from the socket until a Message is decoded and then returns
+        that Message.
+
+        If the socket is in non-blocking mode this function will return the
+        oldest message in the message buffer if such a message exists,
+        otherwise it will read all of the data waiting in the socket and
+        return the message it decodes, otherwise a socket.error or socket.
+        timeout error will occur depending on how the socket is configured.
 
         """
 
-        data = self.sock.recv(4096)
-        if len(data) == 0:
-            raise Connection.Disconnected()
+        while not self.message_buffer:
+            data = self.sock.recv(4096)
+            if len(data) == 0:
+                raise Connection.Disconnected()
 
-        messages = []
-        for i in data:
-            msg = self._decoder.decode(i)
-            if msg is not None:
-                messages.append(msg)
-        return messages
+            for i in data:
+                msg = self._decoder.decode(i)
+                if msg is not None:
+                    self.message_buffer.insert(0, msg)
+
+        return self.message_buffer.pop()
 
     def send(self, message):
         """
