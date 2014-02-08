@@ -67,10 +67,6 @@ last ``init`` command.
     get_config 0
     config 128 {"user": 100, "group": 100, "harness_directory": "/tmp/harness", "testables_directory": "/tmp/testables"}
 
-#### subscribe
-
-This command is used to subscribe to log messages. When the bootstrapper receives a ``subscribe`` command it will begin sending ``log`` responses whenever a loggable event occurs in the bootstrapper. These ``log`` responses can occur at any time
-
 #### get_status
 
 When the bootstrapper receives a ``get_status`` command it will give a ``status`` response with a UTF-8 encoded payload containing the textual representation of its state.

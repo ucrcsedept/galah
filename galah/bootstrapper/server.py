@@ -123,6 +123,32 @@ def main(uds = None):
                 sock.shutdown()
                 connections.remove(sock)
 
+def safe_extraction(zipfile, dir_path):
+    """
+    Extracts all of the members of a zip archive into the given directory.
+
+    :param zipfile: An instance of zipfile.ZipFile.
+    :param dir_path: The path to the directory.
+
+    :returns: None
+
+    :raises RuntimeError: When the archive contains illegal paths (such as
+        paths that may try to escape the directory). Nothing will be extracted
+        in this case, all or nothing style.
+
+    """
+
+    for i in zipfile.namelist():
+        i = i.decode("ascii")
+
+        if os.path.isabs(i):
+            raise RuntimeError("absolute path found")
+
+        if u".." in i:
+            raise RuntimeError(".. found")
+
+    zipfile.extractall(dir_path)
+
 def handle_message(msg):
     if msg.command == u"ping":
         return Message("pong", msg.payload)
@@ -164,6 +190,8 @@ def handle_message(msg):
     elif msg.command == u"upload_harness":
         if config is None:
             return Message("error", "no configuration")
+        if len(os.listdir(config["harness_directory"])) > 0:
+            return Message("error", "harness already uploaded")
 
         with tempfile.TemporaryFile() as f:
             f.write(msg.payload)
@@ -171,8 +199,12 @@ def handle_message(msg):
             archive = zipfile.ZipFile(f, mode = "r")
             log.debug("Extracting harness with members %r to %r",
                 archive.namelist(), config["harness_directory"])
-            archive.extractall(config["harness_directory"])
-            archive.close()
+            try:
+                safe_extraction(archive, config["harness_directory"])
+            except RuntimeError as e:
+                return Message("error", str(e))
+            finally:
+                archive.close()
 
         return Message("ok", "")
 

@@ -162,6 +162,12 @@ class TestLiveInstance:
         con.shutdown()
 
     def test_upload_harness(self, bootstrapper_server):
+        """
+        Ensures that upload harness works as intended as well as testing to
+        ensure that malicious zip files are not accepted.
+
+        """
+
         temp_dir = tempfile.mkdtemp()
 
         try:
@@ -174,6 +180,25 @@ class TestLiveInstance:
             }
             con.send(protocol.Message("init", marshal.dumps(test_config)))
             assert con.recv().command == "ok"
+
+            bad_test_files = {
+                "../file.test": "Delicious applesauce",
+                "a/file.test": "Even more delicious applesauce",
+                "a/unicode": UNICODE_TEST_SCRIBBLES.encode("utf_8")
+            }
+
+            with tempfile.TemporaryFile() as f:
+                test_zipfile = zipfile.ZipFile(f, mode = "w")
+                for k, v in bad_test_files.items():
+                    test_zipfile.writestr(k, v)
+                test_zipfile.close()
+
+                f.seek(0)
+                con.send(protocol.Message("upload_harness", f.read()))
+
+            assert con.recv().command == "error"
+
+            con = bootstrapper_server()
 
             test_files = {
                 "file.test": "Delicious applesauce",
