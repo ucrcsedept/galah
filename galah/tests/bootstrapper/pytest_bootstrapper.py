@@ -89,7 +89,7 @@ def bootstrapper_server(request):
     # Connect to the bootstrapper
     def create_connection():
         bootstrapper_sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-        bootstrapper_sock.settimeout(4)
+        bootstrapper_sock.settimeout(0.5)
         bootstrapper_sock.connect(socket_path)
 
         return protocol.Connection(bootstrapper_sock)
