@@ -182,6 +182,7 @@ class TestLiveInstance:
             assert con.recv().command == "ok"
 
             bad_test_files = {
+                "main": "lalala",
                 "../file.test": "Delicious applesauce",
                 "a/file.test": "Even more delicious applesauce",
                 "a/unicode": UNICODE_TEST_SCRIBBLES.encode("utf_8")
@@ -201,6 +202,7 @@ class TestLiveInstance:
             con = bootstrapper_server()
 
             test_files = {
+                "main": "lalala",
                 "file.test": "Delicious applesauce",
                 "a/file.test": "Even more delicious applesauce",
                 "a/unicode": UNICODE_TEST_SCRIBBLES.encode("utf_8")

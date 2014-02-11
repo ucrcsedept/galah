@@ -196,9 +196,15 @@ def handle_message(msg):
         with tempfile.TemporaryFile() as f:
             f.write(msg.payload)
             f.seek(0)
+
             archive = zipfile.ZipFile(f, mode = "r")
-            log.debug("Extracting harness with members %r to %r",
+
+            if "main" not in archive.namelist():
+                return Message("error", "no main file in test harness")
+
+            log.info("Extracting harness with members %r to %r",
                 archive.namelist(), config["harness_directory"])
+
             try:
                 safe_extraction(archive, config["harness_directory"])
             except RuntimeError as e:
