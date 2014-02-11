@@ -47,7 +47,7 @@ When the bootstrapper receives an ``init`` command it will initialize itself bas
  * **user** (string or int): The username or UID to run the harness under.
  * **group** (string or int): The groupname or GID to run the harness under.
  * **harness_directory** (string): The directory to store the test harness in.
- * **testables_directory** (string): The directory to store the testables in.
+ * **submission_directory** (string): The directory to store the submission in.
 
 The bootstrapper will respond with an ``ok`` response.
 

@@ -150,19 +150,23 @@ def safe_extraction(zipfile, dir_path):
     zipfile.extractall(dir_path)
 
 def handle_message(msg):
+    global config
+
     if msg.command == u"ping":
         return Message("pong", msg.payload)
 
     elif msg.command == u"init":
+        if config is not None:
+            return Message("error", u"already configured")
+
         EXPECTED_KEYS = set(["user", "group", "harness_directory",
-            "testables_directory"])
+            "submission_directory"])
 
         decoded_payload = msg.payload.decode("utf_8")
         received_config = json.loads(decoded_payload)
         if set(received_config.keys()) != EXPECTED_KEYS:
             return Message("error", u"bad configuration")
 
-        global config
         config = received_config
 
         return Message("ok", u"")
@@ -176,7 +180,8 @@ def handle_message(msg):
             temp_path = f.name
             f.write(msg.payload)
 
-        # The tempfile module inits it to 600
+        # The tempfile module inits it to 600, we need to make it executable as
+        # well.
         os.chmod(temp_path, 0700)
 
         p = subprocess.Popen([temp_path], stdout = subprocess.PIPE,
@@ -187,11 +192,25 @@ def handle_message(msg):
 
         return Message("provision_output", output)
 
-    elif msg.command == u"upload_harness":
+    elif (msg.command == u"upload_harness" or
+            msg.command == u"upload_submission"):
+        # We need to know where to store our files so we have to be initialized
+        # first.
         if config is None:
-            return Message("error", "no configuration")
-        if len(os.listdir(config["harness_directory"])) > 0:
-            return Message("error", "harness already uploaded")
+            return Message("error", u"no configuration")
+
+        # The primary different between the two commands is where it stores the
+        # payload. We resolve that difference here.
+        is_harness = msg.command == u"upload_harness"
+        if is_harness:
+            target_directory = config["harness_directory"]
+        else:
+            target_directory = config["submission_directory"]
+
+        # This plays double duty of catching bad configurations and erroring
+        # if the user uploads something twice.
+        if len(os.listdir(target_directory)) > 0:
+            return Message("error", u"target directory not empty")
 
         with tempfile.TemporaryFile() as f:
             f.write(msg.payload)
@@ -199,14 +218,14 @@ def handle_message(msg):
 
             archive = zipfile.ZipFile(f, mode = "r")
 
-            if "main" not in archive.namelist():
-                return Message("error", "no main file in test harness")
+            if is_harness and "main" not in archive.namelist():
+                return Message("error", u"no main file in test harness")
 
-            log.info("Extracting harness with members %r to %r",
-                archive.namelist(), config["harness_directory"])
+            log.info("Extracting archive with members %r to %r",
+                archive.namelist(), target_directory)
 
             try:
-                safe_extraction(archive, config["harness_directory"])
+                safe_extraction(archive, target_directory)
             except RuntimeError as e:
                 return Message("error", str(e))
             finally:

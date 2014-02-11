@@ -119,7 +119,7 @@ class TestLiveInstance:
             "user": 100,
             "group": 100,
             "harness_directory": "/tmp/harness",
-            "testables_directory": UNICODE_TEST_SCRIBBLES
+            "submission_directory": UNICODE_TEST_SCRIBBLES
         }
         test_config_serialized = marshal.dumps(test_config)
 
@@ -161,72 +161,111 @@ class TestLiveInstance:
         assert msg.payload == expected_output
         con.shutdown()
 
-    def test_upload_harness(self, bootstrapper_server):
-        """
-        Ensures that upload harness works as intended as well as testing to
-        ensure that malicious zip files are not accepted.
-
-        """
-
-        temp_dir = tempfile.mkdtemp()
-
-        try:
-            con = bootstrapper_server()
-            test_config = {
-                "user": "notvalid",
-                "group": "notvalid",
-                "harness_directory": temp_dir,
-                "testables_directory": "/dev/null"
-            }
-            con.send(protocol.Message("init", marshal.dumps(test_config)))
-            assert con.recv().command == "ok"
-
-            bad_test_files = {
-                "main": "lalala",
+    TEST_ARCHIVES = [
+        {
+            "files": {
                 "../file.test": "Delicious applesauce",
                 "a/file.test": "Even more delicious applesauce",
                 "a/unicode": UNICODE_TEST_SCRIBBLES.encode("utf_8")
-            }
-
-            with tempfile.TemporaryFile() as f:
-                test_zipfile = zipfile.ZipFile(f, mode = "w")
-                for k, v in bad_test_files.items():
-                    test_zipfile.writestr(k, v)
-                test_zipfile.close()
-
-                f.seek(0)
-                con.send(protocol.Message("upload_harness", f.read()))
-
-            assert con.recv().command == "error"
-
-            con = bootstrapper_server()
-
-            test_files = {
+            },
+            "type": "submission",
+            "should_succeed": False
+        },
+        {
+            "files": {
+                "main": "lalalala",
+                "../file.test": "Delicious applesauce",
+                "a/file.test": "Even more delicious applesauce",
+                "a/unicode": UNICODE_TEST_SCRIBBLES.encode("utf_8")
+            },
+            "type": "submission",
+            "should_succeed": False
+        },
+        {
+            "files": {
                 "main": "lalala",
                 "file.test": "Delicious applesauce",
                 "a/file.test": "Even more delicious applesauce",
                 "a/unicode": UNICODE_TEST_SCRIBBLES.encode("utf_8")
-            }
+            },
+            "type": "submission",
+            "should_succeed": True
+        },
+        {
+            "files": {
+                "main": "lalala",
+                "file.test": "Delicious applesauce",
+                "a/file.test": "Even more delicious applesauce",
+                "a/unicode": UNICODE_TEST_SCRIBBLES.encode("utf_8")
+            },
+            "type": "harness",
+            "should_succeed": True
+        },
+        {
+            "files": {
+                "file.test": "Delicious applesauce",
+                "a/file.test": "Even more delicious applesauce",
+                "a/unicode": UNICODE_TEST_SCRIBBLES.encode("utf_8")
+            },
+            "type": "harness",
+            "should_succeed": False
+        }
+    ]
 
+    @pytest.mark.parametrize("archive_info", TEST_ARCHIVES)
+    def test_upload(self, bootstrapper_server, archive_info):
+        """
+        Tests the upload_harness and upload_submission commands.
+
+        """
+
+        # We will get the bootstrapper to unpack the archive here
+        temp_dir = tempfile.mkdtemp()
+
+        try:
+            con = bootstrapper_server()
+
+            # Initialize the bootstrapper
+            is_harness = archive_info["type"] == "harness"
+            test_config = {
+                "user": "notvalid",
+                "group": "notvalid",
+                "harness_directory": temp_dir if is_harness else "/dev/null",
+                "submission_directory":
+                    temp_dir if not is_harness else "/dev/null"
+            }
+            con.send(protocol.Message("init", marshal.dumps(test_config)))
+            assert con.recv().command == "ok"
+
+            # Create the test archive and send it to the bootstrapper
             with tempfile.TemporaryFile() as f:
                 test_zipfile = zipfile.ZipFile(f, mode = "w")
-                for k, v in test_files.items():
+                for k, v in archive_info["files"].items():
                     test_zipfile.writestr(k, v)
                 test_zipfile.close()
 
                 f.seek(0)
-                con.send(protocol.Message("upload_harness", f.read()))
 
-            assert con.recv().command == "ok"
+                command = ("upload_harness" if is_harness else
+                    "upload_submission")
+                con.send(protocol.Message(command, f.read()))
 
-            # Print everything in the temp directory for the debuggers sake
-            print repr(list(os.walk(temp_dir)))
+            if archive_info["should_succeed"]:
+                # Print everything in the temp directory for the debugger's
+                # sake.
+                print repr(list(os.walk(temp_dir)))
 
-            for k, v in test_files.items():
-                adjusted_path = os.path.join(temp_dir, k)
-                assert os.path.isfile(adjusted_path)
-                assert open(adjusted_path, "rb").read() == v
+                assert con.recv().command == "ok"
+
+                for k, v in archive_info["files"].items():
+                    adjusted_path = os.path.join(temp_dir, k)
+                    assert os.path.isfile(adjusted_path)
+                    assert open(adjusted_path, "rb").read() == v
+            else:
+                assert con.recv().command == "error"
 
             con.shutdown()
         finally:
+            # Make sure we don't leave a bunch of temporary directories lying
+            # around after testing.
             shutil.rmtree(temp_dir)
