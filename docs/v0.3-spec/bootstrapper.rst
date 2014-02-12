@@ -48,6 +48,7 @@ When the bootstrapper receives an ``init`` command it will initialize itself bas
  * **group** (string or int): The groupname or GID to run the harness under.
  * **harness_directory** (string): The directory to store the test harness in.
  * **submission_directory** (string): The directory to store the submission in.
+ * **secret** (string): A string of bytes that all subsequent connections must authenticate with in order for the bootstrapper to accept their commands.
 
 The bootstrapper will respond with an ``ok`` response.
 

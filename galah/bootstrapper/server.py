@@ -17,6 +17,8 @@ import tempfile
 import subprocess
 import os
 import zipfile
+import pwd
+import grp
 
 import logging
 log = logging.getLogger("galah.bootstrapper.server")
@@ -26,6 +28,19 @@ LISTEN_ON = ("", BOOTSTRAPPER_PORT)
 
 config = None
 """The global configuration dictionary. Set by the ``init`` command."""
+
+class UntrustedConnection(Connection):
+    """
+    A normal protocol.Connection object for all purposes except that it also
+    has the boolean instance variable ``authenticated`` that stores whether the
+    peer has sent an appropriate ``auth`` command.
+
+    """
+
+    def __init__(self, *args, **kwargs):
+        self.authenticated = False
+
+        super(UntrustedConnection, self).__init__(*args, **kwargs)
 
 def process_socket(sock, server_sock, connections):
     """
@@ -39,7 +54,7 @@ def process_socket(sock, server_sock, connections):
         # Accept any new connections
         sock, address = server_sock.accept()
         sock.setblocking(0)
-        connections.append(Connection(sock))
+        connections.append(UntrustedConnection(sock))
 
         log.info("New connection from %s", address)
     else:
@@ -57,7 +72,7 @@ def process_socket(sock, server_sock, connections):
             log.info("Received %s command from %s with %d-byte payload",
                 msg.command, sock.sock.getpeername(), len(msg.payload))
 
-            response = handle_message(msg)
+            response = handle_message(msg, sock)
             if response is not None:
                 log.info("Sending %s response with payload %r",
                     response.command, response.payload)
@@ -105,15 +120,16 @@ def main(uds = None):
 
         for sock in socks:
             try:
-                # There's quite a bit of log we have to do here and the nesting
-                # becomes a problem so I moved the code to a helper function.
+                # There's quite a bit of stuff we have to do here and the
+                # nesting becomes a problem so I moved the code to a helper
+                # function.
                 process_socket(sock, server_sock, connections)
             except socket.error:
                 log.warning("Exception raised on socket connected to %r",
                     sock.sock.getpeername(), exc_info = sys.exc_info())
                 sock.shutdown()
                 connections.remove(sock)
-            except Connection.Disconnected:
+            except UntrustedConnection.Disconnected:
                 log.info("%r disconnected", sock.sock.getpeername())
                 sock.shutdown() # Just in case
                 connections.remove(sock)
@@ -136,6 +152,11 @@ def safe_extraction(zipfile, dir_path):
         paths that may try to escape the directory). Nothing will be extracted
         in this case, all or nothing style.
 
+    .. note::
+
+        This function could be made quite a bit safer by implementig
+        extractall() ourselves.
+
     """
 
     for i in zipfile.namelist():
@@ -149,18 +170,25 @@ def safe_extraction(zipfile, dir_path):
 
     zipfile.extractall(dir_path)
 
-def handle_message(msg):
+def handle_message(msg, con):
+    """
+    Handles the the ``msg`` received from ``con`` (a UntrustedConnection
+    object).
+
+    """
+
     global config
 
     if msg.command == u"ping":
         return Message("pong", msg.payload)
 
-    elif msg.command == u"init":
+    if msg.command == u"init":
         if config is not None:
+            log.warning("Bootstrapper was initialized twice")
             return Message("error", u"already configured")
 
         EXPECTED_KEYS = set(["user", "group", "harness_directory",
-            "submission_directory"])
+            "submission_directory", "secret"])
 
         decoded_payload = msg.payload.decode("utf_8")
         received_config = json.loads(decoded_payload)
@@ -171,11 +199,26 @@ def handle_message(msg):
 
         return Message("ok", u"")
 
-    elif msg.command == u"get_config":
+    if msg.command == u"auth":
+        if config is None:
+            return Message("error", u"no secret set yet")
+
+        if msg.payload == config["secret"]:
+            con.authenticated = True
+            return Message("ok", "")
+        else:
+            log.warning("Failed auth from peer")
+            return Message("error", u"bad secret")
+
+    # Every command that follows needs the peer to be authenticated
+    if config is None or not con.authenticated:
+        return Message("error", u"you are not authenticated")
+
+    if msg.command == u"get_config":
         serialized_config = json.dumps(config, ensure_ascii = False)
         return Message("config", serialized_config)
 
-    elif msg.command == u"provision":
+    if msg.command == u"provision":
         with tempfile.NamedTemporaryFile(delete = False) as f:
             temp_path = f.name
             f.write(msg.payload)
@@ -192,13 +235,8 @@ def handle_message(msg):
 
         return Message("provision_output", output)
 
-    elif (msg.command == u"upload_harness" or
+    if (msg.command == u"upload_harness" or
             msg.command == u"upload_submission"):
-        # We need to know where to store our files so we have to be initialized
-        # first.
-        if config is None:
-            return Message("error", u"no configuration")
-
         # The primary different between the two commands is where it stores the
         # payload. We resolve that difference here.
         is_harness = msg.command == u"upload_harness"
@@ -227,14 +265,34 @@ def handle_message(msg):
             try:
                 safe_extraction(archive, target_directory)
             except RuntimeError as e:
-                return Message("error", str(e))
+                return Message("error", unicode(e))
             finally:
                 archive.close()
 
         return Message("ok", "")
 
-    else:
-        return Message("error", u"unknown command")
+    if msg.command == "run_harness":
+        uid = config["user"]
+        if isinstance(uid, basestring):
+            uid = pwd.getpwname(uid).pw_uid
+
+        gid = config["group"]
+        if isinstance(gid, basestring):
+            gid = grp.getgrname(gid).gr_gid
+
+        # Make sure the permissions of the harness directory and submission
+        # directory are such that the testing user has ownership of them.
+        for i in [config["harness_directory"], config["submission_directory"]]:
+            os.chmod(i, 0700)
+            os.chown(i, uid, gid)
+            for root, dirnames, filenames in os.walk(i):
+                for j in dirnames + filenames:
+                    os.chown(os.path.join(root, j), uid, gid)
+                    os.chmod(os.path.join(root, j), 0700)
+
+        harness_executable = os.path.join(config["harness_directory"], "main")
+
+    return Message("error", u"unknown command")
 
 def setup_logging(log_dir):
     import codecs

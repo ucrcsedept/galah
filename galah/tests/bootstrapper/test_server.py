@@ -114,12 +114,19 @@ class TestLiveInstance:
         assert msg.command == "pong"
         assert msg.payload == ping_message.payload
 
-    def test_init(self, bootstrapper_server):
+    def test_init_auth(self, bootstrapper_server):
+        """
+        Tests that the init command works, as well as the auth command.
+
+        """
+
+        secret = "very secret"
         test_config = {
             "user": 100,
             "group": 100,
             "harness_directory": "/tmp/harness",
-            "submission_directory": UNICODE_TEST_SCRIBBLES
+            "submission_directory": UNICODE_TEST_SCRIBBLES,
+            "secret": secret
         }
         test_config_serialized = marshal.dumps(test_config)
 
@@ -138,6 +145,11 @@ class TestLiveInstance:
         msg = con.recv()
         assert msg.command == "ok"
 
+        # We now need to auth in order to get the configuration
+        con.send(protocol.Message("auth", secret))
+        msg = con.recv()
+        assert msg.command == "ok"
+
         con.send(protocol.Message("get_config", ""))
         msg = con.recv()
         assert msg.command == "config"
@@ -146,6 +158,8 @@ class TestLiveInstance:
         con.shutdown()
 
     def test_provision(self, bootstrapper_server):
+        """Tests that the provision command works as expected."""
+
         expected_output = "Good day sir"
         test_script = """#!/usr/bin/env bash
         echo "%s"
@@ -155,6 +169,20 @@ class TestLiveInstance:
         expected_output += "\n"
 
         con = bootstrapper_server()
+
+        secret = "super secret"
+        test_config = {
+            "user": "notvalid",
+            "group": "notvalid",
+            "harness_directory": "/dev/null",
+            "submission_directory": "/dev/null",
+            "secret": secret
+        }
+        con.send(protocol.Message("init", marshal.dumps(test_config)))
+        assert con.recv().command == "ok"
+        con.send(protocol.Message("auth", secret))
+        assert con.recv().command == "ok"
+
         con.send(protocol.Message("provision", test_script))
         msg = con.recv()
         assert msg.command == "provision_output"
@@ -227,14 +255,18 @@ class TestLiveInstance:
 
             # Initialize the bootstrapper
             is_harness = archive_info["type"] == "harness"
+            secret = "super secret"
             test_config = {
                 "user": "notvalid",
                 "group": "notvalid",
                 "harness_directory": temp_dir if is_harness else "/dev/null",
                 "submission_directory":
-                    temp_dir if not is_harness else "/dev/null"
+                    temp_dir if not is_harness else "/dev/null",
+                "secret": secret
             }
             con.send(protocol.Message("init", marshal.dumps(test_config)))
+            assert con.recv().command == "ok"
+            con.send(protocol.Message("auth", secret))
             assert con.recv().command == "ok"
 
             # Create the test archive and send it to the bootstrapper
@@ -269,3 +301,34 @@ class TestLiveInstance:
             # Make sure we don't leave a bunch of temporary directories lying
             # around after testing.
             shutil.rmtree(temp_dir)
+
+    def test_auth(self, bootstrapper_server):
+        con = bootstrapper_server()
+        secret = "super secret"
+        test_config = {
+            "user": "notvalid",
+            "group": "notvalid",
+            "harness_directory": "/dev/null",
+            "submission_directory": "/dev/null",
+            "secret": secret
+        }
+        con.send(protocol.Message("init", marshal.dumps(test_config)))
+        assert con.recv().command == "ok"
+        con.shutdown()
+
+        con = bootstrapper_server()
+        con.send(protocol.Message("get_config", ""))
+        assert con.recv().command == "error"
+        con.shutdown()
+
+        con = bootstrapper_server()
+        con.send(protocol.Message("auth", secret + "not correct"))
+        assert con.recv().command == "error"
+        con.shutdown()
+
+        con = bootstrapper_server()
+        con.send(protocol.Message("auth", secret))
+        assert con.recv().command == "ok"
+        con.send(protocol.Message("get_config", ""))
+        assert con.recv().command == "config"
+        con.shutdown()
