@@ -20,14 +20,15 @@ UNICODE_TEST_PONY = (
     u"\u031eS\u036f\u033f\u0314\u0328\u0340\u0325\u0345\u032b\u034e\u032d"
 )
 
-TEST_MESSAGES = [
-    protocol.Message(command = "test", payload = UNICODE_TEST_PONY),
-    protocol.Message(command = "test2", payload = "test payload"),
-    protocol.Message(command = "", payload = ""),
-    protocol.Message(command = "empty_payload", payload = "")
-]
+TEST_MESSAGES = {
+    "unicode": protocol.Message(command = "test", payload = UNICODE_TEST_PONY),
+    "normal": protocol.Message(command = "test2", payload = "test payload"),
+    "all empty": protocol.Message(command = "", payload = ""),
+    "payload empty": protocol.Message(command = "empty_payload", payload = "")
+}
 
-@pytest.mark.parametrize("test_message", TEST_MESSAGES)
+@pytest.mark.parametrize("test_message", TEST_MESSAGES.values(),
+        ids = TEST_MESSAGES.keys())
 def test_single_encode_decode(test_message):
     """
     Tests that all of the test messages can be encoded and decoded properly by
@@ -67,7 +68,7 @@ def test_stream_encode_decode():
 
     # This will create a flat list of messages containing every possible
     # ordering of our list of test messages.
-    combos = itertools.combinations(TEST_MESSAGES, len(TEST_MESSAGES))
+    combos = itertools.combinations(TEST_MESSAGES.values(), len(TEST_MESSAGES))
     message_stream = [i for combo in combos for i in combo]
 
     decoder = protocol.Decoder()
