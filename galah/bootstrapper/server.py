@@ -19,6 +19,8 @@ import os
 import zipfile
 import pwd
 import grp
+import fcntl
+import datetime
 
 import logging
 log = logging.getLogger("galah.bootstrapper.server")
@@ -170,7 +172,7 @@ def safe_extraction(zipfile, dir_path):
 
     zipfile.extractall(dir_path)
 
-def execute(args, stdin_data, user, group, buffer_limit):
+def execute(args, stdin_data, user, group, buffer_limit, timeout):
     # Get the UID from the username if that was provided
     uid = user
     if isinstance(uid, basestring):
@@ -195,9 +197,9 @@ def execute(args, stdin_data, user, group, buffer_limit):
 
         # Set or unset the non blocking flag
         if blocking:
-            flags |= os.O_NONBLOCK
-        else:
             flags &= ~os.O_NONBLOCK
+        else:
+            flags |= os.O_NONBLOCK
 
         fcntl.fcntl(f.fileno(), fcntl.F_SETFL, flags)
 
@@ -205,21 +207,21 @@ def execute(args, stdin_data, user, group, buffer_limit):
     # won't affect the write end of the pipe. After this is done however, we
     # need to be sure to not use any of the high level file operations and
     # instead only read via os.read.
-    set_blocking(process.stdout, True)
-    set_blocking(process.stderr, True)
+    set_blocking(process.stdout, False)
+    set_blocking(process.stderr, False)
 
     process.stdin.write(stdin_data)
     process.stdin.close()
 
     # Figure out when the process needs to die by
     deadline = (datetime.datetime.today() +
-        datetime.timedelta(seconds = config["harness_timeout"]))
+        datetime.timedelta(seconds = timeout))
 
     # We're going to buffer stdin and stdout on the filesystem
     buffers = [tempfile.TemporaryFile(), tempfile.TemporaryFile()]
     buffers_nbytes = [0, 0]
 
-    while process.poll():
+    while process.poll() is None:
         # Figure out how long we have until our deadline
         time_to_wait = deadline - datetime.datetime.today()
 
@@ -239,6 +241,7 @@ def execute(args, stdin_data, user, group, buffer_limit):
         # Read from stdout and stderr
         exceeded_buffer = False
         for k, v in enumerate([process.stdout, process.stderr]):
+            print "eat me"
             # If there's data waiting in the buffer
             if v in ready:
                 data = os.read(v.fileno(), 4096)
@@ -252,22 +255,29 @@ def execute(args, stdin_data, user, group, buffer_limit):
             break
 
     # If the process is still alive, kill it
-    bad_process = False
-    if process.poll():
-        bad_process = True
+    if process.poll() is None:
         process.kill() # brutally murder the process
         process.wait()
 
     # We'll grab the remaining data in the pipes as long as we don't exceed our
-    # buffer
+    # maximum sizes.
     for k, v in enumerate([process.stdout, process.stderr]):
-        while buffers_nbytes[k] < buffer_limit:
-            data = os.read(v.fileno(), 4096)
-            if data == "":
-                break
+        try:
+            while buffers_nbytes[k] < buffer_limit:
+                data = os.read(v.fileno(), 4096)
+                if data == "":
+                    break
 
-            buffers[k].write(data)
-            buffers_nbytes[k] += len(data)
+                buffers[k].write(data)
+                buffers_nbytes[k] += len(data)
+        except OSError as e:
+            if e.errno == errno.EAGAIN or e.errno == errno.EWOULDBLOCK:
+                pass
+            else:
+                raise
+
+    for i in buffers:
+        i.seek(0)
 
     return buffers
 
@@ -374,7 +384,7 @@ def handle_message(msg, con):
 
     if msg.command == "run_harness":
         harness_executable = os.path.join(config["harness_directory"], "main")
-        if not os.path.exists(harness_executable)
+        if not os.path.exists(harness_executable):
             return Message("error", u"no harness executable found")
 
         # Make sure the permissions of the harness directory and submission

@@ -321,3 +321,36 @@ class TestLiveInstance:
         con.send(protocol.Message("get_config", ""))
         assert con.recv().command == "config"
         con.shutdown()
+
+    def test_execute(self):
+        """
+        Tests the server's execute function which is responsible for securely
+        running the test harness.
+
+        """
+
+        expected_stdout, expected_stderr = "Foo", "Bar"
+        well_behaved = """#!/usr/bin/env bash
+            echo -n "%s"
+            echo -n "%s" 1>&2
+        """ % (expected_stdout, expected_stderr)
+
+        with tempfile.NamedTemporaryFile(delete = False) as f:
+            f.write(well_behaved)
+            executable_path = f.name
+
+        os.chmod(executable_path, 0700)
+
+        try:
+            real_stdout, real_stderr = server.execute([executable_path], "",
+                os.getuid(), os.getgid(), 30, 5)
+
+            try:
+                assert real_stdout.read() == expected_stdout
+                assert real_stderr.read() == expected_stderr
+            finally:
+                # This will destroy the buffer files
+                real_stdout.close()
+                real_stderr.close()
+        finally:
+            os.remove(executable_path)
