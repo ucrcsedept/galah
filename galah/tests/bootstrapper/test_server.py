@@ -186,6 +186,7 @@ class TestLiveInstance:
 
     TEST_ARCHIVES = [
         {
+            "name": "submission with malicious path",
             "files": {
                 "../file.test": "Delicious applesauce",
                 "a/file.test": "Even more delicious applesauce",
@@ -195,16 +196,18 @@ class TestLiveInstance:
             "should_succeed": False
         },
         {
+            "name": "harness with malicious path",
             "files": {
                 "main": "lalalala",
                 "../file.test": "Delicious applesauce",
                 "a/file.test": "Even more delicious applesauce",
                 "a/unicode": UNICODE_TEST_SCRIBBLES.encode("utf_8")
             },
-            "type": "submission",
+            "type": "harness",
             "should_succeed": False
         },
         {
+            "name": "normal submission",
             "files": {
                 "main": "lalala",
                 "file.test": "Delicious applesauce",
@@ -215,6 +218,7 @@ class TestLiveInstance:
             "should_succeed": True
         },
         {
+            "name": "normal harness",
             "files": {
                 "main": "lalala",
                 "file.test": "Delicious applesauce",
@@ -225,6 +229,7 @@ class TestLiveInstance:
             "should_succeed": True
         },
         {
+            "name": "harness without main",
             "files": {
                 "file.test": "Delicious applesauce",
                 "a/file.test": "Even more delicious applesauce",
@@ -235,7 +240,8 @@ class TestLiveInstance:
         }
     ]
 
-    @pytest.mark.parametrize("archive_info", TEST_ARCHIVES)
+    @pytest.mark.parametrize("archive_info", TEST_ARCHIVES,
+        ids = [i["name"] for i in TEST_ARCHIVES])
     def test_upload(self, bootstrapper_server, archive_info):
         """
         Tests the upload_harness and upload_submission commands.
@@ -322,28 +328,43 @@ class TestLiveInstance:
         assert con.recv().command == "config"
         con.shutdown()
 
-    def test_execute(self):
+    BASIC_TEST_PROGRAMS = [
+        """#!/usr/bin/env bash
+        echo -n "{stdout}"
+        echo -n "{stderr}" 1>&2
+        sleep 10
+        """,
+        """#!/usr/bin/env bash
+        echo -n "{stdout}"
+        echo -n "{stderr}" 1>&2
         """
-        Tests the server's execute function which is responsible for securely
-        running the test harness.
+    ]
+
+    @pytest.mark.parametrize("test_program", BASIC_TEST_PROGRAMS,
+            ids = ["with long sleep", "without sleep"])
+    def test_execute_basic(self, test_program):
+        """
+        Tests the server's execute function works. Specific features of the
+        function that are tested include:
+
+            * The ability to kill a hanging program.
+            * The ability to read in both stderr and stdout independently.
 
         """
 
         expected_stdout, expected_stderr = "Foo", "Bar"
-        well_behaved = """#!/usr/bin/env bash
-            echo -n "%s"
-            echo -n "%s" 1>&2
-        """ % (expected_stdout, expected_stderr)
+        test_program = test_program.format(stdout = expected_stdout,
+            stderr = expected_stderr)
 
         with tempfile.NamedTemporaryFile(delete = False) as f:
-            f.write(well_behaved)
+            f.write(test_program)
             executable_path = f.name
 
         os.chmod(executable_path, 0700)
 
         try:
             real_stdout, real_stderr = server.execute([executable_path], "",
-                os.getuid(), os.getgid(), 30, 5)
+                os.getuid(), os.getgid(), 1024, 2)
 
             try:
                 assert real_stdout.read() == expected_stdout
@@ -354,3 +375,34 @@ class TestLiveInstance:
                 real_stderr.close()
         finally:
             os.remove(executable_path)
+
+    TEST_INPUTS = {
+        "simple": "simple test",
+        "unicode": UNICODE_TEST_SCRIBBLES.encode("utf_8"),
+        "huge": "way too big" * 3000
+    }
+
+    @pytest.mark.parametrize("test_input", TEST_INPUTS.values(),
+            ids = TEST_INPUTS.keys())
+    def test_execute_input(self, test_input):
+        """
+        Tests whether the execute function correctly feeds the program's stdin
+        and whether it will stop buffering a program's output when it gets too
+        big.
+
+        """
+
+        BUFFER_SIZE = 1024
+        out, err = server.execute(["/usr/bin/env", "cat"],
+            test_input, os.getuid(), os.getgid(), BUFFER_SIZE, 5)
+
+        try:
+            out_data = out.read()
+            assert len(out_data) <= BUFFER_SIZE + server.EXECUTE_BUFFER_SIZE
+            assert out_data[:BUFFER_SIZE] == test_input[:BUFFER_SIZE]
+
+            assert err.read() == ""
+        finally:
+            # This will destroy the buffer files
+            out.close()
+            err.close()

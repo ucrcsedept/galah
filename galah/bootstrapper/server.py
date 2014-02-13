@@ -172,6 +172,7 @@ def safe_extraction(zipfile, dir_path):
 
     zipfile.extractall(dir_path)
 
+EXECUTE_BUFFER_SIZE = 4096
 def execute(args, stdin_data, user, group, buffer_limit, timeout):
     # Get the UID from the username if that was provided
     uid = user
@@ -191,24 +192,18 @@ def execute(args, stdin_data, user, group, buffer_limit, timeout):
         stdout = subprocess.PIPE, stderr = subprocess.PIPE,
         preexec_fn = demote, close_fds = True)
 
-    def set_blocking(f, blocking):
+    def set_non_blocking(f):
         # Grab the file status flags
         flags = fcntl.fcntl(f.fileno(), fcntl.F_GETFL)
 
-        # Set or unset the non blocking flag
-        if blocking:
-            flags &= ~os.O_NONBLOCK
-        else:
-            flags |= os.O_NONBLOCK
-
-        fcntl.fcntl(f.fileno(), fcntl.F_SETFL, flags)
+        fcntl.fcntl(f.fileno(), fcntl.F_SETFL, flags | os.O_NONBLOCK)
 
     # Make the process's output file handlers be non-blocking. This
     # won't affect the write end of the pipe. After this is done however, we
     # need to be sure to not use any of the high level file operations and
     # instead only read via os.read.
-    set_blocking(process.stdout, False)
-    set_blocking(process.stderr, False)
+    set_non_blocking(process.stdout)
+    set_non_blocking(process.stderr)
 
     process.stdin.write(stdin_data)
     process.stdin.close()
@@ -244,7 +239,7 @@ def execute(args, stdin_data, user, group, buffer_limit, timeout):
             print "eat me"
             # If there's data waiting in the buffer
             if v in ready:
-                data = os.read(v.fileno(), 4096)
+                data = os.read(v.fileno(), EXECUTE_BUFFER_SIZE)
                 buffers[k].write(data)
                 buffers_nbytes[k] += len(data)
 
@@ -264,7 +259,7 @@ def execute(args, stdin_data, user, group, buffer_limit, timeout):
     for k, v in enumerate([process.stdout, process.stderr]):
         try:
             while buffers_nbytes[k] < buffer_limit:
-                data = os.read(v.fileno(), 4096)
+                data = os.read(v.fileno(), EXECUTE_BUFFER_SIZE)
                 if data == "":
                     break
 
