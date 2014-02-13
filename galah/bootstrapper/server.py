@@ -170,6 +170,107 @@ def safe_extraction(zipfile, dir_path):
 
     zipfile.extractall(dir_path)
 
+def execute(args, stdin_data, user, group, buffer_limit):
+    # Get the UID from the username if that was provided
+    uid = user
+    if isinstance(uid, basestring):
+        uid = pwd.getpwname(uid).pw_uid
+
+    # Same for the GID
+    gid = group
+    if isinstance(gid, basestring):
+        gid = grp.getgrname(gid).gr_gid
+
+    def demote():
+        os.setuid(uid)
+        os.setgid(gid)
+
+    process = subprocess.Popen(args, stdin = subprocess.PIPE,
+        stdout = subprocess.PIPE, stderr = subprocess.PIPE,
+        preexec_fn = demote, close_fds = True)
+
+    def set_blocking(f, blocking):
+        # Grab the file status flags
+        flags = fcntl.fcntl(f.fileno(), fcntl.F_GETFL)
+
+        # Set or unset the non blocking flag
+        if blocking:
+            flags |= os.O_NONBLOCK
+        else:
+            flags &= ~os.O_NONBLOCK
+
+        fcntl.fcntl(f.fileno(), fcntl.F_SETFL, flags)
+
+    # Make the process's output file handlers be non-blocking. This
+    # won't affect the write end of the pipe. After this is done however, we
+    # need to be sure to not use any of the high level file operations and
+    # instead only read via os.read.
+    set_blocking(process.stdout, True)
+    set_blocking(process.stderr, True)
+
+    process.stdin.write(stdin_data)
+    process.stdin.close()
+
+    # Figure out when the process needs to die by
+    deadline = (datetime.datetime.today() +
+        datetime.timedelta(seconds = config["harness_timeout"]))
+
+    # We're going to buffer stdin and stdout on the filesystem
+    buffers = [tempfile.TemporaryFile(), tempfile.TemporaryFile()]
+    buffers_nbytes = [0, 0]
+
+    while process.poll():
+        # Figure out how long we have until our deadline
+        time_to_wait = deadline - datetime.datetime.today()
+
+        # Check if we're past our deadline by looking for a negative
+        # timedelta.
+        if time_to_wait.days < 0:
+            break
+
+        # Wait for the process to feed us input
+        ready, _w, _e = select.select([process.stdout, process.stderr],
+            [], [], time_to_wait.seconds)
+
+        # If a timeout occurs
+        if not ready:
+            break
+
+        # Read from stdout and stderr
+        exceeded_buffer = False
+        for k, v in enumerate([process.stdout, process.stderr]):
+            # If there's data waiting in the buffer
+            if v in ready:
+                data = os.read(v.fileno(), 4096)
+                buffers[k].write(data)
+                buffers_nbytes[k] += len(data)
+
+                if buffers_nbytes[k] > buffer_limit:
+                    exceeded_buffer = True
+
+        if exceeded_buffer:
+            break
+
+    # If the process is still alive, kill it
+    bad_process = False
+    if process.poll():
+        bad_process = True
+        process.kill() # brutally murder the process
+        process.wait()
+
+    # We'll grab the remaining data in the pipes as long as we don't exceed our
+    # buffer
+    for k, v in enumerate([process.stdout, process.stderr]):
+        while buffers_nbytes[k] < buffer_limit:
+            data = os.read(v.fileno(), 4096)
+            if data == "":
+                break
+
+            buffers[k].write(data)
+            buffers_nbytes[k] += len(data)
+
+    return buffers
+
 def handle_message(msg, con):
     """
     Handles the the ``msg`` received from ``con`` (a UntrustedConnection
@@ -272,13 +373,9 @@ def handle_message(msg, con):
         return Message("ok", "")
 
     if msg.command == "run_harness":
-        uid = config["user"]
-        if isinstance(uid, basestring):
-            uid = pwd.getpwname(uid).pw_uid
-
-        gid = config["group"]
-        if isinstance(gid, basestring):
-            gid = grp.getgrname(gid).gr_gid
+        harness_executable = os.path.join(config["harness_directory"], "main")
+        if not os.path.exists(harness_executable)
+            return Message("error", u"no harness executable found")
 
         # Make sure the permissions of the harness directory and submission
         # directory are such that the testing user has ownership of them.
@@ -287,10 +384,12 @@ def handle_message(msg, con):
             os.chown(i, uid, gid)
             for root, dirnames, filenames in os.walk(i):
                 for j in dirnames + filenames:
-                    os.chown(os.path.join(root, j), uid, gid)
                     os.chmod(os.path.join(root, j), 0700)
+                    os.chown(os.path.join(root, j), uid, gid)
 
-        harness_executable = os.path.join(config["harness_directory"], "main")
+
+
+
 
     return Message("error", u"unknown command")
 

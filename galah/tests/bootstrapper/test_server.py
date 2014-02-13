@@ -295,6 +295,8 @@ class TestLiveInstance:
             shutil.rmtree(temp_dir)
 
     def test_auth(self, bootstrapper_server):
+        """Tests the auth command."""
+
         con = bootstrapper_server()
 
         test_config = base_config()
