@@ -30,7 +30,7 @@ class TestOpenVZProvider:
         tests may give false results.
 
         This can be done by changing the configuration option
-        `vmfactory/vz/ID_RANGE` when running the tests to a different range
+        ``vmfactory/vz/ID_RANGE1`` when running the tests to a different range
         than any running vmfactory.
 
     """

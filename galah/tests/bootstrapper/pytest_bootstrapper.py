@@ -71,7 +71,10 @@ def bootstrapper_server(request):
     # Ensure that the process and files are cleaned up once the test is done
     def cleanup():
         # Brutally murder the server process
-        os.kill(server_process.pid, signal.SIGKILL)
+        try:
+            os.kill(server_process.pid, signal.SIGKILL)
+        except OSError:
+            pass
 
         # Delete the temporary directory
         shutil.rmtree(temp_dir, ignore_errors = True)
@@ -84,6 +87,13 @@ def bootstrapper_server(request):
 
         tries_left -= 1
         if tries_left <= 0:
+            try:
+                os.kill(server_process.pid, signal.SIGKILL)
+            except OSError:
+                pass
+
+            print "Server output:", server_process.stdout.read()
+
             pytest.fail("Could not start bootstrapper server.")
 
     # Connect to the bootstrapper

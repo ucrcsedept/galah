@@ -426,7 +426,9 @@ class TestLiveInstance:
                 "data/out": "foo",
                 "data/err": "bar"
             },
-            "submission_tree": {},
+            "submission_tree": {
+                "bla": "student's code"
+            },
             "expected": {
                 "return_code": 0,
                 "stdout": "foo",

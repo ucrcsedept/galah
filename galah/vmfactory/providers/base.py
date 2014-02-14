@@ -37,9 +37,10 @@ class BaseProvider(object):
         for the VM and nothing more. All efforts should be made to keep this
         function from raising an exception because if any work is not yet done
         it will not be cleaned up. This means that this function should handle
-        destroying a partially made virtual machine if it did not
+        destroying a partially made virtual machine if it did not finish
+        creating it.
 
-        :returns: A `unicode` object containing the ID of the created VM.
+        :returns: A ``unicode`` object containing the ID of the created VM.
 
         """
 
@@ -50,7 +51,8 @@ class BaseProvider(object):
         Prepares a virtual machine with the given ID.
 
         After this function is called on a VM it should be completely ready to
-        be handed over to a testrunner for use.
+        be handed over to a testrunner for use. This typically involves
+        installing the bootstrapper server onto the vm.
 
         :returns: None
 
