@@ -428,7 +428,7 @@ class TestLiveInstance:
             },
             "submission_tree": {},
             "expected": {
-                "return_value": 0,
+                "return_code": 0,
                 "stdout": "foo",
                 "stderr": "bar"
             }
@@ -468,7 +468,17 @@ class TestLiveInstance:
             }
             con.send(protocol.Message("run_harness",
                 marshal.dumps(harness_config)))
-            print con.recv()
+
+            result = con.recv()
+            assert result.command == "results"
+            result_dict = marshal.loads(result.payload)
+            print result_dict
+
+            assert (set(result_dict.keys()) ==
+                protocol.RUN_HARNESS_RESULT_FIELDS)
+
+            for k, v in test_case["expected"].items():
+                assert result_dict[k] == v
 
             con.shutdown()
 

@@ -180,7 +180,7 @@ def execute(args, stdin_data, uid, gid, buffer_limit, timeout):
 
     process = subprocess.Popen(args, stdin = subprocess.PIPE,
         stdout = subprocess.PIPE, stderr = subprocess.PIPE,
-        preexec_fn = demote, close_fds = True)
+        preexec_fn = demote, close_fds = True, cwd = os.path.dirname(args[0]))
 
     def set_non_blocking(f):
         # Grab the file status flags
