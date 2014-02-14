@@ -173,17 +173,7 @@ def safe_extraction(zipfile, dir_path):
     zipfile.extractall(dir_path)
 
 EXECUTE_BUFFER_SIZE = 4096
-def execute(args, stdin_data, user, group, buffer_limit, timeout):
-    # Get the UID from the username if that was provided
-    uid = user
-    if isinstance(uid, basestring):
-        uid = pwd.getpwname(uid).pw_uid
-
-    # Same for the GID
-    gid = group
-    if isinstance(gid, basestring):
-        gid = grp.getgrname(gid).gr_gid
-
+def execute(args, stdin_data, uid, gid, buffer_limit, timeout):
     def demote():
         os.setuid(uid)
         os.setgid(gid)
@@ -236,7 +226,6 @@ def execute(args, stdin_data, user, group, buffer_limit, timeout):
         # Read from stdout and stderr
         exceeded_buffer = False
         for k, v in enumerate([process.stdout, process.stderr]):
-            print "eat me"
             # If there's data waiting in the buffer
             if v in ready:
                 data = os.read(v.fileno(), EXECUTE_BUFFER_SIZE)
@@ -274,7 +263,7 @@ def execute(args, stdin_data, user, group, buffer_limit, timeout):
     for i in buffers:
         i.seek(0)
 
-    return buffers
+    return process.returncode, buffers[0], buffers[1]
 
 def handle_message(msg, con):
     """
@@ -293,12 +282,9 @@ def handle_message(msg, con):
             log.warning("Bootstrapper was initialized twice")
             return Message("error", u"already configured")
 
-        EXPECTED_KEYS = set(["user", "group", "harness_directory",
-            "submission_directory", "secret"])
-
         decoded_payload = msg.payload.decode("utf_8")
         received_config = json.loads(decoded_payload)
-        if set(received_config.keys()) != EXPECTED_KEYS:
+        if set(received_config.keys()) != INIT_FIELDS:
             return Message("error", u"bad configuration")
 
         config = received_config
@@ -378,9 +364,24 @@ def handle_message(msg, con):
         return Message("ok", "")
 
     if msg.command == "run_harness":
+        decoded_payload = msg.payload.decode("utf_8")
+        payload_dict = json.loads(decoded_payload)
+        if set(payload_dict.keys()) != RUN_HARNESS_FIELDS:
+            return Message("error", u"invalid payload")
+
         harness_executable = os.path.join(config["harness_directory"], "main")
         if not os.path.exists(harness_executable):
             return Message("error", u"no harness executable found")
+
+        # Get the UID from the username if that was provided
+        uid = config["user"]
+        if isinstance(uid, basestring):
+            uid = pwd.getpwname(uid).pw_uid
+
+        # Same for the GID
+        gid = config["group"]
+        if isinstance(gid, basestring):
+            gid = grp.getgrname(gid).gr_gid
 
         # Make sure the permissions of the harness directory and submission
         # directory are such that the testing user has ownership of them.
@@ -392,9 +393,25 @@ def handle_message(msg, con):
                     os.chmod(os.path.join(root, j), 0700)
                     os.chown(os.path.join(root, j), uid, gid)
 
+        # Execute the harness and time how long it takes
+        start_time = datetime.datetime.today()
+        return_code, out, err = execute([harness_executable],
+            payload_dict["harness_input"].encode("ascii"), uid, gid,
+            payload_dict["buffer_limit"], payload_dict["timeout"])
 
+        results = {
+            "stdout": out.read(),
+            "stderr": err.read(),
+            "return_code": return_code,
+            "total_time": (datetime.datetime.today() - start_time).seconds
+        }
 
+        # This should be done by the marshal library but I don't want to do a
+        # bunch of magic to ensure that it gets into the VM as well.
+        unencoded = json.dumps(results, separators = (",", ":"),
+            ensure_ascii = False)
 
+        return Message("results", unencoded.encode("utf_8"))
 
     return Message("error", u"unknown command")
 

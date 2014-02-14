@@ -184,6 +184,23 @@ class TestLiveInstance:
         assert msg.payload == expected_output
         con.shutdown()
 
+    def send_file_tree(self, con, command, tree):
+        """
+        Send file tree to the bootstrapper through the connection ``con``.
+
+        """
+
+        # Create the test archive and send it to the bootstrapper
+        with tempfile.TemporaryFile() as f:
+            test_zipfile = zipfile.ZipFile(f, mode = "w")
+            for k, v in tree.items():
+                test_zipfile.writestr(k, v)
+            test_zipfile.close()
+
+            f.seek(0)
+
+            con.send(protocol.Message(command, f.read()))
+
     TEST_ARCHIVES = [
         {
             "name": "submission with malicious path",
@@ -269,16 +286,7 @@ class TestLiveInstance:
             con.send(protocol.Message("auth", test_config["secret"]))
             assert con.recv().command == "ok"
 
-            # Create the test archive and send it to the bootstrapper
-            with tempfile.TemporaryFile() as f:
-                test_zipfile = zipfile.ZipFile(f, mode = "w")
-                for k, v in archive_info["files"].items():
-                    test_zipfile.writestr(k, v)
-                test_zipfile.close()
-
-                f.seek(0)
-
-                con.send(protocol.Message(command, f.read()))
+            self.send_file_tree(con, command, archive_info["files"])
 
             if archive_info["should_succeed"]:
                 # Print everything in the temp directory for the debugger's
@@ -363,8 +371,8 @@ class TestLiveInstance:
         os.chmod(executable_path, 0700)
 
         try:
-            real_stdout, real_stderr = server.execute([executable_path], "",
-                os.getuid(), os.getgid(), 1024, 2)
+            rvalue, real_stdout, real_stderr = server.execute(
+                [executable_path], "", os.getuid(), os.getgid(), 1024, 2)
 
             try:
                 assert real_stdout.read() == expected_stdout
@@ -393,7 +401,7 @@ class TestLiveInstance:
         """
 
         BUFFER_SIZE = 1024
-        out, err = server.execute(["/usr/bin/env", "cat"],
+        rv, out, err = server.execute(["/usr/bin/env", "cat"],
             test_input, os.getuid(), os.getgid(), BUFFER_SIZE, 5)
 
         try:
@@ -406,3 +414,64 @@ class TestLiveInstance:
             # This will destroy the buffer files
             out.close()
             err.close()
+
+    RUN_HARNESS_TEST_CASES = [
+        {
+            "name": "basic test harness",
+            "harness_tree": {
+                "main":
+                    """#!/usr/bin/env bash
+                    cat ./data/out
+                    cat ./data/err 1>&2""",
+                "data/out": "foo",
+                "data/err": "bar"
+            },
+            "submission_tree": {},
+            "expected": {
+                "return_value": 0,
+                "stdout": "foo",
+                "stderr": "bar"
+            }
+        }
+    ]
+
+    @pytest.mark.parametrize("test_case", RUN_HARNESS_TEST_CASES,
+            ids = [i["name"] for i in RUN_HARNESS_TEST_CASES])
+    def test_run_harness(self, bootstrapper_server, test_case):
+        con = bootstrapper_server()
+
+        test_config = base_config()
+        test_config["harness_directory"] = tempfile.mkdtemp()
+        test_config["submission_directory"] = tempfile.mkdtemp()
+        test_config["user"] = os.getuid()
+        test_config["group"] = os.getgid()
+
+        try:
+            con.send(protocol.Message("init", marshal.dumps(test_config)))
+            assert con.recv().command == "ok"
+
+            con.send(protocol.Message("auth", test_config["secret"]))
+            assert con.recv().command == "ok"
+
+            self.send_file_tree(con, "upload_harness",
+                test_case["harness_tree"])
+            assert con.recv().command == "ok"
+
+            self.send_file_tree(con, "upload_submission",
+                test_case["submission_tree"])
+            assert con.recv().command == "ok"
+
+            harness_config = {
+                "harness_input": "",
+                "buffer_limit": 5000,
+                "timeout": 5
+            }
+            con.send(protocol.Message("run_harness",
+                marshal.dumps(harness_config)))
+            print con.recv()
+
+            con.shutdown()
+
+        finally:
+            shutil.rmtree(test_config["harness_directory"])
+            shutil.rmtree(test_config["submission_directory"])

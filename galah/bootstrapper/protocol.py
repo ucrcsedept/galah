@@ -7,6 +7,17 @@ log = logging.getLogger("galah.bootstrapper.protocol")
 BOOTSTRAPPER_PORT = 51749
 """The port the bootstrapper server will be listening on."""
 
+INIT_FIELDS = set(["user", "group", "harness_directory",
+    "submission_directory", "secret"])
+"""The fields expected in the ``init`` command's dictionary."""
+
+RUN_HARNESS_FIELDS = set(["harness_input", "buffer_limit", "timeout"])
+"""The fields expected in the ``run_harness`` command's dictionary."""
+
+RUN_HARNESS_RESULT_FIELDS = set(["stdout", "stderr", "return_code",
+    "total_time"])
+"""The fields expected in the ``run_harness`` command's response dictionary."""
+
 class Message(object):
     """A message sent/to send over the Bootsrapper Protocol."""
 
