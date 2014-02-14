@@ -10,7 +10,9 @@ from mangoengine import *
 
 class CoreError(RuntimeError):
     """
-    An error thrown by galah.core.
+    A standard error thrown by galah.core. Core functions may raise exceptions
+    that are not derived from this error, but all exceptions documented in the
+    core interface will be derived from this error.
 
     """
 
