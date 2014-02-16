@@ -4,7 +4,7 @@ import StringIO
 import logging
 log = logging.getLogger("galah.bootstrapper.protocol")
 
-BOOTSTRAPPER_PORT = 51749
+BOOTSTRAPPER_PORT = 40
 """The port the bootstrapper server will be listening on."""
 
 INIT_FIELDS = set(["user", "group", "harness_directory",

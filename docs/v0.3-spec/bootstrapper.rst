@@ -4,13 +4,15 @@ The bootstrapper is the small application that is loaded onto every VM by the vm
 
 The minimum required version of Python available on the VM is version 2.6 (the same version requirement as the Galah server codebase).
 
+The module ``bootstrapper.protocol`` should be used when communicating the bootstrapper. In addition, make sure that any changes to that file that break the interface are then updated here.
+
 ## Bootstrapper Protocol
 
-Once the bootstrapper starts up it will accept TCP connections on port ``51749``.
+Once the bootstrapper starts up it will accept TCP connections on port ``40``.
 
 ### Framing
 
-Messages to the bootstrapper should follow the format ``COMMAND NUM_BYTES PAYLOAD`` or the ASCII encoded message type followed by a space, the number of bytes in the payload (encoded as an ASCII encoded string containing the number) followed by a space, followed by the payload (meaning of the payload depends on the command). Any newline and space characters printed before a message are ignored (useful when interacting with the bootstrapper over telnet). For example, the following stream contains two well framed messages:
+Messages to the bootstrapper should follow the format ``COMMAND NUM_BYTES PAYLOAD``: an ASCII encoded message type followed by a space, the number of bytes in the payload (encoded as an ASCII encoded string containing the number) followed by a space, followed by the payload (encoding depends on the command). Any newline and space characters printed before a message are ignored (useful when interacting with the bootstrapper over telnet). For example, the following stream contains two well framed messages:
 
 .. code-block:: json
 
@@ -19,30 +21,23 @@ Messages to the bootstrapper should follow the format ``COMMAND NUM_BYTES PAYLOA
 
 Responses by the bootstrapper will be framed the same way.
 
+The ``bootstrapper.protocol.Decoder`` object is capable of decoding well-framed messages from a byte stream.
+
 .. note::
 
     A message with a 0 length payload must still have a space after the 0.
 
-### Operation
+### Security
 
-The bootstrapper is always in one of several states. Which state it is in determines the types of commands it will accept. Below is a listing of the various states and the commands the bootstrapper will accept while in that state.
-
-Note however, that the *get_status* and *bye* commands are accepted in every state.
-
- * **NOT_READY** (the initial state): Accepts *init*.
- * **IDLE**: Accepts *upload_harness*.
- * **HARNESS_READY**: Accepts *upload_submission*.
- * **TEST_READY**: Accepts *run_test*.
- * **RUNNING_TEST**: Accepts *abort_test*.
- * **RESULTS_READY**: Accepts *get_results*.
-
-The only time (with one exception) the bootstrapper transitions between states is when it receives a command, therefore the documentation of each command below notes the transition it causes (if any). The exception is during the **RUNNING_TEST** state: once the test completes the bootstrapper will transition into the **RESULTS_READY** state.
+The bootstrapper is listening on a TCP port and allows multiple connections. Therefore there is nothing stopping the student's code from connecting to it. In order to prevent any malicious behavior from arising from this, the bootstrapper is configured with a randomly generated "secret" which is then used to authenticate connections to it.
 
 ### Commands
 
 #### init
 
-When the bootstrapper receives an ``init`` command it will initialize itself based on the UTF-8 encoded JSON dictionary in the payload. The JSON dictionary must have the following keys and no others:
+**Payload encoding:** a UTF-8 encoded JSON dictionary containing the configuration.
+
+When the bootstrapper receives an ``init`` command it will initialize itself based on the payload. The JSON dictionary must have the following keys and no others (this list should mirror the list at ``bootstrapper.protocol.INIT_FIELDS``:
 
  * **user** (string or int): The username or UID to run the harness under.
  * **group** (string or int): The groupname or GID to run the harness under.
@@ -50,29 +45,20 @@ When the bootstrapper receives an ``init`` command it will initialize itself bas
  * **submission_directory** (string): The directory to store the submission in.
  * **secret** (string): A string of bytes that all subsequent connections must authenticate with in order for the bootstrapper to accept their commands.
 
-The bootstrapper will respond with an ``ok`` response.
-
-.. code-block:: json
-
-    init 128 {"user": 100, "group": 100, "harness_directory": "/tmp/harness", "testables_directory": "/tmp/testables"}
-    ok 0
+The bootstrapper will respond with an ``ok`` response with an empty payload.
 
 #### get_config
 
+**Payload encoding:** empty.
+
 When the bootstrapper recieves this command it will respond with a ``config``
-message containing the UTF-8 JSON encoded configuration it recieved from the
-last ``init`` command.
+message containing the UTF-8 JSON encoded configuration it received from the
+last ``init`` command (it may not match the exact payload that was sent though because it will be reserialized from the bootstrapper's own internal representation of the configuration).
 
-.. code-block:: json
+#### upload_harness and upload_submission
 
-    get_config 0
-    config 128 {"user": 100, "group": 100, "harness_directory": "/tmp/harness", "testables_directory": "/tmp/testables"}
+**Payload encoding:** a zip file containing the files.
 
-#### get_status
+When the bootstrapper receives this command it will unpack the zip file into the correct directory depending on its configuration, and then respond with an empty ``ok`` message.
 
-When the bootstrapper receives a ``get_status`` command it will give a ``status`` response with a UTF-8 encoded payload containing the textual representation of its state.
-
-.. code-block:: json
-
-    ready 0
-    status 4 IDLE
+####
