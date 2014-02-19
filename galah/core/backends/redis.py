@@ -53,7 +53,7 @@ class VMFactory(mangoengine.Model):
     state = mangoengine.IntegralField(bounds = (0, 3))
     """The state of the vmfactory."""
 
-    vm_id = mangoengine.UnicodeField(nullable = True)
+    vm_id = mangoengine.StringField(nullable = True)
     """
     The ID of the VM the vmfactory is working with.
 
@@ -217,9 +217,14 @@ class RedisConnection(object):
                 raise objects.CoreError("vmfactory is busy")
 
             # This will peek at the last element in the list
-            dirty_vm_id = pipe.lindex(dirty_queue_key, -1)
-            if dirty_vm_id is None:
+            dirty_vm_id_local = pipe.lindex(dirty_queue_key, -1)
+            if dirty_vm_id_local is None:
                 raise _Return(None)
+
+            # Only the local part of the VM's ID is stored within the queue, so
+            # create the full ID now.
+            dirty_vm_id = objects.NodeID(machine = vmfactory_id.machine,
+                local = int(dirty_vm_id_local.decode("utf_8")))
 
             # All following Redis calls will be buffered and executed at once
             # as a transaction.
@@ -230,7 +235,7 @@ class RedisConnection(object):
 
             # Change the VM factory's state
             vmfactory.state = VMFactory.STATE_DESTROYING
-            vmfactory.vm_id = dirty_vm_id
+            vmfactory.vm_id = dirty_vm_id.serialize()
             pipe.set(vmfactory_key,
                 galah.common.marshal.dumps(vmfactory.to_dict()))
 
@@ -273,12 +278,13 @@ class RedisConnection(object):
                     dirty_queue_key, vmfactory_key)
             except _Return as e:
                 # The check_dirty function raises _Return(None) if we should
-                # *not* start creating a new virtual machine.
+                # *not* start destroying a virtual machine.
                 assert e.what is None
             else:
-                # The first result of the transaction will be the ID of the
-                # VM to destroy.
-                return result[0].decode("utf_8")
+                # The first result of the transaction will be the local part of
+                # the VM to destroy.
+                return objects.NodeID(machine = vmfactory_id.machine,
+                    local = int(result[0].decode("utf_8")))
 
             try:
                 result = self._redis.transaction(check_clean,
@@ -296,10 +302,6 @@ class RedisConnection(object):
             time.sleep(poll_every)
 
     def vmfactory_note_clean_id(self, vmfactory_id, clean_id, _hints = None):
-        if not isinstance(clean_id, unicode):
-            raise TypeError("clean_id must be of type unicode, got %s" %
-                (repr(clean_id), ))
-
         vmfactory_key = "NodeInfo/%s" % (vmfactory_id.serialize(), )
 
         def note_clean(pipe):
@@ -320,7 +322,7 @@ class RedisConnection(object):
             pipe.multi()
 
             vmfactory.state = VMFactory.STATE_CREATING
-            vmfactory.vm_id = clean_id.encode("utf_8")
+            vmfactory.vm_id = clean_id.serialize()
             pipe.set(vmfactory_key,
                 galah.common.marshal.dumps(vmfactory.to_dict()))
 
@@ -348,10 +350,13 @@ class RedisConnection(object):
                     VMFactory.STATE_DESTROYING):
                 raise objects.CoreError("vmfactory not in correct state")
 
+            vm_id = objects.NodeID.deserialize(vmfactory.vm_id)
+
             pipe.multi()
 
             if vmfactory.state == VMFactory.STATE_CREATING:
-                pipe.lpush(clean_vm_queue_key, vmfactory.vm_id)
+                pipe.lpush(clean_vm_queue_key,
+                    unicode(vm_id.local).encode("utf_8"))
 
             vmfactory.state = VMFactory.STATE_IDLE
             vmfactory.vm_id = None
@@ -371,16 +376,8 @@ class RedisConnection(object):
     #      `888'       8    Y     888  o.  )88b
     #       `8'       o8o        o888o 8""888P'
 
-    def vm_mark_dirty(self, vmfactory_id, vm_id, _hints = None):
-        if not isinstance(vm_id, unicode):
-            raise TypeError("vm_id must be a unicode string, got %s." %
-                (repr(vm_id), ))
-
-        vm_id_encoded = vm_id.encode("utf_8")
-        if vm_id_encoded == "":
-            raise ValueError("vm_id cannot be the empty string")
-
-        self._redis.lpush("DirtyVMs/%s" % (vmfactory_id.machine, ),
-            vm_id_encoded)
+    def vm_mark_dirty(self, vm_id, _hints = None):
+        self._redis.lpush("DirtyVMs/%s" % (vm_id.machine.encode("utf_8"), ),
+            unicode(vm_id.local).encode("utf_8"))
 
         return True

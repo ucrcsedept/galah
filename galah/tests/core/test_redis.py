@@ -86,7 +86,7 @@ class TestVMFactory:
 
         con = RedisConnection(redis_server)
 
-        my_id = NodeID(machine = UNICODE_TEST_PONY, local = 0)
+        my_id = NodeID(machine = u"localhost", local = 0)
         assert con.vmfactory_register(my_id)
 
         grab_hints = {"max_clean_vms": 2}
@@ -108,20 +108,20 @@ class TestVMFactory:
 
         con = RedisConnection(redis_server)
 
-        my_id = NodeID(machine = UNICODE_TEST_PONY, local = 0)
+        my_id = NodeID(machine = u"localhost", local = 0)
         assert con.vmfactory_register(my_id)
 
         grab_hints = {"max_clean_vms": 2}
 
-        fake_vm_id = UNICODE_TEST_SCRIBBLES
-        assert con.vm_mark_dirty(my_id, fake_vm_id)
+        fake_vm_id = NodeID(machine = u"localhost", local = 1)
+        assert con.vm_mark_dirty(fake_vm_id)
 
-        fake_vm_id2 = UNICODE_TEST_PONY
-        assert con.vm_mark_dirty(my_id, fake_vm_id)
+        fake_vm_id2 = NodeID(machine = u"localhost", local = 2)
+        assert con.vm_mark_dirty(fake_vm_id2)
 
         dirty_vm = con.vmfactory_grab(my_id, grab_hints)
         assert dirty_vm == fake_vm_id
-        assert isinstance(dirty_vm, unicode)
+        assert isinstance(dirty_vm, NodeID)
 
         # We are already assigned work so this should fail
         with pytest.raises(CoreError):
@@ -136,7 +136,7 @@ class TestVMFactory:
 
         con = RedisConnection(redis_server)
 
-        my_id = NodeID(machine = UNICODE_TEST_PONY, local = 0)
+        my_id = NodeID(machine = u"localhost", local = 0)
         assert con.vmfactory_register(my_id)
 
         grab_hints = {"max_clean_vms": 20}
@@ -150,8 +150,8 @@ class TestVMFactory:
             with pytest.raises(CoreError):
                 con.vmfactory_finish(my_id)
 
-            # We'll pretend we created a machine and named it something
-            fake_vm_id = UNICODE_TEST_SCRIBBLES
+            # We'll pretend we created a machine
+            fake_vm_id = NodeID(machine = u"localhost", local = i + 1)
             assert con.vmfactory_note_clean_id(my_id, fake_vm_id)
 
             assert con.vmfactory_finish(my_id)
@@ -162,7 +162,7 @@ class TestVMFactory:
     def test_workflow_dirty(self, redis_server):
         con = RedisConnection(redis_server)
 
-        my_id = NodeID(machine = UNICODE_TEST_PONY, local = 0)
+        my_id = NodeID(machine = u"localhost", local = 0)
         assert con.vmfactory_register(my_id)
 
         grab_hints = {"max_clean_vms": 3}
@@ -170,8 +170,8 @@ class TestVMFactory:
         # We should be able to continually perform these operations so we'll
         # do them ten times here.
         for i in range(10):
-            fake_vm_id = UNICODE_TEST_SCRIBBLES
-            assert con.vm_mark_dirty(my_id, fake_vm_id)
+            fake_vm_id = NodeID(machine = u"localhost", local = i + 1)
+            assert con.vm_mark_dirty(fake_vm_id)
 
             # This should tell us to destroy the dirty VM
             assert con.vmfactory_grab(my_id, grab_hints) == fake_vm_id

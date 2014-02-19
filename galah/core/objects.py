@@ -43,7 +43,8 @@ class IDNotRegistered(CoreError):
 
 class NodeID(Model):
     """
-    A node is a single application such as a vmfactory or webapp process.
+    A node is a single application such as a vmfactory or webapp process, or a
+    VM.
 
     :ivar machine: A unicode string identifying the machine the node is running
         on. The System Administrator can set this to whatever makes the most
@@ -116,3 +117,11 @@ class NodeID(Model):
 
         return result
 
+    def __eq__(self, other):
+        if isinstance(other, self.__class__):
+            return self.__dict__ == other.__dict__
+        else:
+            return False
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
