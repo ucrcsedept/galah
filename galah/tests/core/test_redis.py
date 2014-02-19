@@ -182,3 +182,21 @@ class TestVMFactory:
             # We shouldn't be able to finish twice without error
             with pytest.raises(CoreError):
                 con.vmfactory_finish(my_id)
+
+class TestVM:
+    def test_registration(self, redis_server):
+        con = RedisConnection(redis_server)
+
+        vm_id = NodeID(machine = u"localhost", local = 0)
+        assert con.vm_register(vm_id)
+        assert not con.vm_register(vm_id)
+
+        vm_id2 = NodeID(machine = u"localhost", local = 1)
+        assert con.vm_register(vm_id2)
+        assert not con.vm_register(vm_id2)
+
+        assert con.vm_unregister(vm_id)
+        assert not con.vm_unregister(vm_id)
+
+        assert con.vm_unregister(vm_id2)
+        assert not con.vm_unregister(vm_id2)

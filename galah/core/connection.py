@@ -357,7 +357,7 @@ class Connection:
             returned job.
 
         :returns: Returns True if a clean VM should be created, or a
-            VirtualMachineID specifying the VM to be destroyed.
+            NodeID specifying the VM to be destroyed.
 
         :raises IDNotRegistered:
         :raises CoreError: If the vmfactory already has work assigned to it.
@@ -413,6 +413,39 @@ class Connection:
     #     `888.8'      8  `888'   888  `"Y88b.
     #      `888'       8    Y     888  o.  )88b
     #       `8'       o8o        o888o 8""888P'
+
+    def vm_register(self, vm_id, _hints = None):
+        """
+        Registers a VM.
+
+        Whenever a VM is created or recovered this function should be called.
+        Calling this function multiple times for the same VM is fine.
+
+        :param vm_id: The VM's NodeID.
+
+        :returns: True if the VM was not already registered, False otherwise.
+
+        """
+
+        pass
+
+    def vm_unregister(self, vm_id, _hints = None):
+        """
+        Unregisters a VM.
+
+        This will examine neither the VM queues nor the VMFactory objects in
+        the backend, so be careful when using this function. It should be used
+        only after fully destroying a VM that was pulled off the dirty queue.
+
+        :param vm_id: The VM's ID.
+
+        :returns: True if the VM was registered (and succesfully unregistered),
+            False if the VM was not registered (therefore this call did
+            nothing).
+
+        """
+
+        pass
 
     def vm_mark_dirty(self, vm_id, _hints = None):
         """

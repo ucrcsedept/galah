@@ -376,6 +376,14 @@ class RedisConnection(object):
     #      `888'       8    Y     888  o.  )88b
     #       `8'       o8o        o888o 8""888P'
 
+    def vm_register(self, vm_id, _hints = None):
+        rv = self._redis.setnx("NodeInfo/%s" % (vm_id.serialize(), ), None)
+        return rv == 1
+
+    def vm_unregister(self, vm_id, _hints = None):
+        rv = self._redis.delete("NodeInfo/%s" % (vm_id.serialize(), ))
+        return rv == 1
+
     def vm_mark_dirty(self, vm_id, _hints = None):
         self._redis.lpush("DirtyVMs/%s" % (vm_id.machine.encode("utf_8"), ),
             unicode(vm_id.local).encode("utf_8"))
