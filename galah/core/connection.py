@@ -447,6 +447,36 @@ class Connection:
 
         pass
 
+    def vm_set_metadata(self, vm_id, data, _hints = None):
+        """
+        Sets metadata associated with the VM.
+
+        :param vm_id: The ID of the VM.
+        :param data: Dictionary of data that will be associated with the VM. It
+            will be JSON serialized using the common.marshal module.
+
+        :returns: None
+
+        :raises IDNotRegistered:
+
+        """
+
+        pass
+
+    def vm_get_metadata(self, vm_id, _hints = None):
+        """
+        Gets any metadata associated with a VM by vm_set_metadata().
+
+        :param vm_id: The ID of the VM.
+
+        :returns: A dictionary object containing the metadata.
+
+        :raises IDNotRegistered:
+
+        """
+
+        pass
+
     def vm_mark_dirty(self, vm_id, _hints = None):
         """
         Queues a virtual machine for deletion.
