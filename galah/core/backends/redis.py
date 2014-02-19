@@ -224,7 +224,7 @@ class RedisConnection(object):
             # Only the local part of the VM's ID is stored within the queue, so
             # create the full ID now.
             dirty_vm_id = objects.NodeID(machine = vmfactory_id.machine,
-                local = int(dirty_vm_id_local.decode("utf_8")))
+                local = int(dirty_vm_id_local))
 
             # All following Redis calls will be buffered and executed at once
             # as a transaction.
@@ -284,7 +284,7 @@ class RedisConnection(object):
                 # The first result of the transaction will be the local part of
                 # the VM to destroy.
                 return objects.NodeID(machine = vmfactory_id.machine,
-                    local = int(result[0].decode("utf_8")))
+                    local = int(result[0]))
 
             try:
                 result = self._redis.transaction(check_clean,
@@ -342,7 +342,7 @@ class RedisConnection(object):
 
             vmfactory_json = pipe.get(vmfactory_key)
             if vmfactory_json is None:
-                raise IDNotRegistered(vmfactory_id)
+                raise objects.IDNotRegistered(vmfactory_id)
             vmfactory = VMFactory.from_dict(
                 galah.common.marshal.loads(vmfactory_json))
 
@@ -377,15 +377,64 @@ class RedisConnection(object):
     #       `8'       o8o        o888o 8""888P'
 
     def vm_register(self, vm_id, _hints = None):
-        rv = self._redis.setnx("NodeInfo/%s" % (vm_id.serialize(), ), None)
+        # We only add an entry in the NodeSet and not in NodeInfo because an
+        # empty hash field cannot be created.
+        rv = self._redis.sadd(
+            "NodeSet/VM/%s" % (vm_id.machine.encode("utf_8"), ),
+            str(vm_id.local)
+        )
         return rv == 1
 
     def vm_unregister(self, vm_id, _hints = None):
-        rv = self._redis.delete("NodeInfo/%s" % (vm_id.serialize(), ))
+        # We need to be careful to make sure to delete both the NodeInfo entry
+        # for the VM as well as the NodeSet entry. We use a "pipeline" to make
+        # the two deletions atomic in the unlikely event of an application
+        # failure between sending the two commands.
+        with self._redis.pipeline() as pipe:
+            pipe.srem("NodeSet/VM/%s" % (vm_id.machine.encode("utf_8"), ),
+                str(vm_id.local))
+            pipe.delete("NodeInfo/%s" % (vm_id.serialize(), ))
+
+            srem_rv, del_rv = pipe.execute()
+            return srem_rv == 1
+
+    def vm_set_metadata(self, vm_id, key, value, _hints = None):
+        if not isinstance(key, unicode):
+            raise TypeError("key must be unicode string, got %r." % (key, ))
+        if not isinstance(value, str):
+            raise TypeError("value must be str, got %r." % (value, ))
+
+        # We do the set in a formal transaction so that we can ensure that the
+        # vm isn't deleted right before we set its metadata.
+        vm_set_key = "NodeSet/VM/%s" % (vm_id.machine.encode("utf_8"), )
+        vm_info_key = "NodeInfo/%s" % (vm_id.serialize(), )
+        def set_metadata(pipe):
+            # watch(vm_set_key)
+
+            if pipe.sismember(vm_set_key, str(vm_id.local)) != 1:
+                raise objects.IDNotRegistered(vm_id)
+
+            # Following commands will be queued and executed at once
+            pipe.multi()
+
+            pipe.hset(vm_info_key, key.encode("utf_8"), value)
+
+        # Only one command is executed in the multi block above so we can pull
+        # it out easily here.
+        rv = self._redis.transaction(set_metadata, vm_set_key)[0]
         return rv == 1
+
+    def vm_get_metadata(self, vm_id, key, _hints = None):
+        if not isinstance(key, unicode):
+            raise TypeError("key must be unicode string, got %s." %
+                (repr(key), ))
+
+        vm_key = "NodeInfo/%s" % (vm_id.serialize(), )
+        rv = self._redis.hget(vm_key, key.encode("utf_8"))
+        return rv
 
     def vm_mark_dirty(self, vm_id, _hints = None):
         self._redis.lpush("DirtyVMs/%s" % (vm_id.machine.encode("utf_8"), ),
-            unicode(vm_id.local).encode("utf_8"))
+            str(vm_id.local))
 
         return True

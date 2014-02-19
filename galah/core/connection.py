@@ -447,15 +447,20 @@ class Connection:
 
         pass
 
-    def vm_set_metadata(self, vm_id, data, _hints = None):
+    def vm_set_metadata(self, vm_id, key, value, _hints = None):
         """
         Sets metadata associated with the VM.
 
-        :param vm_id: The ID of the VM.
-        :param data: Dictionary of data that will be associated with the VM. It
-            will be JSON serialized using the common.marshal module.
+        The metadata is stored in a hash field within Redis, which allows for
+        straightforward atomic access to each key.
 
-        :returns: None
+        :param vm_id: The NodeID of the VM.
+        :param key: The key in the VM's metadata dictionary to set. Must be a
+            ``unicode`` object.
+        :param value: The value to associate with the key. Must be a ``str``.
+
+        :returns: True if the key did not already have a value, False
+            otherwise.
 
         :raises IDNotRegistered:
 
@@ -463,15 +468,15 @@ class Connection:
 
         pass
 
-    def vm_get_metadata(self, vm_id, _hints = None):
+    def vm_get_metadata(self, vm_id, key, _hints = None):
         """
-        Gets any metadata associated with a VM by vm_set_metadata().
+        Gets a value in the metadata associated with a VM.
 
         :param vm_id: The ID of the VM.
+        :param key: The key to check the value of.
 
-        :returns: A dictionary object containing the metadata.
-
-        :raises IDNotRegistered:
+        :returns: The value associated with that key, or None if there is no
+            such value. None will also be returned if the VM is not registered.
 
         """
 

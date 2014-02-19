@@ -185,6 +185,8 @@ class TestVMFactory:
 
 class TestVM:
     def test_registration(self, redis_server):
+        """Tests to see if VMs can be registered and unregistered cleanly."""
+
         con = RedisConnection(redis_server)
 
         vm_id = NodeID(machine = u"localhost", local = 0)
@@ -200,3 +202,42 @@ class TestVM:
 
         assert con.vm_unregister(vm_id2)
         assert not con.vm_unregister(vm_id2)
+
+    def test_metadata(self, redis_server):
+        """Tests to see if metadata about VMs can be stored reliably."""
+
+        # We'll usethis key and value throughout the rest of the test
+        key, value = u"bla", "hello"
+
+        con = RedisConnection(redis_server)
+
+        vm_id = NodeID(machine = u"localhost", local = 0)
+
+        # Setting metadata on a VM that doesn't exist raises
+        with pytest.raises(objects.IDNotRegistered):
+            con.vm_set_metadata(vm_id, key, value)
+
+        # None is returned if querying metadata of a VM that doesn't exist
+        assert con.vm_get_metadata(vm_id, key) is None
+
+        assert con.vm_register(vm_id)
+
+        # Only unicode keys and string values should be accepted
+        with pytest.raises(TypeError):
+            con.vm_set_metadata(vm_id, "string", value)
+        with pytest.raises(TypeError):
+            con.vm_set_metadata(vm_id, key, 23)
+
+        # It should return None if no value is associated with the key
+        assert con.vm_get_metadata(vm_id, key) is None
+
+        assert con.vm_set_metadata(vm_id, key, value)
+
+        # False should be returned if we are updating the value rather than
+        # setting it for the first time.
+        assert not con.vm_set_metadata(vm_id, key, value)
+
+        # Make sure we get back what we want
+        rv = con.vm_get_metadata(vm_id, key)
+        assert rv == value
+        assert type(rv) is type(value)
