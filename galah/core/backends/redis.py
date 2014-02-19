@@ -39,7 +39,7 @@ class VMFactory(mangoengine.Model):
 
     STATE_CREATING_NOID = 1
     """
-    The vmfactory is creating a new virtual machine and has not yet assigned
+    The vmfactory is creating a new virtual machine and has not yet registered
     an ID for it yet.
 
     """

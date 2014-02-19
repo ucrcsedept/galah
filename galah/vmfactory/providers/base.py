@@ -40,13 +40,14 @@ class BaseProvider(object):
         destroying a partially made virtual machine if it did not finish
         creating it.
 
-        :returns: A ``unicode`` object containing the ID of the created VM.
+        :returns: The metadata that should be associated with the VM as a
+            dictionary.
 
         """
 
         pass
 
-    def prepare_vm(self, vm_id):
+    def prepare_vm(self, vm_id, set_metadata, get_metadata):
         """
         Prepares a virtual machine with the given ID.
 
@@ -54,15 +55,25 @@ class BaseProvider(object):
         be handed over to a testrunner for use. This typically involves
         installing the bootstrapper server onto the vm.
 
+        :param vm_id: The NodeID of the VM.
+        :param set_metadata: A function ``set_metadata(key, value)`` that can
+            be called to set metadata related to the VM.
+        :param get_metadata: A function ``get_metadata(key)`` that can be called
+            to get metadata related to the VM.
+
         :returns: None
 
         """
 
         pass
 
-    def destroy_vm(self, vm_id):
+    def destroy_vm(self, vm_id, get_metadata):
         """
         Destroys a virtual machine with the given ID.
+
+        :param vm_id: The NodeID of the VM.
+        :param get_metadata: A function ``get_metadata(key)`` that can be called
+            to get metadata related to the VM.
 
         :returns: None
 

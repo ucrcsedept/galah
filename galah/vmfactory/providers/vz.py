@@ -19,7 +19,7 @@ class OpenVZProvider(BaseProvider):
     container_description = "galah-created"
 
     def __init__(self, vzctl_path = None, vzlist_path = None, id_range = None,
-            subnet = None, os_template = None, container_directory = None,
+            allocate_ip = None, os_template = None, container_directory = None,
             guest_user = None):
         self.vzctl_path = (vzctl_path if vzctl_path is not None else
             config["vmfactory/vz/VZCTL_PATH"])
@@ -27,8 +27,8 @@ class OpenVZProvider(BaseProvider):
             config["vmfactory/vz/VZLIST_PATH"])
         self.id_range = (id_range if id_range is not None else
             config["vmfactory/vz/ID_RANGE"])
-        self.subnet = (subnet if subnet is not None else
-            config["vmfactory/SUBNET"])
+        self.allocate_ip = (allocate_ip if allocate_ip is not None else
+            config["vmfactory/vz/ALLOCATE_IP"])
         self.os_template = (os_template if os_template is not None else
             config["vmfactory/vz/OS_TEMPLATE"])
         self.container_directory = (
@@ -112,6 +112,7 @@ class OpenVZProvider(BaseProvider):
             be returned, otherwise all containers will be returned.
 
         :returns: A list of integers.
+
         """
 
         cmd = [self.vzlist_path, "--all", "--no-header", "--output", "ctid"]
@@ -134,7 +135,8 @@ class OpenVZProvider(BaseProvider):
         """
         Creates a new OpenVZ container.
 
-        :returns: The ID of the newly created container as an ``int``.
+        :returns: The metadata that should be associated with the VM as a
+            dictionary.
 
         :raises NoAvailableIDs: If we could not find an available CTID.
 
@@ -165,12 +167,14 @@ class OpenVZProvider(BaseProvider):
             # particular id).
             chosen_id = random.choice(list(available_ids))
 
-            # Actually call vzctl to create the container
+            ip_address = self.allocate_ip(chosen_id)
             vzctl_args = [
-                "--ipadd", self.subnet + "." + str(chosen_id),
+                "--ipadd", ip_address,
                 "--ostemplate", self.os_template,
                 "--description", self.container_description
             ]
+
+            # Actually call vzctl to create the container
             try:
                 self._run_vzctl(["create", str(chosen_id)] + vzctl_args)
             except subprocess.CalledProcessError as e:
@@ -181,7 +185,10 @@ class OpenVZProvider(BaseProvider):
 
                 raise
 
-            return unicode(chosen_id)
+            return {
+                u"ip": ip_address,
+                u"ctid": str(chosen_id)
+            }
 
-    def destroy_vm(self, vm_id):
-        self._run_vzctl(["destroy", vm_id.encode("ascii")])
+    def destroy_vm(self, vm_id, get_metadata):
+        self._run_vzctl(["destroy", get_metadata(u"ctid").encode("ascii")])
