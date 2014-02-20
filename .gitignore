@@ -52,3 +52,6 @@ vagrant_ansible_inventory_default
 
 # Packer
 packer_cache/
+
+# Virtualenv
+env/
