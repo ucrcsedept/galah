@@ -2,10 +2,12 @@
 import subprocess
 import os
 import random
+import shutil
 from datetime import datetime, timedelta
 
 # internal
 from .base import BaseProvider
+import galah.bootstrapper
 
 import logging
 log = logging.getLogger("galah.vmfactory")
@@ -20,7 +22,7 @@ class OpenVZProvider(BaseProvider):
 
     def __init__(self, vzctl_path = None, vzlist_path = None, id_range = None,
             allocate_ip = None, os_template = None, container_directory = None,
-            guest_user = None):
+            bootstrapper_directory = None):
         self.vzctl_path = (vzctl_path if vzctl_path is not None else
             config["vmfactory/vz/VZCTL_PATH"])
         self.vzlist_path = (vzlist_path if vzlist_path is not None else
@@ -34,8 +36,9 @@ class OpenVZProvider(BaseProvider):
         self.container_directory = (
             container_directory if container_directory is not None else
             config["vmfactory/vz/CONTAINER_DIRECTORY"])
-        self.guest_user = (guest_user if guest_user is not None else
-            config["vmfactory/GUEST_USER"])
+        self.bootstrapper_directory = (
+            bootstrapper_directory if bootstrapper_directory is not None else
+            config["vmfactory/vz/BOOTSTRAPPER_DIRECTORY"])
 
     def _run_vzctl(self, arguments):
         """
@@ -75,14 +78,40 @@ class OpenVZProvider(BaseProvider):
                     # Any other error should be allowed to propagate
                     raise
 
+    def _execute(self, container, command):
+        """
+        Executes the given command in the container's default shell as the
+        root user.
+
+        :param container: The container ID.
+        :param command: The command to run. This string will be passed to the
+            default shell for the root user of the container (as far as I can
+            tell, see vzctl's man page for more info).
+
+        :returns: None
+
+        :raises subprocess.CalledProcessError: If a non-zero exit status is
+            returned by the command.
+
+        """
+
+        # We don't use our _run_vzctl function here because the return values
+        # are not going to be what it expects.
+        cmd = [self.vzctl_path, "exec2", container, command]
+        subprocess.check_call(cmd, stdout = NULL_FILE, stderr = NULL_FILE)
+
     def _inject_file(self, container, source_path, dest_path):
         """
         Injects a file from the host system into the filesystem of the
         given container.
 
+        The owner of the files will be the root user on the VM and the
+        permissions will be set to 500 (read and execute by owner only).
+
         :param container: The container ID to inject the file into.
         :param source_path: The path to the file on the host system.
-        :param dest_path: The path on the guest to copy the file to.
+        :param dest_path: The path on the guest to copy the file to. Should be
+            a full target path (ie: not a directory).
 
         """
 
@@ -94,15 +123,12 @@ class OpenVZProvider(BaseProvider):
             dest_path[1:])
 
         # Do the actual copy
-        subprocess.check_call(["cp", "-rf", source_path, real_dest_path],
-            stdout = NULL_FILE, stderr = NULL_FILE)
+        shutil.copyfile(source_path, real_dest_path)
 
         # Ensure that the permissions are set correctly (read and execute only
-        # by owner) and owned by the corret guest_user.
-        subprocess.check_call(["chown", "-R", self.guest_user, real_dest_path],
-            stdout = NULL_FILE, stderr = NULL_FILE)
-        subprocess.check_call(["chmod", "-R", "500", real_dest_path],
-            stdout = NULL_FILE, stderr = NULL_FILE)
+        # by owner) and owned by the root user
+        self._execute(container, "chown root:root %s" % (dest_path, ))
+        self._execute(container, "chmod 500 %s" % (dest_path, ))
 
     def _get_containers(self, galah_created):
         """
@@ -190,5 +216,28 @@ class OpenVZProvider(BaseProvider):
                 u"ctid": str(chosen_id)
             }
 
+    def prepare_vm(self, vm_id, set_metadata, get_metadata):
+        # Figure out the CTID of the VM from the metadata
+        ctid = get_metadata(u"ctid")
+
+        # Start the VM
+        self._run_vzctl(["start", ctid])
+
+        # Ensure that the directory we're about to install the bootstrapper
+        # into actually exists.
+        self._execute(ctid, "mkdir -p -m 500 %s" %
+            (self.bootstrapper_directory, ))
+
+        # Install the bootstrapper
+        package_dir = os.path.dirname(galah.bootstrapper.__file__)
+        for i in galah.bootstrapper.SERVER_FILES:
+            self._inject_file(ctid, os.path.join(package_dir, i),
+                os.path.join(self.bootstrapper_directory, i))
+
+        self._execute(ctid, "%s > /dev/null 2>&1 &" % (
+            os.path.join(self.bootstrapper_directory, "server.py")))
+
     def destroy_vm(self, vm_id, get_metadata):
-        self._run_vzctl(["destroy", get_metadata(u"ctid").encode("ascii")])
+        ctid = get_metadata(u"ctid").encode("ascii")
+        self._run_vzctl(["stop", ctid])
+        self._run_vzctl(["destroy", ctid])

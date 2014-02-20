@@ -1,10 +1,12 @@
+#!/usr/bin/env python
+
 # This is necessary to allow relative imports from a script
-if __name__ == "__main__" and __package__ is None:
-    import galah.bootstrapper
-    __package__ = "galah.bootstrapper"
+# if __name__ == "__main__" and __package__ is None:
+#     import galah.bootstrapper
+#     __package__ = "galah.bootstrapper"
 
 # internal
-from .protocol import *
+from protocol import *
 
 # stdlib
 from optparse import make_option, OptionParser

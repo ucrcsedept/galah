@@ -1,12 +1,14 @@
 # internal
 import galah.vmfactory.providers.vz as vzprovider
 from galah.core.objects import NodeID
+import galah.bootstrapper.protocol as protocol
 
 # external
 import pytest
 
 # stdlib
 import sys
+import socket
 
 @pytest.fixture
 def vz(request):
@@ -99,3 +101,27 @@ class TestOpenVZProvider:
         assert ctid not in vz._get_containers(True)
         assert ctid not in vz._get_containers(False)
 
+    def test_prepare(self, vz):
+        # Create a new container
+        created_vm_metadata = vz.create_vm()
+
+        # Pull out the CTID from the metadata
+        ctid = int(created_vm_metadata["ctid"])
+
+        # Get some dummy objects prepared that prepare_vm and destroy_vm can
+        # play with.
+        get_metadata = created_vm_metadata.__getitem__
+        set_metadata = created_vm_metadata.__setitem__
+        vm_nodeid = NodeID(machine = u"localhost", local = 1)
+
+        try:
+            vz.prepare_vm(ctid, set_metadata, get_metadata)
+
+            sock = socket.create_connection((created_vm_metadata["ip"],
+                protocol.BOOTSTRAPPER_PORT), timeout = 2)
+            con = protocol.Connection(sock)
+            con.send(protocol.Message("ping", ""))
+            assert con.recv().command == "pong"
+        finally:
+            # At least try and destroy the VM if anything bad happens
+            vz.destroy_vm(vm_nodeid, get_metadata)
