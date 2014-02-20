@@ -115,13 +115,25 @@ class TestOpenVZProvider:
         vm_nodeid = NodeID(machine = u"localhost", local = 1)
 
         try:
+            # After this completes the bootstrapper should be running on the
+            # VM.
             vz.prepare_vm(ctid, set_metadata, get_metadata)
 
+            # Connect to the bootstrapper
             sock = socket.create_connection((created_vm_metadata["ip"],
                 protocol.BOOTSTRAPPER_PORT), timeout = 2)
             con = protocol.Connection(sock)
-            con.send(protocol.Message("ping", ""))
-            assert con.recv().command == "pong"
+
+            # Authenticate with the bootstrapper
+            con.send(protocol.Message("auth",
+                created_vm_metadata["bootstrapper_secret"]))
+            assert con.recv().command == "ok"
+
+            # Grab the configuration it received
+            con.send(protocol.Message("get_config", ""))
+            response = con.recv()
+            assert response.command == "config"
+            print response.payload
         finally:
             # At least try and destroy the VM if anything bad happens
             vz.destroy_vm(vm_nodeid, get_metadata)

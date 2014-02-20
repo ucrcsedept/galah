@@ -3,11 +3,15 @@ import subprocess
 import os
 import random
 import shutil
+import socket
+import time
 from datetime import datetime, timedelta
 
 # internal
 from .base import BaseProvider
 import galah.bootstrapper
+from galah.bootstrapper import protocol
+from galah.common import marshal
 
 import logging
 log = logging.getLogger("galah.vmfactory")
@@ -20,25 +24,19 @@ NULL_FILE = open(os.devnull, "w")
 class OpenVZProvider(BaseProvider):
     container_description = "galah-created"
 
-    def __init__(self, vzctl_path = None, vzlist_path = None, id_range = None,
-            allocate_ip = None, os_template = None, container_directory = None,
-            bootstrapper_directory = None):
-        self.vzctl_path = (vzctl_path if vzctl_path is not None else
-            config["vmfactory/vz/VZCTL_PATH"])
-        self.vzlist_path = (vzlist_path if vzlist_path is not None else
-            config["vmfactory/vz/VZLIST_PATH"])
-        self.id_range = (id_range if id_range is not None else
-            config["vmfactory/vz/ID_RANGE"])
-        self.allocate_ip = (allocate_ip if allocate_ip is not None else
-            config["vmfactory/vz/ALLOCATE_IP"])
-        self.os_template = (os_template if os_template is not None else
-            config["vmfactory/vz/OS_TEMPLATE"])
-        self.container_directory = (
-            container_directory if container_directory is not None else
-            config["vmfactory/vz/CONTAINER_DIRECTORY"])
-        self.bootstrapper_directory = (
-            bootstrapper_directory if bootstrapper_directory is not None else
-            config["vmfactory/vz/BOOTSTRAPPER_DIRECTORY"])
+    def __init__(self, test_config = None):
+        self.vzctl_path = config["vmfactory/vz/VZCTL_PATH"]
+        self.vzlist_path = config["vmfactory/vz/VZLIST_PATH"]
+        self.id_range = config["vmfactory/vz/ID_RANGE"]
+        self.allocate_ip = config["vmfactory/vz/ALLOCATE_IP"]
+        self.os_template = config["vmfactory/vz/OS_TEMPLATE"]
+        self.container_directory = config["vmfactory/vz/CONTAINER_DIRECTORY"]
+        self.bootstrapper_directory = \
+            config["vmfactory/vz/BOOTSTRAPPER_DIRECTORY"]
+        self.guest_user = config["vmfactory/GUEST_USER"]
+        self.guest_group = config["vmfactory/GUEST_GROUP"]
+        self.submission_directory = config["vmfactory/SUBMISSION_DIRECTORY"]
+        self.harness_directory = config["vmfactory/HARNESS_DIRECTORY"]
 
     def _run_vzctl(self, arguments):
         """
@@ -234,8 +232,53 @@ class OpenVZProvider(BaseProvider):
             self._inject_file(ctid, os.path.join(package_dir, i),
                 os.path.join(self.bootstrapper_directory, i))
 
+        # Fork off an instance of the bootstrapper
         self._execute(ctid, "%s > /dev/null 2>&1 &" % (
             os.path.join(self.bootstrapper_directory, "server.py")))
+
+        # Create the secret we will use to auth with the bootstrapper. The
+        # init dictionary will be encoded as UTF-8 so we can't just shove raw
+        # binary data into the dictionary, therefore we conver to a base64
+        # encoding first.
+        secret = os.urandom(16).encode("base64_codec")
+        set_metadata(u"bootstrapper_secret", secret)
+
+        # Create the bootstrapper's configuration
+        bootstrapper_config = {
+            "user": self.guest_user,
+            "group": self.guest_group,
+            "harness_directory": self.harness_directory,
+            "submission_directory": self.submission_directory,
+            "secret": secret
+        }
+
+        # Grab the ip address of the VM, should have been set when the VM was
+        # created.
+        ip_address = get_metadata(u"ip")
+
+        # Connect to the VM. We'll retry a few times to give the bootstrapper
+        # time to come up.
+        i = 3
+        while True:
+            try:
+                sock = socket.create_connection(
+                    (ip_address, protocol.BOOTSTRAPPER_PORT), timeout = 2)
+                sock.settimeout(4)
+                break
+            except (socket.timeout, socket.error):
+                # If we got a connection refused, it won't help to immediatley
+                # try again, so we sleep for a bit here.
+                time.sleep(0.5)
+
+                i -= 1
+                if i <= 0:
+                    raise
+
+        # Connect to the bootstrapper and send it its configuration
+        con = protocol.Connection(sock)
+        con.send(protocol.Message("init", marshal.dumps(bootstrapper_config)))
+        if con.recv().command != "ok":
+            raise RuntimeError("bootstrapper did not send an OK response")
 
     def destroy_vm(self, vm_id, get_metadata):
         ctid = get_metadata(u"ctid").encode("ascii")
