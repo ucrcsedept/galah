@@ -195,7 +195,7 @@ class RedisConnection(object):
         # The maximum number of clean virtual machines that can exist. Should
         # be typically pulled down from the configuration but can be
         # overridden during testing.
-        max_clean_vms = _hints.get("max_clean_vms", 3)
+        max_clean_vms = _hints.get("max_clean_vms", 2)
 
         vmfactory_key = "NodeInfo/%s" % (vmfactory_id.serialize(), )
 
