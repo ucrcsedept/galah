@@ -13,11 +13,6 @@ import os
 # external
 import pytest
 
-# Tell pytest to load our bootstrapper plugin. Absolute import is required here
-# though I'm not sure why. It does not error when given simply "bootstrapper"
-# but it does not correclty load the plugin.
-pytest_plugins = ("galah.tests.bootstrapper.pytest_bootstrapper", )
-
 # A crazy unicode string that renders as scribbles
 UNICODE_TEST_SCRIBBLES = (
     u" \u031b \u0340 \u0341 \u0358 \u0321 \u0322 \u0327 \u0328 \u0334 \u0335 "
