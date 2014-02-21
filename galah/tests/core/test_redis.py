@@ -2,9 +2,6 @@
 from galah.core.backends.redis import *
 from galah.core.objects import *
 
-# test internal
-from .pytest_redis import parse_redis_config
-
 # external
 import pytest
 
@@ -27,11 +24,6 @@ UNICODE_TEST_SCRIBBLES = (
     u"\u0336 \u034f \u035c \u035d \u035e \u035f \u0360 \u0362 \u0338 \u0337 "
     u"\u0361 \u0489"
 )
-
-# Tell pytest to load our pytest_redis plugin. Absolute import is required here
-# though I'm not sure why. It does not error when given simply "pytest_redis"
-# but it does not correclty load the plugin.
-pytest_plugins = ("galah.tests.core.pytest_redis", )
 
 class TestNode:
     def test_allocate(self, redis_server):

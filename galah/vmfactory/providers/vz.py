@@ -24,7 +24,7 @@ NULL_FILE = open(os.devnull, "w")
 class OpenVZProvider(BaseProvider):
     container_description = "galah-created"
 
-    def __init__(self, test_config = None):
+    def __init__(self):
         self.vzctl_path = config["vmfactory/vz/VZCTL_PATH"]
         self.vzlist_path = config["vmfactory/vz/VZLIST_PATH"]
         self.id_range = config["vmfactory/vz/ID_RANGE"]

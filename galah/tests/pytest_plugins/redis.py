@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+
 # stdlib
 import re
 import socket
@@ -11,6 +13,13 @@ import inspect
 import pytest
 import redis
 
+# This will only get used if we ensure that py.test loads this file when the
+# tool starts. We can do that by adding a dependency in the top level conftest
+# file.
+def pytest_addoption(parser):
+    parser.addoption("--redis", action = "store",
+        help = "host:port:db, ex: 10.189.0.2:6379:0")
+
 def pytest_runtest_setup(item):
     if "redis_server" in item.fixturenames:
         raw_config = item.config.getoption("--redis")
@@ -20,7 +29,7 @@ def pytest_runtest_setup(item):
 
         # Start the Redis monitor so we can see what commands get run.
         monitor = RedisMonitor(host = config.host, port = config.port,
-            db = config.db_range[0])
+            db = config.db)
 
         item._redis_monitor = monitor
 
@@ -46,22 +55,20 @@ def redis_server(request):
         pytest.skip("Configuration with `--redis` required for this test.")
     config = parse_redis_config(raw_config)
 
-    db = config.db_range[0]
     connection = redis.StrictRedis(host = config.host, port = config.port,
-        db = db)
+        db = config.db)
 
     # This will delete everything in the current database
     connection.flushdb()
 
     return connection
 
-RedisConfig = collections.namedtuple("RedisConfig",
-    ["host", "port", "db_range"])
+RedisConfig = collections.namedtuple("RedisConfig", ["host", "port", "db"])
 
 def parse_redis_config(raw):
     # Parse the configuration string
-    REDIS_CONFIG_RE = re.compile(r"(?P<host>[^:]+):(?P<port>[0-9]+):"
-        r"(?P<db_start>[0-9]+)\-(?P<db_end>[0-9]+)")
+    REDIS_CONFIG_RE = re.compile(r"^(?P<host>[^:]+):(?P<port>[0-9]+):"
+        r"(?P<db>[0-9]+)$")
     config = REDIS_CONFIG_RE.match(raw)
     if config is None:
         pytest.fail("Invalid --redis configuration.")
@@ -69,10 +76,7 @@ def parse_redis_config(raw):
     return RedisConfig(
         host = config.group("host"),
         port = int(config.group("port")),
-        db_range = range(
-            int(config.group("db_start")),
-            int(config.group("db_end")) + 1
-        )
+        db = int(config.group("db"))
     )
 
 class RedisMonitor:

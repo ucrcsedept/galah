@@ -9,15 +9,18 @@ import pytest
 # stdlib
 import sys
 import socket
+import os
 
 @pytest.fixture
 def vz(request):
-    raw_config = request.config.getoption("--openvz")
-    if not raw_config:
-        pytest.skip("Configuration with `--openvz` required for this test.")
-    config = eval(raw_config)
+    try:
+        provider = vzprovider.OpenVZProvider()
+    except:
+        pytest.skip("Could not create OpenVZ provider.")
 
-    provider = vzprovider.OpenVZProvider(**config)
+    if not os.path.exists(provider.vzctl_path):
+        pytest.skip("Configured path of vzctl (%r) does not exist.",
+            provider.vzctl_path)
 
     # This will prevent containers created during testing from being picked up
     # incidently by a running vmfactory in the event of an ID range overlap.
