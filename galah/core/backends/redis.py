@@ -82,18 +82,15 @@ class _Return(Exception):
         self.what = what
 
 class RedisConnection(object):
-    # redis_connection should only ever be specified during testing
-    def __init__(self, redis_connection = None):
-        if redis_connection is None:
-            self._redis = redis.StrictRedis(
-                host = config["core/REDIS_HOST"],
-                port = config["core/REDIS_PORT"]
-            )
-        else:
-            self._redis = redis_connection
+    @staticmethod
+    def get_config():
+        return (config["core/REDIS_HOST"], config.get("core/REDIS_PORT", 6379),
+            config.get("core/REDIS_DB", 0))
 
-        # This will contain all of our registered scripts.
-        self._scripts = {}
+    # redis_connection should only ever be specified during testing
+    def __init__(self):
+        host, port, db = self.get_config()
+        self._redis = redis.StrictRedis(host = host, port = port, db = db)
 
     #                             .o8
     #                            "888

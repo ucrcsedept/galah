@@ -13,23 +13,14 @@ import inspect
 import pytest
 import redis
 
-# This will only get used if we ensure that py.test loads this file when the
-# tool starts. We can do that by adding a dependency in the top level conftest
-# file.
-def pytest_addoption(parser):
-    parser.addoption("--redis", action = "store",
-        help = "host:port:db, ex: 10.189.0.2:6379:0")
+# internal
+from galah.core.backends.redis import RedisConnection
 
 def pytest_runtest_setup(item):
     if "redis_server" in item.fixturenames:
-        raw_config = item.config.getoption("--redis")
-        if not raw_config:
-            pytest.skip("Configuration with `--redis` required for this test.")
-        config = parse_redis_config(raw_config)
-
         # Start the Redis monitor so we can see what commands get run.
-        monitor = RedisMonitor(host = config.host, port = config.port,
-            db = config.db)
+        host, port, db = RedisConnection.get_config()
+        monitor = RedisMonitor(host = host, port = port, db = db)
 
         item._redis_monitor = monitor
 
@@ -50,34 +41,14 @@ def pytest_runtest_makereport(item, call, __multicall__):
 
 @pytest.fixture
 def redis_server(request):
-    raw_config = request.config.getoption("--redis")
-    if not raw_config:
-        pytest.skip("Configuration with `--redis` required for this test.")
-    config = parse_redis_config(raw_config)
-
-    connection = redis.StrictRedis(host = config.host, port = config.port,
-        db = config.db)
+    con = RedisConnection()
 
     # This will delete everything in the current database
-    connection.flushdb()
+    con._redis.flushdb()
 
-    return connection
+    return con
 
 RedisConfig = collections.namedtuple("RedisConfig", ["host", "port", "db"])
-
-def parse_redis_config(raw):
-    # Parse the configuration string
-    REDIS_CONFIG_RE = re.compile(r"^(?P<host>[^:]+):(?P<port>[0-9]+):"
-        r"(?P<db>[0-9]+)$")
-    config = REDIS_CONFIG_RE.match(raw)
-    if config is None:
-        pytest.fail("Invalid --redis configuration.")
-
-    return RedisConfig(
-        host = config.group("host"),
-        port = int(config.group("port")),
-        db = int(config.group("db"))
-    )
 
 class RedisMonitor:
     """

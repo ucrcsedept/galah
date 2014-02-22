@@ -47,7 +47,7 @@ def main(vmfactory_id, con):
         task = con.vmfactory_grab(vmfactory_id)
 
         if isinstance(task, NodeID):
-            log.info("Destroying virtual machine %r.", task)
+            log.debug("Destroying virtual machine %r.", task)
 
             # We don't expose the whole connection object to the destroy_vm
             # function and instead just give it a way to get metadata.
@@ -60,6 +60,8 @@ def main(vmfactory_id, con):
             # is fine and should be picked up as an already-destroyed VM when
             # it's picked up again.
             con.vm_unregister(task)
+
+            log.info("Destroyed virtual maching %r.", task)
         elif task is True:
             log.info("Creating new virtual machine.")
 
@@ -81,14 +83,14 @@ def main(vmfactory_id, con):
 
             # Note the ID of the VM before we try to prepare it
             con.vmfactory_note_clean_id(vmfactory_id, new_vm_id)
-            log.info("New VM created and registered with NodeID %r. Not yet "
+            log.debug("New VM created and registered with NodeID %r. Not yet "
                 "prepared.", new_vm_id)
 
             # Prepare the VM
             get_metadata = lambda k: con.vm_get_metadata(new_vm_id, k)
             set_metadata = lambda k, v: con.vm_set_metadata(new_vm_id, k, v)
             provider.prepare_vm(new_vm_id, set_metadata, get_metadata)
-            log.info("New VM prepared.")
+            log.info("New VM prepared with NodeID %r.", new_vm_id)
 
         # Mark the dirty or clean VM as successfully deleted/created and
         # disassociate it from this vmfactory.
