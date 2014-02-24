@@ -341,6 +341,16 @@ class Connection:
 
         pass
 
+    def vmfactory_list(self, machine, _hints = None):
+        """
+        Returns a list of the VMFactories on a machine.
+
+        :param machine: The machine (a unicode string).
+
+        :returns: A list of NodeIDs.
+
+        """
+
     def vmfactory_grab(self, vmfactory_id, _hints = None):
         """
         Grabs a new job for the vmfactory to complete.

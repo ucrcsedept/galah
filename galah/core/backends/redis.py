@@ -203,6 +203,13 @@ class RedisConnection(object):
 
         return True
 
+    def vmfactory_list(self, machine, _hints = None):
+        result = self._redis.smembers(
+            "NodeSet/VMFactory/%s" % (machine.encode("utf_8"), ))
+
+        return [objects.NodeID(machine = machine, local = int(i))
+            for i in result]
+
     def vmfactory_grab(self, vmfactory_id, _hints = None):
         if _hints is None:
             _hints = {}

@@ -65,6 +65,19 @@ class TestVMFactory:
         # Unregister our node again
         assert not redis_server.vmfactory_unregister(my_id)
 
+    def test_list(self, redis_server):
+        """Ensures that vmfactory_list works as intended."""
+
+        my_machine = u"localhost"
+
+        my_factories = [NodeID(machine = my_machine, local = i)
+            for i in range(10)]
+        for i in my_factories:
+            assert redis_server.vmfactory_register(i)
+
+        result = redis_server.vmfactory_list(my_machine)
+        assert set(result) == set(my_factories)
+
     def test_grab_clean(self, redis_server):
         """
         Tests grab to ensure that it will return True when there are no queued
