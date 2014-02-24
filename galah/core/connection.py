@@ -406,6 +406,14 @@ class Connection:
 
         pass
 
+    # oooo d8b oooo  oooo  ooo. .oo.   ooo. .oo.    .ooooo.  oooo d8b
+    # `888""8P `888  `888  `888P"Y88b  `888P"Y88b  d88' `88b `888""8P
+    #  888      888   888   888   888   888   888  888ooo888  888
+    #  888      888   888   888   888   888   888  888    .o  888
+    # d888b     `V88V"V8P' o888o o888o o888o o888o `Y8bod8P' d888b
+
+
+
     # oooooo     oooo ooo        ooooo
     #  `888.     .8'  `88.       .888'
     #   `888.   .8'    888b     d'888   .oooo.o
@@ -486,9 +494,52 @@ class Connection:
         """
         Queues a virtual machine for deletion.
 
-        :param vm_id: The virtual machine's ID (a unicode string).
+        .. warning::
+
+            This is a very simple operation with no error-checking. It will
+            simply add the VM to the queue of dirty virtual machines. No check
+            will be done to ensure the VM is registered or if it exists in
+            any other queue.
+
+        :param vm_id: The virtual machine's ID (a NodeID).
 
         :returns: True.
+
+        """
+
+        pass
+
+    def vm_mark_clean(self, vm_id, _hints = None):
+        """
+        Queues a virtual machine for use.
+
+        .. warning::
+
+            This is a very simple operation with no error-checking. It will
+            simply add the VM to the queue of clean virtual machines. No check
+            will be done to ensure the VM is registered or if it exists in
+            any other queue.
+
+        :param vm_id: The virtual machine's ID (a NodeID).
+
+        :returns: True.
+
+        """
+
+        pass
+
+    def vm_list_clean(self, machine, _hints = None):
+        """
+        Returns a list of all of the clean virtual machines in the queue.
+
+        .. note::
+
+            This operation is atomic, it will retrieve the queue at a single
+            instance of time.
+
+        :param machine: The machine to look at (a unicode string).
+
+        :returns: A list of NodeIDs.
 
         """
 

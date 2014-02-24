@@ -435,3 +435,14 @@ class RedisConnection(object):
             str(vm_id.local))
 
         return True
+
+    def vm_mark_clean(self, vm_id, hints = None):
+        self._redis.lpush("CleanVMs/%s" % (vm_id.machine.encode("utf_8"), ),
+            str(vm_id.local))
+
+    def vm_list_clean(self, machine, _hints = None):
+        result = self._redis.lrange(
+            "CleanVMs/%s" % (machine.encode("utf_8"), ), 0, -1)
+
+        return [objects.NodeID(machine = machine, local = int(i))
+            for i in result]

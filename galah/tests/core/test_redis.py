@@ -217,3 +217,13 @@ class TestVM:
         rv = redis_server.vm_get_metadata(vm_id, key)
         assert rv == value
         assert type(rv) is type(value)
+
+    def test_list_clean(self, redis_server):
+        my_machine = u"localhost"
+
+        my_vms = [NodeID(machine = my_machine, local = i) for i in range(10)]
+        for i in my_vms:
+            redis_server.vm_mark_clean(i)
+
+        clean_list = redis_server.vm_list_clean(my_machine)
+        assert set(clean_list) == set(my_vms)
