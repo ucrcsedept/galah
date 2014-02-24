@@ -128,11 +128,25 @@ class RedisConnection(object):
         new_factory_serialized = galah.common.marshal.dumps(
             new_factory.to_dict())
 
-        rv = self._redis.setnx(
-            "NodeInfo/%s" % (vmfactory_id.serialize(), ),
-            new_factory_serialized
-        )
-        return rv == 1
+        # I don't foresee any real badness if these two calls aren't atomic,
+        # but it feels safer if I make them such.
+        with self._redis.pipeline() as pipe:
+            # Add the VMFactory to the set
+            pipe.sadd(
+                "NodeSet/VMFactory/%s" % (
+                    vmfactory_id.machine.encode("utf_8"), ),
+                str(vmfactory_id.local)
+            )
+
+            # Add the VMFactory's state data
+            pipe.setnx(
+                "NodeInfo/%s" % (vmfactory_id.serialize(), ),
+                new_factory_serialized
+            )
+
+            sadd_rv, setnx_rv = pipe.execute()
+
+            return setnx_rv == 1
 
     def vmfactory_unregister(self, vmfactory_id, _hints = None):
         vmfactory_key = "NodeInfo/%s" % (vmfactory_id.serialize(), )
@@ -171,7 +185,14 @@ class RedisConnection(object):
                     VMFactory.STATE_CREATING_NOID):
                 pipe.decr(clean_vm_count_key)
 
-            # Remove the reference to the VM factory.
+            # Remove the VMFactory from the set
+            pipe.srem(
+                "NodeSet/VMFactory/%s" % (
+                    vmfactory_id.machine.encode("utf_8"), ),
+                str(vmfactory_id.local)
+            )
+
+            # Remove the VMFactory's state
             pipe.delete(vmfactory_key)
 
         try:
