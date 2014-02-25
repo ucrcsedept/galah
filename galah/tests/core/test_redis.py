@@ -231,6 +231,13 @@ class TestVM:
         assert rv == value
         assert type(rv) is type(value)
 
+        key2, value2 = u"milkshake", "yard"
+        assert redis_server.vm_set_metadata(vm_id, key2, value2)
+        all_metadata = redis_server.vm_get_all_metadata(vm_id)
+        assert isinstance(all_metadata, dict)
+        assert key in all_metadata and key2 in all_metadata
+        assert all_metadata[key] == value and all_metadata[key2] == value2
+
     def test_list_clean(self, redis_server):
         my_machine = u"localhost"
 

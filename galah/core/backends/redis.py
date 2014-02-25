@@ -458,6 +458,11 @@ class RedisConnection(object):
         rv = self._redis.hget(vm_key, key.encode("utf_8"))
         return rv
 
+    def vm_get_all_metadata(self, vm_id, _hints = None):
+        vm_key = "NodeInfo/%s" % (vm_id.serialize(), )
+        rv = self._redis.hgetall(vm_key)
+        return rv
+
     def vm_mark_dirty(self, vm_id, _hints = None):
         self._redis.lpush("DirtyVMs/%s" % (vm_id.machine.encode("utf_8"), ),
             str(vm_id.local))
