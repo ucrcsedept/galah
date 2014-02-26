@@ -351,6 +351,8 @@ class Connection:
 
         """
 
+        pass
+
     def vmfactory_grab(self, vmfactory_id, _hints = None):
         """
         Grabs a new job for the vmfactory to complete.
@@ -553,4 +555,29 @@ class Connection:
 
         """
 
+        pass
+
+    def vm_purge_all(self, machine, _hints = None):
+        """
+        Clears any information about VMs on the given machine.
+
+        This is a command used by VMFactories in their recovery mode, where
+        they clear out the backend information and recreate it by looking at
+        the virtual machines on its own system.
+
+        TODO: Handle testrunners that are still processing requests.
+
+        .. warning::
+
+            This function assumes that nobody else will be *adding* to the
+            clean queue while it's running.
+
+            This function is not atomic, if this function is interrupted,
+            information about some VMs may be lost.
+
+        :param machine: The machine (a unicode string)
+
+        :returns: A list of tuples ``(VM NodeID, VM Metadata)``.
+
+        """
         pass

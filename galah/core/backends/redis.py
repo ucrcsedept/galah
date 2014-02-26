@@ -174,9 +174,9 @@ class RedisConnection(object):
                     VMFactory.STATE_DESTROYING):
                 # Destroy any VM it was working on.
                 pipe.lpush(
-                    "DirtyVMQueue/%s" %
+                    "DirtyVMs/%s" %
                         (vmfactory_id.machine.encode("utf_8"), ),
-                    vmfactory.vm_id.encode("utf_8")
+                    int(vmfactory.vm_id.local)
                 )
 
             # If we were in the middle of creating a VM we want to decrement
@@ -220,7 +220,7 @@ class RedisConnection(object):
         # The maximum number of clean virtual machines that can exist. Should
         # be typically pulled down from the configuration but can be
         # overridden during testing.
-        max_clean_vms = _hints.get("max_clean_vms", 2)
+        max_clean_vms = _hints.get("max_clean_vms", 1)
 
         vmfactory_key = "NodeInfo/%s" % (vmfactory_id.serialize(), )
 
@@ -472,6 +472,7 @@ class RedisConnection(object):
     def vm_mark_clean(self, vm_id, hints = None):
         self._redis.lpush("CleanVMs/%s" % (vm_id.machine.encode("utf_8"), ),
             str(vm_id.local))
+        self._redis.incr("CleanVMCount/%s" % (vm_id.machine.encode("utf_8"), ))
 
     def vm_list_clean(self, machine, _hints = None):
         result = self._redis.lrange(
@@ -479,3 +480,35 @@ class RedisConnection(object):
 
         return [objects.NodeID(machine = machine, local = int(i))
             for i in result]
+
+    def vm_purge_all(self, machine, _hints = None):
+        m = machine.encode("utf_8")
+
+        metadata = []
+
+        def unregister_all(queue_name):
+            """Unregisters every VM in the given queue."""
+
+            while True:
+                i = self._redis.rpop(queue_name)
+                if i is None:
+                    break
+
+                cur_id = objects.NodeID(machine = machine, local = int(i))
+
+                metadata.append((cur_id, self.vm_get_all_metadata(cur_id)))
+
+                self.vm_unregister(cur_id)
+
+        # Clear out all of the clean virtual machines
+        unregister_all("CleanVMs/%s" % (m, ))
+        self._redis.set("CleanVMCount/%s" % (m, ), 0)
+
+        # Clear out all of the dirty ones
+        unregister_all("DirtyVMs/%s" % (m, ))
+
+        # TODO: Handle the case where testrunner's are working while this
+        # function runs.
+
+        return metadata
+

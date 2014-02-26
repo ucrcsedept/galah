@@ -284,3 +284,59 @@ class OpenVZProvider(BaseProvider):
         ctid = get_metadata(u"ctid").encode("ascii")
         self._run_vzctl(["stop", ctid])
         self._run_vzctl(["destroy", ctid])
+
+    def recover_vms(self, metadata):
+        # The metadata will be given to us a simple list of tuples with the
+        # first item as the nodeid and the second item as the metadata. We want
+        # to shift things around into a dictionary keyed on CTIDs
+        ctid_metadata = {}
+        for k, v in metadata:
+            # We're going to ignore any metadata that doesn't have a CTID
+            # inside of it because we won't be able to determine which VM it
+            # corresponds with anyways.
+            if u"ctid" in v:
+                # Add the metadata to the dictionary (we don't need the NodeID
+                # so we'll just discard it).
+                ctid_metadata[int(v[u"ctid"])] = dict(v)
+
+        vms = self._get_containers(galah_created = True)
+        log.debug("Found containers during recovery: %r", vms)
+
+        clean_vms = []
+        dirty_vms = []
+
+        for i in vms:
+            cur_metadata = dict(ctid_metadata.get(i, {}))
+            cur_metadata[u"ctid"] = str(i)
+
+            # We'd catch such a failure below in the try stucture but we
+            # wouldn't be able to provide as clear an error message.
+            if i not in ctid_metadata or u"ip" not in ctid_metadata[i]:
+                log.info("Could not find IP for VM with CTID %r, marking as "
+                    "dirty.", i)
+                dirty_vms.append(cur_metadata)
+                continue
+
+            try:
+                # Try to connect to the bootstrapper
+                sock = socket.create_connection(
+                    (ctid_metadata[i][u"ip"], protocol.BOOTSTRAPPER_PORT),
+                    timeout = 2 # Timeout for initial connection
+                )
+                sock.settimeout(2) # Timeout for subsequent reads
+                con = protocol.Connection(sock)
+
+                # Check if the bootstrapper is clean
+                con.send(protocol.Message("status", ""))
+                response = con.recv()
+                if response.command == u"status" and \
+                        response.payload == "ready":
+                    log.info("VM with CTID %r found to be clean.", i)
+
+                    clean_vms.append(cur_metadata)
+            except:
+                log.info("VM with CTID %r found to be dirty.", i,
+                    exc_info = True)
+                dirty_vms.append(cur_metadata)
+
+        return clean_vms, dirty_vms

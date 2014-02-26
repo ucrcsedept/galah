@@ -80,3 +80,16 @@ class BaseProvider(object):
         """
 
         pass
+
+    def recover_vms(self):
+        """
+        Goes through all of the Galah-created VMs on the machine and determines
+        whether they are clean or dirty using no additional information.
+
+        :returns: A tuple ``(clean_vms, dirty_vms)`` where each item is a
+            list of dictionaries containing the meta-data about each VM that
+            could be garnished from local sources.
+
+        """
+
+        pass

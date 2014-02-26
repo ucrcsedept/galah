@@ -118,6 +118,23 @@ class TestLiveInstance:
         assert msg.command == "pong"
         assert msg.payload == ping_message.payload
 
+    def test_status(self, bootstrapper_server):
+        con = bootstrapper_server()
+
+        con.send(protocol.Message("status", ""))
+        msg = con.recv()
+        assert msg.command == "status" and msg.payload == "not initialized"
+
+        conf = base_config()
+        conf["harness_directory"] = tempfile.mkdtemp()
+        conf["submission_directory"] = tempfile.mkdtemp()
+        con.send(protocol.Message("init", marshal.dumps(conf)))
+        assert con.recv().command == "ok"
+
+        con.send(protocol.Message("status", ""))
+        msg = con.recv()
+        assert msg.command == "status" and msg.payload == "ready"
+
     def test_init_auth(self, bootstrapper_server):
         """
         Tests that the init command works, as well as the auth command.

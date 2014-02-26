@@ -291,6 +291,14 @@ def handle_message(msg, con):
 
         config = received_config
 
+        def make_dirs(path):
+            try:
+                os.makedirs(path)
+            except OSError:
+                pass
+        make_dirs(config["harness_directory"])
+        make_dirs(config["submission_directory"])
+
         return Message("ok", u"")
 
     if msg.command == u"auth":
@@ -303,6 +311,18 @@ def handle_message(msg, con):
         else:
             log.warning("Failed auth from peer")
             return Message("error", u"bad secret")
+
+    if msg.command == u"status":
+        if config is None:
+            return Message("status", "not initialized")
+
+        harness_uploaded = len(os.listdir(config["harness_directory"])) > 1
+        submission_uploaded = \
+            len(os.listdir(config["submission_directory"])) > 1
+        if not harness_uploaded and not submission_uploaded:
+            return Message("status", "ready")
+
+        return Message("status", "not ready")
 
     # Every command that follows needs the peer to be authenticated
     if config is None or not con.authenticated:
