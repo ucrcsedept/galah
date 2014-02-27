@@ -53,6 +53,14 @@ def parse_arguments(args = sys.argv[1:]):
                 "startup where it will clear out all of the data on virtual "
                 "machines that exist in the backend and try to rebuild it "
                 "using local data."
+        ),
+        make_option(
+            "--force-unregister", action = "store_true", default = False,
+            help =
+                "Unless this option is present, if another vmfactory is "
+                "registered when entering recovery mode, the vmfactory will "
+                "exit. If this option is present, all other vmfactories will "
+                "first be unregistered."
         )
     ]
 
@@ -152,8 +160,6 @@ def recover(vmfactory_id, provider, con, force_unregister):
 
     clean_vms, dirty_vms = provider.recover_vms(metadata)
 
-    print clean_vms, dirty_vms
-
     # Register all of the found virtual machines and set the appropriate meta
     # data
     clean_vm_ids, dirty_vm_ids = [], []
@@ -196,7 +202,7 @@ if __name__ == "__main__":
 
     try:
         if options.recover:
-            recover(vmfactory_id, provider, con, True)
+            recover(vmfactory_id, provider, con, options.force_unregister)
 
         main(vmfactory_id, provider, con)
     finally:

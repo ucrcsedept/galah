@@ -280,10 +280,16 @@ class OpenVZProvider(BaseProvider):
         if con.recv().command != "ok":
             raise RuntimeError("bootstrapper did not send an OK response")
 
-    def destroy_vm(self, vm_id, get_metadata):
-        ctid = get_metadata(u"ctid").encode("ascii")
+    def _destroy_container(self, ctid):
+        if isinstance(ctid, (int, long)):
+            ctid = str(ctid)
+
         self._run_vzctl(["stop", ctid])
         self._run_vzctl(["destroy", ctid])
+
+    def destroy_vm(self, vm_id, get_metadata):
+        ctid = get_metadata(u"ctid").encode("ascii")
+        self._destroy_container(ctid)
 
     def recover_vms(self, metadata):
         # The metadata will be given to us a simple list of tuples with the
