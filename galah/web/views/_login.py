@@ -186,7 +186,7 @@ def authenticate_user():
     email = id_token["email"]
     verified_email = id_token["verified_email"]
 
-    if verified_email == "true":
+    if verified_email is True:
         # Find the user with the given email
         try:
             user = FlaskUser(User.objects.get(email = email))
@@ -213,7 +213,8 @@ def authenticate_user():
     else:
         flash("Sorry, we couldn't verify your email", "error")
 
-        logger.info("User %s failed to authenticate with OAuth2.", email)
+        logger.info("User %s failed to authenticate with OAuth2 because "
+            "their email has not been verified with google.", email)
 
     return redirect(url_for("login"))
 

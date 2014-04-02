@@ -20,6 +20,7 @@ from galah.db.models import Assignment, Submission, Class, User
 from bson import ObjectId
 import os.path
 import shutil
+import errno
 
 # Set up configuration and logging
 from galah.base.config import load_config
@@ -52,10 +53,14 @@ def _delete_assignments(ids, delete_class):
             shutil.rmtree(
                 os.path.join(config["SUBMISSION_DIRECTORY"], str(i.id))
             )
-        except:
-            logger.error("Failed to delete assignment with ID %s", str(i.id))
-
-            raise
+        except OSError as e:
+            # We don't want to explode if the directory has been deleted for us
+            # but it is weird so log a warning.
+            if e.errno == errno.ENOENT:
+                logger.warning("Assignment directory missing for %s",
+                    str(i.id))
+            else:
+                raise
 
     # Actually delete the submissions from the database
     Submission.objects(assignment__in = ids).delete()
