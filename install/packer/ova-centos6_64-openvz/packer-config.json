@@ -14,7 +14,9 @@
     {
       "type": "shell",
       "inline": [
-        "yum install -y ansible"
+        "yum -y install python-pip python-devel",
+        "yum -y groupinstall 'Development Tools'",
+        "pip install ansible"
       ]
     },
     {

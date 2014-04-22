@@ -11,6 +11,7 @@ VBOX_VERSION=$(cat LATEST.TXT | tr -d " ")
 wget http://download.virtualbox.org/virtualbox/$VBOX_VERSION/VBoxGuestAdditions_${VBOX_VERSION}.iso
 
 # Install dependencies
+yum -y remove kernel-headers kernel-devel vzkernel-headers vzkernel-devel
 if [[ $(uname -r) == *stab* ]]; then
     yum -y install vzkernel-headers-$(uname -r) vzkernel-devel-$(uname -r)
 else
