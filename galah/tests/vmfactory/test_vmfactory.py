@@ -124,7 +124,7 @@ class TestLiveInstance:
         # Start a new vmfactory in recovery mode, because the other vmfactory
         # is still registered it should exit quickly.
         p = vmfactory_process(["--recover"])
-        for i in range(5):
+        for i in range(10):
             time.sleep(1)
             if p.poll() is not None:
                 break
