@@ -29,6 +29,6 @@ $(VBGUEST_OVA): $(VBGUEST_DIR)/packer-config.json $(OPENVZ_OVA)
 	mv $(VBGUEST_DIR)/output-virtualbox-ovf/* $(VBGUEST_OVA)
 
 $(VAGRANTBOX_BOX): $(VAGRANTBOX_DIR)/packer-config.json $(VBGUEST_OVA)
-	ln -f $(OPENVZ_OVA) $(VAGRANTBOX_DIR)/source.ova
+	ln -f $(VBGUEST_OVA) $(VAGRANTBOX_DIR)/source.ova
 	cd $(VAGRANTBOX_DIR); packer build packer-config.json
 	mv $(VAGRANTBOX_DIR)/*.box ./centos6_64_vz.box
