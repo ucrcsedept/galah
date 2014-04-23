@@ -7,7 +7,7 @@ Vagrant will automatically create and give you access to a virtual machine that 
  * `Ansible <http://docs.ansible.com/intro_installation.html>`_
  * `VirtualBox <https://www.virtualbox.org/wiki/Linux_Downloads>`_
 
-Then you will need to retrieve the appropriate Galah Vagrant Box (**instructions not yet available for this step**).
+Then you will need to retrieve the appropriate Vagrant Box (basically a VM image). We don't yet host ready-made boxes but you can generate one easily with packer. Check out the README in ``install/packer`` for more information.
 
 Finally, you should navigate to the appropriate directory in ``install/vagrant/`` (which is a directory in the Galah core git repo) and run the command ``vagrant up``. After Vagrant is finished setting up the VM you will be able to run ``vagrant ssh`` to enter the virtual machine and begin development.
 
