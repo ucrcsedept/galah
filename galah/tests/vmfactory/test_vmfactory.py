@@ -139,11 +139,14 @@ class TestLiveInstance:
 
         # We need to give the vmfactory time to unregister any vmfactories and
         # collect the clean VM's. It should be able to do this very quickly.
-        time.sleep(5)
+        for i in range(10):
+            time.sleep(1)
 
-        # The vmfactory should unregister all other vmfactories
-        assert len(redis_server.vmfactory_list(my_machine)) == 1
-
-        # And bring back the clean VM(s). Here we just check to make sure the
-        # queue isn't empty
-        assert redis_server.vm_list_clean(my_machine)
+            if len(redis_server.vmfactory_list(my_machine)) == 1 and \
+                    redis_server.vm_list_clean(my_machine):
+                break
+        else:
+            pytest.fail("VM did not unregister all other vmfactories (%r) "
+                "and/or did not recover the clean VMs (vmlist = %r).",
+                redis_server.vmfactory_list(my_machine),
+                redis_server.vm_list_clean(my_machine))
