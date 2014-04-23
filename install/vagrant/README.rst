@@ -3,9 +3,9 @@ Using Vagrant with Galah
 
 Vagrant will automatically create and give you access to a virtual machine that has been prepared for development with Galah. In order to use Vagrant, you must install a few programs:
 
- * `Vagrant <http://www.vagrantup.com/downloads.html>`_
- * `Ansible <http://docs.ansible.com/intro_installation.html>`_
- * `VirtualBox <https://www.virtualbox.org/wiki/Linux_Downloads>`_
+* `Vagrant <http://www.vagrantup.com/downloads.html>`_
+* `Ansible <http://docs.ansible.com/intro_installation.html>`_
+* `VirtualBox <https://www.virtualbox.org/wiki/Linux_Downloads>`_
 
 Then you will need to retrieve the appropriate Vagrant Box (basically a VM image). We don't yet host ready-made boxes but you can generate one easily with packer. Check out the README in ``install/packer`` for more information.
 
