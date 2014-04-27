@@ -1,0 +1,3 @@
+[submodule "galah/third_party/mangoengine-src"]
+	path = galah/third_party/mangoengine-src
+	url = git@github.com:brownhead/mangoengine.git
