@@ -1,7 +1,7 @@
 ---
 
 - name: Set up 'dev-mongo-redis-vz' vagrant box
-  hosts: vm-dev-mongo-redis-vz
+  hosts: dev-mongo-redis-vz
 
   roles:
     - redis

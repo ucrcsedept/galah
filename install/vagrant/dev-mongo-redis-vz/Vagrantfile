@@ -1,20 +1,13 @@
 Vagrant.configure("2") do |config|
-  # Every Vagrant virtual environment requires a box to build off of.
-  config.vm.box = "centos6_64-openvz"
-
-  # This URL should be updated when the boxes are available from Galah Group
-  # servers.
-  # config.vm.box_url = "http://domain.com/path/to/above.box"
-
-  # We assign the VM a static IP so we can refer to it in our Ansible inventory
-  # file.
-  config.vm.network "private_network", ip: "10.189.0.2"
-
-  config.vm.synced_folder "../../../", "/opt/galah"
+  # This lets us specify a name for the VM that will be used later in the
+  # generated ansible inventory file, making everything easier.
+  config.vm.define "dev-mongo-redis-vz" do |dev|
+    dev.vm.box = "galahgroup/centos6-x86_64-vbox-vz"
+    dev.vm.synced_folder "../../../", "/opt/galah"
+  end
 
   # Provision the VM with our Ansible playbook.
   config.vm.provision "ansible" do |ansible|
-    ansible.inventory_path = "inventory.ini"
     ansible.playbook = "../../ansible/site.yml"
     ansible.sudo = true
     ansible.verbose = "vvvv"
