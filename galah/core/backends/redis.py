@@ -8,7 +8,7 @@ import pkg_resources
 
 # external
 import redis
-import mangoengine
+import galah.third_party.mangoengine as mangoengine
 
 # galah external
 import galah.common.marshal

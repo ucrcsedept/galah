@@ -6,7 +6,7 @@ functions.
 """
 
 # external
-from mangoengine import *
+from galah.third_party.mangoengine import *
 
 class CoreError(RuntimeError):
     """
