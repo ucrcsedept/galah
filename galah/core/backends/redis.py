@@ -53,15 +53,16 @@ class VMFactory(mangoengine.Model):
     state = mangoengine.IntegralField(bounds = (0, 3))
     """The state of the vmfactory."""
 
-    vm_id = mangoengine.StringField(nullable = True)
+    vm_local_id = mangoengine.IntegralField(bounds = (0, None),
+        nullable = True)
     """
-    The ID of the VM the vmfactory is working with.
+    The local ID of the VM the vmfactory is working with.
 
-    When in ``STATE_CREATING``, this is the ID of the virtual machine that
-    is being created and prepared.
+    When in ``STATE_CREATING``, this is the local ID of the virtual machine
+    that is being created and prepared.
 
-    When in ``STATE_DESTROYING``, this is the ID of the virtual machine that
-    is being destroyed.
+    When in ``STATE_DESTROYING``, this is the local ID of the virtual machine
+    that is being destroyed.
 
     In all other states this attribute should be None.
 
@@ -123,7 +124,8 @@ class RedisConnection(object):
     #                                                        `Y8P'
 
     def vmfactory_register(self, vmfactory_id, _hints = None):
-        new_factory = VMFactory(state = VMFactory.STATE_IDLE, vm_id = None)
+        new_factory = VMFactory(state = VMFactory.STATE_IDLE,
+            vm_local_id = None)
         new_factory.validate()
         new_factory_serialized = galah.common.marshal.dumps(
             new_factory.to_dict())
@@ -176,7 +178,7 @@ class RedisConnection(object):
                 pipe.lpush(
                     "DirtyVMs/%s" %
                         (vmfactory_id.machine.encode("utf_8"), ),
-                    int(vmfactory.vm_id.local)
+                    vmfactory.vm_local_id
                 )
 
             # If we were in the middle of creating a VM we want to decrement
@@ -260,7 +262,7 @@ class RedisConnection(object):
 
             # Change the VM factory's state
             vmfactory.state = VMFactory.STATE_DESTROYING
-            vmfactory.vm_id = dirty_vm_id.serialize()
+            vmfactory.vm_local_id = dirty_vm_id.serialize()
             pipe.set(vmfactory_key,
                 galah.common.marshal.dumps(vmfactory.to_dict()))
 
@@ -347,7 +349,7 @@ class RedisConnection(object):
             pipe.multi()
 
             vmfactory.state = VMFactory.STATE_CREATING
-            vmfactory.vm_id = clean_id.serialize()
+            vmfactory.vm_local_id = clean_id.serialize()
             pipe.set(vmfactory_key,
                 galah.common.marshal.dumps(vmfactory.to_dict()))
 
@@ -375,16 +377,15 @@ class RedisConnection(object):
                     VMFactory.STATE_DESTROYING):
                 raise objects.CoreError("vmfactory not in correct state")
 
-            vm_id = objects.NodeID.deserialize(vmfactory.vm_id)
+            vm_id = objects.NodeID.deserialize(vmfactory.vm_local_id)
 
             pipe.multi()
 
             if vmfactory.state == VMFactory.STATE_CREATING:
-                pipe.lpush(clean_vm_queue_key,
-                    unicode(vm_id.local).encode("utf_8"))
+                pipe.lpush(clean_vm_queue_key, vm_id.local)
 
             vmfactory.state = VMFactory.STATE_IDLE
-            vmfactory.vm_id = None
+            vmfactory.vm_local_id = None
             pipe.set(vmfactory_key,
                 galah.common.marshal.dumps(vmfactory.to_dict()))
 
@@ -406,7 +407,7 @@ class RedisConnection(object):
         # empty hash field cannot be created.
         rv = self._redis.sadd(
             "NodeSet/VM/%s" % (vm_id.machine.encode("utf_8"), ),
-            str(vm_id.local)
+            vm_id.local
         )
         return rv == 1
 
@@ -417,7 +418,7 @@ class RedisConnection(object):
         # failure between sending the two commands.
         with self._redis.pipeline() as pipe:
             pipe.srem("NodeSet/VM/%s" % (vm_id.machine.encode("utf_8"), ),
-                str(vm_id.local))
+                vm_id.local)
             pipe.delete("NodeInfo/%s" % (vm_id.serialize(), ))
 
             srem_rv, del_rv = pipe.execute()
@@ -436,7 +437,7 @@ class RedisConnection(object):
         def set_metadata(pipe):
             # watch(vm_set_key)
 
-            if pipe.sismember(vm_set_key, str(vm_id.local)) != 1:
+            if pipe.sismember(vm_set_key, vm_id.local) != 1:
                 raise objects.IDNotRegistered(vm_id)
 
             # Following commands will be queued and executed at once
@@ -465,13 +466,13 @@ class RedisConnection(object):
 
     def vm_mark_dirty(self, vm_id, _hints = None):
         self._redis.lpush("DirtyVMs/%s" % (vm_id.machine.encode("utf_8"), ),
-            str(vm_id.local))
+            vm_id.local)
 
         return True
 
     def vm_mark_clean(self, vm_id, hints = None):
         self._redis.lpush("CleanVMs/%s" % (vm_id.machine.encode("utf_8"), ),
-            str(vm_id.local))
+            vm_id.local)
         self._redis.incr("CleanVMCount/%s" % (vm_id.machine.encode("utf_8"), ))
 
     def vm_list_clean(self, machine, _hints = None):
