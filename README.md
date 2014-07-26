@@ -1,7 +1,5 @@
 # Galah
 
-**Warning: Large refactoring is occuring in the master branch for version 0.3 and no attempt is being made to keep the master branch functional while this occurs. If you're interested in seeing an unbroken Galah see the v0.2stable branch (that is the version UCR has deployed).**
-
 ## What is Galah?
 
 Galah is an automated grading system geared towards processing computer
@@ -30,20 +28,24 @@ Documentation for Galah is maintained on the
 documentation is meant to be useful to users of Galah, interested parties
 looking to see if Galah would be useful to them, and developers.
 
-## Current Status
-
-Version 0.2 is stable and deployed at UCR. Servicing 4 courses and 1000+ users
-every quarter.
-
-Version 0.3 is in active development and involves large refactoring and
-restructuring of Galah's design. See
-[this document](https://github.com/galah-group/galah/blob/master/docs/v0.3-spec/v0.3-requirements.rst)
-for a description of the goals for the new version. In short, the model layer
-will be greatly expanded to allow for automated testing, Redis will replace
-ZeroMQ, and Galah's installation will be automated. The feature-set of the
-system is not expected to radically change.
-
 ## News
+
+### Friday, July 25, 2014
+
+A little while ago, Khan Academy invited me to join them on their quest to
+improve education everywhere. I have accepted their invitation and as an
+unfortunate side effect, Galah will continue to be neglected into the
+foreseeable future.
+
+Chris and I have decided to dissolve Galah Group LLC and open source all of our
+intellectual property under the MIT license. We will continue providing support
+and bug fixes to UCR until they're able to move onto a new system.
+
+I won't say that this is the end for Galah because I have really enjoyed
+building this system, but you should probably look elsewhere if you want a
+production-ready grading system.
+
+This has been an awesome ride, thank you to everyone who was a part of it!
 
 ### Wednesday, January 1, 2014
 

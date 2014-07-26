@@ -4,11 +4,11 @@ setup(
     name = "galah",
     version = "0.3.0-rc0",
 
-    author = "Galah Group LLC",
+    author = "John Sullivan and Chris Manghane",
     author_email = "john@galahgroup.com",
     description = ("An automated grading system geared towards processing"
         "computer programming assignments."),
-    license = "GG-GPL",
+    license = "MIT",
 
     packages = ["galah.core", "galah.vmfactory"],
 
