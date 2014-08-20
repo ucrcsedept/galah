@@ -1,0 +1,5 @@
+{
+	"name": "galahgroup/centos6-x86_64-vbox-vz",
+	"description": "A CentOS 6 box provisioned with OpenVZ and Virtual Box Guest Additions.",
+	"provider": "virtualbox"
+}

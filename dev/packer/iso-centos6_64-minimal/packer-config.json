@@ -1,0 +1,46 @@
+{
+  "builders": [
+    {
+      "type": "virtualbox-iso",
+      "boot_command": [
+        "<tab> text ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/kickstart.cfg<enter>"
+      ],
+      "guest_os_type": "RedHat_64",
+      "iso_urls": [
+       "http://mirror.pac-12.org/6.5/isos/x86_64/CentOS-6.5-x86_64-minimal.iso",
+       "http://mirrors.xmission.com/centos/6.5/isos/x86_64/CentOS-6.5-x86_64-minimal.iso",
+       "http://mirrors.usc.edu/pub/linux/distributions/centos/6.5/isos/x86_64/CentOS-6.5-x86_64-minimal.iso",
+       "http://mirror.atlanticmetro.net/centos/6.5/isos/x86_64/CentOS-6.5-x86_64-minimal.iso"
+      ],
+      "iso_checksum": "f9d84907d77df62017944cb23cab66305e94ee6ae6c1126415b81cc5e999bdd0",
+      "iso_checksum_type": "sha256",
+      "guest_additions_mode": "disable",
+      "ssh_username": "root",
+      "ssh_password": "packer",
+      "ssh_wait_timeout": "20m",
+      "http_directory": "http",
+      "format": "ova",
+      "shutdown_command": "shutdown -h now"
+    }
+  ],
+  "provisioners": [
+    {
+      "type": "shell",
+      "inline": [
+        "rpm -Uvh http://download.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm",
+        "yum -y update",
+        "shutdown -r now",
+        "sleep 60"
+      ]
+    },
+    {
+      "type": "shell",
+      "inline": [
+        "yum clean all",
+        "rm -f /etc/udev/rules.d/70-persistent-net.rules; ln -s /dev/null /etc/udev/rules.d/75-persistent-net-generator.rules",
+        "sed -i '/^HWADDR=/d' /etc/sysconfig/network-scripts/ifcfg-eth0",
+        "chkconfig iptables off"
+      ]
+    }
+  ]
+}
