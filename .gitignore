@@ -40,3 +40,9 @@ nosetests.xml
 # Sublime
 *.sublime-project
 *.sublime-workspace
+
+# Packer artifacts
+*.ova
+*.box
+output-virtualbox-*
+packer_cache
