@@ -46,3 +46,5 @@ nosetests.xml
 *.box
 output-virtualbox-*
 packer_cache
+
+.vagrant
