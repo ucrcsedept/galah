@@ -8,7 +8,7 @@ Makefile
 
 The Makefile provided in this directory can make things considerably easier. If nothing goes wrong it can actually do the entire build by itself, but be prepared to debug things if failures occur. Ask for help if you get frustrated.
 
-To start the process off, just run ``make``.
+To start the process off, just run ``make``. After building, run ``make install`` to install the created Vagrant box.
 
 The Manual Way
 --------------

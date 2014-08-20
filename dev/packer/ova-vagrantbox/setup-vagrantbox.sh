@@ -22,7 +22,7 @@ chown vagrant:vagrant /home/vagrant/.ssh/authorized_keys
 chmod 600 /home/vagrant/.ssh/authorized_keys
 
 # Install sudo
-yum install sudo
+yum -y install sudo
 
 # Add vagrant user to sudoers
 echo 'vagrant ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers

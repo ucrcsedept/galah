@@ -12,8 +12,11 @@ VBGUEST_OVA=$(VBGUEST_DIR)/output-virtualbox-ovf/packer-virtualbox-ovf.ova
 VAGRANTBOX_DIR=ova-vagrantbox
 VAGRANTBOX_BOX=./centos6_64_vz.box
 
-.PHONY: all clean
+.PHONY: all install
 all: $(VAGRANTBOX_BOX)
+
+install: $(VAGRANTBOX_BOX)
+	vagrant box add --name galahgroup/centos6-x86_64-vbox-vz $(VAGRANTBOX_BOX)
 
 $(BASE_OVA): $(BASE_DIR)/packer-config.json
 	cd $(BASE_DIR); packer build packer-config.json
