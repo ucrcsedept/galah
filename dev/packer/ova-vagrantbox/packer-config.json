@@ -12,11 +12,8 @@
   ],
   "provisioners": [
     {
-      "type": "ansible-local",
-      "playbook_file": "playbook.yml",
-      "role_paths": [
-        "../../ansible/roles/vagrantbox"
-      ]
+      "type": "shell",
+      "script": "setup-vagrantbox.sh"
     }
   ],
   "post-processors": [

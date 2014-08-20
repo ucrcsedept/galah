@@ -13,7 +13,7 @@
   "provisioners": [
     {
       "type": "shell",
-      "script": "provisioning/install_guest_additions.sh"
+      "script": "install_guest_additions.sh"
     }
   ]
 }
