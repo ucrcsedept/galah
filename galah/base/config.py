@@ -75,10 +75,12 @@ def load_config(domain):
     # Load the configuration if it hasn't been loaded yet. Note this ensures
     # that the configuration is only loaded once per instance of the
     # interpreter
+    config_file = os.environ.get("GALAH_CONFIG_PATH",
+                                 "/etc/galah/galah.config")
     if not loaded:
-        if os.path.isfile("/etc/galah/galah.config"):
+        if os.path.isfile(config_file):
             loaded = imp.load_source(
-                "user_config_file", "/etc/galah/galah.config"
+                "user_config_file", config_file
             )
 
     local_config = {}
