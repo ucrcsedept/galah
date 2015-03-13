@@ -141,7 +141,7 @@ def authenticate_user():
     # Extract email and email verification
     id_token = credentials.id_token
     email = id_token["email"]
-    verified_email = id_token["verified_email"]
+    verified_email = id_token["email_verified"]
 
     if verified_email is True:
         # Find the user with the given email
